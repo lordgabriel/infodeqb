@@ -1,0 +1,32 @@
+# ── Dependências ─────────────────────────────────────
+vendor/
+node_modules/
+
+# ── Uploads e ficheiros gerados ───────────────────────
+uploads/
+tmp/
+*.tmp
+*.log
+
+# ── Configuração sensível ─────────────────────────────
+# (deqbwww.php está em htdocs/, fora deste repo)
+# Se houver config local dentro da pasta:
+config.local.php
+.env
+
+# ── Backups e exportações ─────────────────────────────
+*.sql.gz
+*.zip
+sql/migrate_rds_acessos_run.php
+
+# ── OS / editor ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── PHP cache ─────────────────────────────────────────
+*.cache

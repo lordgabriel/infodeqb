@@ -1,0 +1,6 @@
+# Shibboleth (autenticação FEUP) — desactivado em localhost
+# Descomentar no servidor de produção:
+#AuthType shibboleth
+#ShibRequestSetting requireSession true
+#require shib-session
+#Require shib-attr affiliation

@@ -1,0 +1,9 @@
+.awaiting_approval a::before {
+  content: '#Pending#';
+}
+
+input:invalid,
+select:invalid,
+textarea:invalid {
+  background-color: #ffdddd;
+}

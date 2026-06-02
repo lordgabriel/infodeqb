@@ -1,0 +1,310 @@
+/* ============================================================
+   DSD – App Stylesheet  (InfoDEQB edition)
+   Todos os estilos de conteúdo estão scopados sob .dsd-page
+   para evitar conflitos com Bootstrap / infodeq.css.
+   ============================================================ */
+
+/* ── CSS Variables (globais — nomes distintos de infodeq.css) ── */
+:root {
+  --blue:       #1a56db;
+  --blue-dark:  #1341b5;
+  --blue-light: #dbeafe;
+  --rpt-hdr:    #2563eb;
+  --rpt-sub:    #3b82f6;
+  --rpt-grp:    #eff6ff;
+  --green:      #0e9f6e;
+  --red:        #e02424;
+  --orange:     #d97706;
+  --gray-50:    #f9fafb;
+  --gray-100:   #f3f4f6;
+  --gray-200:   #e5e7eb;
+  --gray-300:   #d1d5db;
+  --gray-400:   #9ca3af;
+  --gray-500:   #6b7280;
+  --gray-600:   #4b5563;
+  --gray-700:   #374151;
+  --gray-800:   #1f2937;
+  --gray-900:   #111827;
+  --white:      #ffffff;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.06);
+  --shadow:     0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+  --radius:     8px;
+}
+
+/* ── Reset isolado — só dentro de .dsd-page ── */
+.dsd-page *, .dsd-page *::before, .dsd-page *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Page header ── */
+.dsd-page .page-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dsd-page .page-title { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+.dsd-page .page-sub   { font-size: 13px; color: var(--gray-500); margin-top: 3px; }
+
+/* ── Cards ── */
+.dsd-page .card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.dsd-page .card-title { font-size: 15px; font-weight: 600; color: var(--gray-800); margin-bottom: 14px; }
+
+/* ── Stats ── */
+.dsd-page .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.dsd-page .stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  padding: 18px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.dsd-page .stat-icon  { font-size: 28px; }
+.dsd-page .stat-value { font-size: 26px; font-weight: 700; color: var(--gray-900); }
+.dsd-page .stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; }
+
+/* ── Tables ── */
+.dsd-page .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+.dsd-page table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dsd-page table.data-table th {
+  background: var(--gray-50);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+.dsd-page table.data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+.dsd-page table.data-table tr:last-child td { border-bottom: none; }
+.dsd-page table.data-table tr:hover td     { background: var(--gray-50); }
+.dsd-page table.data-table td.num          { text-align: right; font-variant-numeric: tabular-nums; }
+.dsd-page table.data-table .row-section td { background: var(--gray-100); font-weight: 600; color: var(--gray-700); }
+.dsd-page table.data-table .row-total td   { background: var(--gray-100); font-weight: 700; }
+
+/* ── Buttons ── */
+.dsd-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: all .15s;
+  line-height: 1.4;
+}
+.dsd-page .btn-primary          { background: var(--blue);  color: #fff; border-color: var(--blue); }
+.dsd-page .btn-primary:hover    { background: var(--blue-dark); color: #fff; }
+.dsd-page .btn-success          { background: var(--green); color: #fff; }
+.dsd-page .btn-success:hover    { filter: brightness(.92); }
+.dsd-page .btn-danger           { background: var(--red);   color: #fff; }
+.dsd-page .btn-danger:hover     { filter: brightness(.92); }
+.dsd-page .btn-secondary        { background: var(--white); color: var(--gray-700); border-color: var(--gray-300); }
+.dsd-page .btn-secondary:hover  { background: var(--gray-50); }
+.dsd-page .btn-sm  { padding: 5px 10px; font-size: 12px; }
+.dsd-page .btn-xs  { padding: 3px 8px;  font-size: 11px; }
+
+/* ── Forms ── */
+.dsd-page .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.dsd-page .form-group { display: flex; flex-direction: column; gap: 5px; }
+.dsd-page .form-group.full { grid-column: 1 / -1; }
+.dsd-page label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+.dsd-page input[type=text],
+.dsd-page input[type=number],
+.dsd-page input[type=email],
+.dsd-page input[type=file],
+.dsd-page select,
+.dsd-page textarea {
+  padding: 8px 11px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--gray-800);
+  background: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.dsd-page input:focus,
+.dsd-page select:focus,
+.dsd-page textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+}
+.dsd-page textarea { resize: vertical; min-height: 80px; }
+.dsd-page .form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+.dsd-page .form-hint { font-size: 11.5px; color: var(--gray-400); }
+
+/* ── Alerts ── */
+.dsd-page .alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.dsd-page .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.dsd-page .alert-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.dsd-page .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.dsd-page .alert-close   { background: none; border: none; font-size: 18px; cursor: pointer; color: inherit; opacity: .6; }
+
+/* ── Badges ── */
+.dsd-page .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dsd-page .badge-blue   { background: var(--blue-light); color: var(--blue-dark); }
+.dsd-page .badge-green  { background: #d1fae5; color: #065f46; }
+.dsd-page .badge-orange { background: #fef3c7; color: #92400e; }
+.dsd-page .badge-red    { background: #fee2e2; color: #991b1b; }
+.dsd-page .badge-gray   { background: var(--gray-100); color: var(--gray-600); }
+
+/* ── Search / Filter bar ── */
+.dsd-page .filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.dsd-page .filter-bar input,
+.dsd-page .filter-bar select { flex: 1; min-width: 160px; max-width: 280px; }
+.dsd-page .filter-bar .btn   { flex-shrink: 0; }
+
+/* ── Progress bar ── */
+.dsd-page .progress-wrap { background: var(--gray-200); border-radius: 4px; height: 6px; overflow: hidden; }
+.dsd-page .progress-bar  { height: 100%; border-radius: 4px; transition: width .3s; }
+.dsd-page .progress-ok   { background: var(--green); }
+.dsd-page .progress-warn { background: var(--orange); }
+.dsd-page .progress-over { background: var(--red); }
+
+/* ── Report styles ── */
+.dsd-page .report-header { border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; padding-bottom: 10px; }
+.dsd-page .report-header h1 { font-size: 18px; color: var(--gray-800); }
+.dsd-page .report-meta { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+/* ── Inline number editable cells ── */
+.dsd-page .inline-num {
+  width: 70px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: right;
+  font-size: 13px;
+  background: transparent;
+  font-family: inherit;
+}
+.dsd-page .inline-num:hover,
+.dsd-page .inline-num:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  outline: none;
+}
+
+/* ── Tooltip ── */
+.dsd-page [data-tip] { position: relative; cursor: help; }
+.dsd-page [data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gray-800);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 999;
+}
+.dsd-page [data-tip]:hover::after { opacity: 1; }
+
+/* ── Spinner ── */
+.dsd-page .spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid var(--gray-300);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: dsd-spin .7s linear infinite;
+}
+@keyframes dsd-spin { to { transform: rotate(360deg); } }
+
+/* ── Tabs ── */
+.dsd-page .tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
+.dsd-page .tab-btn {
+  padding: 9px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-bottom: -2px;
+  transition: all .15s;
+}
+.dsd-page .tab-btn.active,
+.dsd-page .tab-btn:hover { color: var(--blue); border-bottom-color: var(--blue); }
+.dsd-page .tab-panel        { display: none; }
+.dsd-page .tab-panel.active { display: block; }
+
+/* ── Print ── */
+@media print {
+  .iq-topnav, .dsd-toolbar,
+  .dsd-page .filter-bar,
+  .dsd-page .btn,
+  .dsd-page .page-header .btn { display: none !important; }
+  .dsd-page table.data-table  { font-size: 11px; }
+}

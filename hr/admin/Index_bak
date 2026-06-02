@@ -1,0 +1,932 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/deqwww_teste.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/infodeq/session.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/infodeq/common.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/infodeq/hr/inc/functions.php';
+
+date_default_timezone_set('Europe/Lisbon');
+
+if (! ($_SESSION['user'] &&
+        ($_SESSION['user'] == 'up356946@up.pt' ||
+        $_SESSION['user'] == 'up444525@up.pt' ||
+        $_SESSION['user'] == 'up424064@up.pt'))) {
+
+    header('location:' . HTTP_DIR . '/infodeq/denied.php');
+}
+
+
+if (! empty($_POST)) {
+
+    if (isset($_POST["ExportType"])) {
+
+        $pdo = Database::connect();
+        $sth = $pdo->prepare(
+                'SELECT rds_colaborador.codigo, rds_colaborador.nome, rds_colaborador.email,rds_colaborador.telefone, rds_registo.datafim, rds_registo.datainicio, rds_registo.codigo, rds_grupo.grupo_pro  FROM rds_colaborador INNER JOIN rds_registo ON rds_colaborador.codigo=rds_registo.codigo INNER JOIN rds_grupo ON rds_registo.grupo=rds_grupo.grupoid where rds_colaborador.deleted!=1 AND rds_registo.status= "Ativo" ORDER BY rds_colaborador.nome ASC');
+
+        $sth->execute();
+
+        $data = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $filename = 'Registos_Ativos' . ".xls";
+        header("Content-Type: application/vnd.ms-excel;");
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        header("Content-Type: text/csv; charset=UTF-16");
+        ob_end_clean();
+        ExportFile($data);
+    }
+
+    try {
+
+        $timestamp = date('Y-m-d H:i:s');
+
+        $pdo = Database::connect();
+        // set the PDO error mode to exception
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        $_SESSION['ids'] = array_intersect_key($_POST['codigo'],
+                $_POST['selector']);
+
+        foreach ($_POST['selector'] as $id1 => $id1value) :
+
+            switch ($_POST['action']) {
+                case 'Inativo':
+                    $sql = 'UPDATE rds_registo SET status = "Inativo", datainativo = ? WHERE autoid = ?';
+                    break;
+                case 'Ativo':
+                    $sql = 'UPDATE rds_registo SET status = "Ativo", dataativo = ? WHERE autoid = ?';
+                    break;
+                case 'notify':
+                    $sql = 'UPDATE rds_registo SET datanotificacao = ?  WHERE autoid = ?';
+                    break;
+                case 'Pendente':
+                    $sql = 'UPDATE rds_registo SET status = "Ativo", dataativo = ? WHERE autoid = ?';
+                    break;
+            }
+
+            $q = $pdo->prepare($sql);
+            $q->execute(array(
+                    $timestamp,
+                    $id1
+            ));
+            $_SESSION['action'] = $_POST['action'];
+            Header('Location: ./email.php');
+        endforeach
+        ;
+    } catch (PDOException $e) {
+        echo $sql . "<br>" . $e->getMessage();
+    }
+}
+
+$pdo = Database::connect();
+$sth = $pdo->prepare(
+        'SELECT rds_colaborador.codigo, rds_colaborador.nome, rds_colaborador.email,rds_registo.autoid, rds_registo.datafim, rds_registo.datainicio, rds_registo.codigo,rds_registo.status, rds_grupo.grupo_pro, rds_registo.createdate, rds_registo.datacica, rds_registo.dataativo, rds_registo.datainativo FROM rds_colaborador INNER JOIN rds_registo ON rds_colaborador.codigo=rds_registo.codigo INNER JOIN rds_grupo ON rds_registo.grupo=rds_grupo.grupoid where rds_colaborador.deleted!=1 AND rds_registo.deleted!=1 AND rds_registo.status= ? ORDER BY rds_registo.createdate ASC');
+
+$sth_expire = $pdo->prepare(
+        'SELECT rds_colaborador.codigo, rds_colaborador.nome, rds_colaborador.email, rds_registo.autoid, rds_registo.datafim, rds_registo.datanotificacao, rds_registo.codigo,rds_registo.status, rds_grupo.grupo_pro FROM rds_colaborador INNER JOIN rds_registo ON rds_colaborador.codigo=rds_registo.codigo INNER JOIN rds_grupo ON rds_registo.grupo=rds_grupo.grupoid where rds_colaborador.deleted!=1 AND rds_registo.status= ? AND rds_registo.datafim <= ?  ORDER BY rds_grupo.grupoid, rds_colaborador.nome ASC');
+
+$data = $sth->fetchAll(PDO::FETCH_ASSOC);
+$sth->execute([
+        'Novo'
+]);
+$newrecords = $sth->rowCount();
+$sth->execute([
+        'Pendente'
+]);
+$pendentrecords = $sth->rowCount();
+$sth->execute([
+        'Ativo'
+]);
+$activerecords = $sth->rowCount();
+$atual = date("Y/m/d");
+$final = date("Y/m/d", strtotime("+1 month"));
+$sth_expire->execute([
+        'Ativo',
+        $final
+]);
+$expirerecords = $sth_expire->rowCount();
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<link rel="apple-touch-icon" sizes="180x180"
+	href="<?Php echo HTTP_DIR?>/infodeq/img/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32"
+	href="<?Php echo HTTP_DIR?>/infodeq/img/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16"
+	href="<?Php echo HTTP_DIR?>/infodeq/img/favicon/favicon-16x16.png">
+<link rel="manifest"
+	href="<?Php echo HTTP_DIR?>/infodeq/img/favicon//site.webmanifest">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">
+
+<title>InfoDEQ</title>
+
+<!-- Bootstrap core CSS-->
+<link
+	href="<?Php echo HTTP_DIR?>/infodeq/vendor/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+
+
+<!-- Custom fonts for this template-->
+<link
+	href="<?Php echo HTTP_DIR?>/infodeq/vendor/fontawesome-free/css/all.min.css"
+	rel="stylesheet" type="text/css">
+
+<!-- Page level plugin CSS-->
+<link
+	href="<?Php echo HTTP_DIR?>/infodeq/vendor/datatables/dataTables.bootstrap4.css"
+	rel="stylesheet">
+
+
+<!-- Custom styles for this template-->
+<link href="<?Php echo HTTP_DIR?>/infodeq/css/custom.css"
+	rel="stylesheet">
+</head>
+
+<body id="page-top">				
+  
+	<?php include (ROOT_DIR.'/infodeq/inc/navbar.inc');?>
+
+    <div id="wrapper">
+
+		<!-- Sidebar -->
+	<?php include (ROOT_DIR.'/infodeq/inc/sidebarmenu.inc');?>
+		<div id="content-wrapper">
+			<div class="container-fluid">
+				<!-- Breadcrumbs-->
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item "><h5>Registo de colaboradores</h5></li>
+				</ol>
+
+				<!-- Icon Cards-->
+				<div class="row">
+					<div class="col-xl-3 col-sm-6 mb-3">
+						<div class="card text-white text-center bg-success o-hidden h-100">
+							<div class="card-body">
+								<div class="card-body-icon">
+									<i class="fas fa-fw fa-file-alt"></i>
+								</div>
+								<div class="mr-5"><?Php echo  $newrecords;?> novos registo(s)!</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6 mb-3">
+						<div class="card text-white text-center bg-warning o-hidden h-100">
+							<div class="card-body">
+								<div class="card-body-icon">
+									<i class="fas fa-fw fa-list"></i>
+								</div>
+								<div class="mr-5"><?Php echo $pendentrecords;?> registo(s) pendentes!</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6 mb-3">
+						<div class="card text-white bg-danger text-center o-hidden h-100">
+							<div class="card-body">
+								<div class="card-body-icon">
+									<i class="fas fa-fw fa-exclamation-triangle"></i>
+								</div>
+								<div class="mr-5"><?Php echo $expirerecords ;?> registo(s) a caducar!</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6 mb-3">
+						<div class="card text-white bg-primary text-center o-hidden h-100">
+							<div class="card-body">
+								<div class="card-body-icon">
+									<i class="fas fa-fw fa-list"></i>
+								</div>
+								<div class="mr-5"><?Php echo $activerecords;?> registo(s) ativo(s)!</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="card mb-3">
+					<div class="card-header">
+						<i class="far fa-id-card"></i> Investigadores/Colaboradores DEQ
+					</div>
+					<div class="card-body">
+						<!-- page content -->
+						<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+							<li class="nav-item btn-dark"><a
+								class="nav-link active text-white" id="pills-new-tab"
+								data-toggle="pill" href="#pills-new" role="tab"
+								aria-controls="pills-new" aria-selected="true">Novos registos</a>
+							</li>
+							<li class="nav-item btn-dark"><a class="nav-link text-white"
+								id="pills-pendent-tab" data-toggle="pill" href="#pills-pendent"
+								role="tab" aria-controls="pills-pendent" aria-selected="false">Pendentes</a>
+							</li>
+							<li class="nav-item btn-dark"><a class="nav-link text-white"
+								id="pills-expire-tab" data-toggle="pill" href="#pills-expire"
+								role="tab" aria-controls="pills-expire" aria-selected="false">A
+									expirar</a></li>
+							<li class="nav-item btn-dark"><a class="nav-link text-white"
+								id="pills-active-tab" data-toggle="pill" href="#pills-active"
+								role="tab" aria-controls="pills-active" aria-selected="false">Ativos</a>
+							</li>
+							<li class="nav-item btn-dark"><a class="nav-link text-white"
+								id="pills-inactive-tab" data-toggle="pill"
+								href="#pills-inactive" role="tab" aria-controls="pills-inactive"
+								aria-selected="false">Inativos</a></li>
+						</ul>
+						<div class="tab-content" id="pills-tabContent">
+							<div class="tab-pane fade show active" id="pills-new"
+								role="tabpanel" aria-labelledby="pills-new-tab">
+								<div class="row ">
+									<div class="col-md-12 col-xs-12">
+										<form action='index.php' id='formnovoregisto' method='post'>
+											<div class="d-none">
+												<input name="action" value="Pendente"></input>
+											</div>
+											<table class="table table-striped table-bordered table-sm "
+												id="new">
+												<thead>
+													<tr>
+														<th width="1%" class="text-left"><input name="selector[]"
+															type="checkbox" value=""></th>
+														<th>Código</th>
+														<th>Nome</th>
+														<th>Email</th>
+														<th>Grupo Profissional</th>
+														<th>Início</th>
+														<th>Fim</th>
+														<th>Estado</th>
+														<th>Registo</th>
+														<th width="1%">Detalhe</th>
+													</tr>
+												</thead>
+												<tbody>
+													<?php
+            $row = array();
+            if ($sth->execute([
+                    'Novo'
+            ])) {
+                while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+                    echo '<tr data-row-id="' . $row['codigo'] . '">';
+                    // echo '<td class="text-center"><input type="checkbox"
+                    // name="users[]" value="'.$row["codigo"].'" ></td>';
+                    echo '<td class="text-left"><input name="selector[' .
+                            $row['autoid'] . ']" type="checkbox"></td>';
+                    echo '<td>' . $row['codigo'] .
+                            '<input type="hidden"  name="codigo[' .
+                            $row['autoid'] . ']" value="' . $row['codigo'] .
+                            '" ></td>';
+                    echo '<td>' . $row['nome'] . '</td>';
+                    echo '<td>' . $row['email'] . '</td>';
+                    echo '<td>' . $row['grupo_pro'] . '</td>';
+                    echo '<td>' . $row['datainicio'] . '</td>';
+                    echo '<td>' . $row['datafim'] . '</td>';
+                    echo '<td>' . $row['status'] . '</td>';
+                    echo '<td>' . date("Y-m-d", $row['createdate']) . '</td>';
+                    echo '<td class="text-center">';
+                    $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
+                    echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                            $row['codigo'] .
+                            '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                            $link . $row['codigo'] .
+                            '"><i class="fas fa-info fa-sm"></i> </a>';
+                    echo ' ';
+                    echo '</td>';
+                    echo '</tr>';
+                }
+            }
+            Database::disconnect();
+            ?>
+												</tbody>
+												<tfooter>
+												<tr class="bg-white">
+													<td colspan="10" class="right "><span class="text-dark"><b>Com
+																os selecionados:</b></span> <a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="newsubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Solicitar
+															acessos</a></td>
+												</tr>
+												</tfooter>
+											</table>
+										</form>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade" id="pills-pendent" role="tabpanel"
+								aria-labelledby="pills-pendent-tab">
+								<div class="row ">
+									<div class="col-md-12 col-xs-12">
+										<form action='index.php' id='formpendentes' method='post'>
+											<div class="d-none">
+												<input name="action" value="Ativo"></input>
+											</div>
+											<table class="table table-striped table-bordered table-sm "
+												id="pendent" style="width: 100%">
+												<thead>
+													<tr>
+														<th width="1%" class="text-left"><input name="selector[]"
+															type="checkbox" value=""></th>
+														<th>Código</th>
+														<th>Nome</th>
+														<th>Email</th>
+														<th>Grupo Profissional</th>
+														<th>Pedido ao CICA</th>
+														<th>Estado</Th>
+														<th width="1%">Detalhe</th>
+													</tr>
+												</thead>
+												<tbody>
+													<?php
+            $row = array();
+            if ($sth->execute([
+                    'Pendente'
+            ])) {
+                while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+                    echo '<tr data-row-id="' . $row['codigo'] . '">';
+                    echo '<td class="text-left"><input name="selector[' .
+                            $row['autoid'] . ']" type="checkbox"></td>';
+                    echo '<td>' . $row['codigo'] .
+                            '<input type="hidden"  name="codigo[' .
+                            $row['autoid'] . ']" value="' . $row['codigo'] .
+                            '" ></td>';
+                    echo '<td>' . $row['nome'] . '</td>';
+                    echo '<td>' . $row['email'] . '</td>';
+                    echo '<td>' . $row['grupo_pro'] . '</td>';
+                    echo '<td>' . $row['datacica'] . '</td>';
+                    echo '<td>' . $row['status'] . '</td>';
+                    echo '<td class="text-center">';
+                    $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
+                    echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                            $row['codigo'] .
+                            '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                            $link . $row['codigo'] .
+                            '"><i class="fas fa-info fa-sm"></i> </a></td>';
+
+                    echo '</tr>';
+                }
+            }
+            Database::disconnect();
+            ?>
+												</tbody>
+												<tfooter>
+												<tr class="bg-white">
+													<td colspan="9" class="right "><span class="text-dark"><b>Com
+																os selecionados:</b></span> <a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="pendentesubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Ativar
+															registo</a></td>
+												</tr>
+												</tfooter>
+											</table>
+										</form>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade " id="pills-expire" role="tabpanel"
+								aria-labelledby="pills-expire-tab">
+								<div class="row ">
+									<div class="col-md-12 col-xs-12">   
+									<?php echo '<div class=" "> <p class="text-white bg-dark p-1">Registos ativos com data fim <span class="text-warning">anterior a '.formatDate('d-m-Y',$final).'</span></p></div>';  ?>
+									<form action='index.php' id='formexpirados' method='post'>
+											<div class="d-none">
+												<input id="action" name="action" value="notify"></input>
+											</div>
+											<table class="table table-striped table-bordered table-sm "
+												id="expire" style="width: 100%">
+												<thead>
+													<tr>
+														<th width="1%" class="text-left"><input name="selector[]"
+															type="checkbox" value=""></th>
+														<th>Código</th>
+														<th>Nome</th>
+														<th>Email</th>
+														<th class="filter-select filter-exact"
+															data-placeholder="Escolha uma categoria">Categoria</th>
+														<th>Fim</th>
+														<th>Notificação</th>
+														<th>Estado</th>
+														<th width="1%">Detalhe</th>
+													</tr>
+												</thead>
+												<tbody>
+												<?php
+            $row = array();
+            if ($sth_expire->execute([
+                    'Ativo',
+                    $final
+            ])) {
+                while ($row = $sth_expire->fetch(PDO::FETCH_ASSOC)) {
+                    $date = formatDate('Y-m-d', $row['datanotificacao']);
+                    echo '<tr data-row-id="' . $row['codigo'] . '">';
+                    echo '<td class="text-left"><input name="selector[' .
+                            $row['autoid'] . ']" type="checkbox"></td>';
+                    echo '<td>' . $row['codigo'] .
+                            '<input type="hidden"  name="codigo[' .
+                            $row['autoid'] . ']" value="' . $row['codigo'] .
+                            '" ></td>';
+                    echo '<td>' . $row['nome'] . '</td>';
+                    echo '<td>' . $row['email'] . '</td>';
+                    echo '<td>' . $row['grupo_pro'] . '</td>';
+                    echo '<td>' . $row['datafim'] . '</td>';
+                    echo '<td>' . $date . '</td>';
+                    echo '<td>' . $row['status'] . '</td>';
+                    echo '<td class="text-center">';
+                    $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
+                    echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                            $row['codigo'] .
+                            '"><i class="far fa-eye fa-sm" ></i></a>
+															<a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                            $link . $row['codigo'] .
+                            '"><i class="fas fa-info fa-sm"></i> </a></td>';
+                    echo '</tr>';
+                }
+            }
+            Database::disconnect();
+            ?>
+									</form>
+												</tbody>
+												<tfooter>
+												<tr class="bg-white">
+													<td colspan="9" class="right "><span class="text-dark"><b>Com
+																os selecionados:</b></span> <a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="expiradossubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Notificar</a>
+														<a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="ativossubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Inativar
+															registo</a></td>
+												</tr>
+												</tfooter>
+											</table>
+									
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade" id="pills-active" role="tabpanel"
+								aria-labelledby="pills-active-tab">
+								<div class="row ">
+									<div class="col-md-12 col-xs-12">
+										<form action='index.php' id='formativos' method='post'>
+											<div class="d-none">
+												<input name="action" value="Inativo"></input>
+											</div>
+											<table class="table table-striped table-bordered table-sm "
+												id="active">
+												<thead>
+													<tr>
+														<td class="text-right" colspan="9">
+															<form action="index.php" method="post" id="export-form">
+																<input type="submit"
+																	class="btn btn-info  btn-sm text-white"
+																	value='Exportar lista de registos ativos'
+																	id='hidden-type' name='ExportType' />
+															</form>
+														</td>
+													</tr>
+													<th class="text-left"><input type="checkbox" value=""></th>
+													<th>Código</th>
+													<th>Nome</th>
+													<th>Email</th>
+													<th class="filter-select filter-exact"
+														data-placeholder="Escolha uma categoria">Categoria</th>
+													<th width=9%>Início</th>
+													<th width=9%>Fim</th>
+													<th>Ativo desde</th>
+													<th width="1%">Detalhe</th>
+													</tr>
+												</thead>
+												<tbody>
+												<?php
+            if ($sth->execute([
+                    'Ativo'
+            ])) {
+                while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+                    echo '<tr data-row-id="' . $row['codigo'] . '">';
+                    // echo '<td class="text-center"><input type="checkbox"
+                    // name="users[]" value="'.$row["codigo"].'" ></td>';
+                    echo '<td class="text-left"><input name="selector[' .
+                            $row['autoid'] . ']" type="checkbox"></td>';
+                    echo '<td>' . $row['codigo'] .
+                            '<input type="hidden"  name="codigo[' .
+                            $row['autoid'] . ']" value="' . $row['codigo'] .
+                            '" ></td>';
+                    echo '<td>' . $row['nome'] . '</td>';
+                    echo '<td>' . $row['email'] . '</td>';
+                    echo '<td>' . $row['grupo_pro'] . '</td>';
+                    echo '<td>' . $row['datainicio'] . '</td>';
+                    echo '<td>' . $row['datafim'] . '</td>';
+                    echo '<td>' . formatDate('Y-m-d', $row['dataativo']) .
+                            '</td>';
+                    echo '<td class="text-center">';
+                    $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
+                    echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                            $row['codigo'] .
+                            '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                            $link . $row['codigo'] .
+                            '"><i class="fas fa-info fa-sm"></i> </a> ';
+                    echo ' ';
+                    echo '</td>';
+                    echo '</tr>';
+                }
+            }
+            Database::disconnect();
+            ?>
+											</form>
+												</tbody>
+												<tfooter>
+												<tr class="bg-white">
+													<td colspan="9" class="right "><span class="text-dark"><b>Com
+																os selecionados:</b></span> <a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="ativossubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Inativar
+															registo</a></td>
+												</tr>
+												</tfooter>
+											</table>
+									
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade" id="pills-inactive" role="tabpanel"
+								aria-labelledby="pills-inactive-tab">
+								<div class="row ">
+									<div class="col-md-12 col-xs-12">
+										<form action='index.php' id='forminativos' method='post'>
+											<div class="d-none">
+												<input name="action" value="Ativo"></input>
+											</div>
+											<table class="table table-striped table-bordered table-sm "
+												id="inactive">
+												<thead>
+													<tr>
+														<!--<th></th>-->
+														<th width="1%" class="text-left"><input name="selector[]"
+															type="checkbox" value=""></th>
+														<th>Código</th>
+														<th>Nome</th>
+														<th>Email</th>
+														<th class="filter-select filter-exact"
+															data-placeholder="Escolha uma categoria">Categoria</th>
+														<th width=9%>Início</th>
+														<th width=9%>Fim</th>
+														<th>Inativo desde</th>
+														<th width="1%">Detalhe</th>
+													</tr>
+												</thead>
+												<tbody>
+												<?php
+            $row = array();
+            if ($sth->execute([
+                    'Inativo'
+            ])) {
+                while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+                    echo '<tr data-row-id="' . $row['codigo'] . '">';
+                    // echo '<td class="text-center"><input type="checkbox"
+                    // name="users[]" value="'.$row["codigo"].'" ></td>';
+                    echo '<td class="text-left"><input name="selector[' .
+                            $row['autoid'] . ']" type="checkbox"></td>';
+                    echo '<td>' . $row['codigo'] .
+                            '<input type="hidden"  name="codigo[' .
+                            $row['autoid'] . ']" value="' . $row['codigo'] .
+                            '" ></td>';
+                    echo '<td>' . $row['nome'] . '</td>';
+                    echo '<td>' . $row['email'] . '</td>';
+                    echo '<td>' . $row['grupo_pro'] . '</td>';
+                    echo '<td>' . $row['datainicio'] . '</td>';
+                    echo '<td>' . $row['datafim'] . '</td>';
+                    echo '<td>' . formatDate('Y-m-d', $row['datainativo']) .
+                            '</td>';
+                    echo '<td class="text-center">';
+                    $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
+                    echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                            $row['codigo'] .
+                            '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                            $link . $row['codigo'] .
+                            '"><i class="fas fa-info fa-sm"></i> </a>';
+                    echo ' ';
+                    echo '</td>';
+                    echo '</tr>';
+                }
+            }
+            Database::disconnect();
+            ?>
+											</form>
+												</tbody>
+												<tfooter>
+												<tr class="bg-white">
+													<td colspan="9" class="right "><span class="text-dark"><b>Com
+																os selecionados:</b></span> <a type="button" name="btn"
+														class="pl-2 text-info batchaction " href="#"
+														id="inativossubmitBtn" data-toggle="modal"
+														data-target="#modalaction" class="btn btn-default">Ativar
+															registo</a></td>
+												</tr>
+												</tfooter>
+											</table>
+									
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<!-- Logout Modal-->
+	<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog"
+		aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Terminar a sessão?</h5>
+					<button class="close" type="button" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">Escolha "Sair" se pretender terminar a atual
+					sessão.</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" type="button"
+						data-dismiss="modal">Cancelar</button>
+					<a class="btn btn-info" href="../../logout.php">Sair</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+
+	<!-- Action Modal -->
+	<div class="modal fade" id="modalaction" tabindex="-1" role="dialog"
+		aria-labelledby="ativarlabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="ativarlabel">
+						<span class="title-text"></span>
+					</h5>
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<p class="body-text"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-dismiss="modal">Não</button>
+					<button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	</div>
+	</div>
+
+	<!-- Scroll to Top Button-->
+	<a class="scroll-to-top rounded" href="#page-top"> <i
+		class="fas fa-angle-up"></i>
+	</a>
+
+	<!-- Bootstrap core JavaScript-->
+	<script src="<?Php echo HTTP_DIR?>/infodeq/vendor/jquery/jquery.min.js"></script>
+	<script
+		src="<?Php echo HTTP_DIR?>/infodeq/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Core plugin JavaScript-->
+	<script
+		src="<?Php echo HTTP_DIR?>/infodeq/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+	<script
+		src="<?Php echo HTTP_DIR?>/infodeq/vendor/datatables/jquery.dataTables.js"></script>
+	<script
+		src="<?Php echo HTTP_DIR?>/infodeq/vendor/datatables/dataTables.bootstrap4.js"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.4.0/bootbox.min.js"></script>
+
+	<script>
+	  
+    //datatbales
+    $(document).ready(function() {
+    	var activeTab = 'pills-new';
+    	var id ='';
+    	const form='';
+    
+    	$('#new').DataTable({
+    	   "autoWidth": false,	
+    	    "order": [[ 8, "desc" ]],
+    	     "columnDefs": [
+    	        {
+    	            "targets": [ 7 ],
+    	            "visible": false,
+    	            "searchable": false
+    	        },
+    
+    	        {
+    	            "targets": [ 0,9 ],
+    	            "visible": true,
+    	            "orderable": false
+    	        }]			       
+    	});
+    
+    	$('#pendent').DataTable({
+    	"autoWidth": false,	
+    	"language": {
+    	        processing:     "Traitement en cours...",
+    	        search:         "Pesquisar",
+    	        lengthMenu:    "Mostrar _MENU_ registos",
+    	        info:           "A mostrar registos de _START_ a _END_ de _TOTAL_",
+    	        infoEmpty:      "",
+    	        infoFiltered:   "(filtrado de _MAX_ registos)",
+    	        infoPostFix:    "",
+    	        loadingRecords: "Chargement en cours...",
+    	        zeroRecords:    "Sem registos a mostrar",
+    	        emptyTable:     "Nenhum registo disponível",
+    	        paginate: {
+    	            first:      "Primeiro",
+    	            previous:   "Anterior",
+    	            next:       "Próximo",
+    	            last:       "Último"
+    	        },
+    	        aria: {
+    	            sortAscending:  ": activer pour trier la colonne par ordre croissant",
+    	            sortDescending: ": activer pour trier la colonne par ordre décroissant"
+    	        }
+    	    },	
+    	    			   
+    		   "order": [[ 5, "DESC" ]],
+    	     "columnDefs": [
+    	        {
+    	            "targets": [ 6 ],
+    	            "visible": false,
+    	            "searchable": false
+    	        },
+    
+    	        {
+    	            "targets": [ 0 ],
+    	            "visible": true,
+    	            "orderable": false
+    	        }]
+    	});
+    
+    	$('#expire').DataTable({
+    			"order": [[ 5, "asc" ]],
+    			"autoWidth": false,	
+    			"columnDefs": [
+    	        {
+    	            "targets": [ 7 ],
+    	            "visible": false,
+    	            "searchable": false
+    
+    	        },
+    
+    	        {
+    	            "targets": [ 0 ],
+    	            "visible": true,
+    	            "orderable": false
+    	        }]
+    	});
+    
+    	$('#active').DataTable({
+      "autoWidth": false,	
+    	"language": {
+    
+    	        search:         "Pesquisar",
+    	        lengthMenu:    "Mostrar _MENU_ registos",
+    	        info:           "A mostrar registos de _START_ a _END_ de _TOTAL_",
+    	        infoEmpty:      "",
+    	        infoFiltered:   "(filtrado de _MAX_ registos)",
+    	        infoPostFix:    "",
+    	        loadingRecords: "Chargement en cours...",
+    	        zeroRecords:    "Sem registos a mostrar",
+    	        emptyTable:     "Aucune donnée disponible dans le tableau",
+    	        paginate: {
+    	            first:      "Primeiro",
+    	            previous:   "Anterior",
+    	            next:       "Próximo",
+    	            last:       "Último"
+    	        },
+    	        aria: {
+    	            sortAscending:  ": activer pour trier la colonne par ordre croissant",
+    	            sortDescending: ": activer pour trier la colonne par ordre décroissant"
+    	        }
+    	    },
+    
+    
+    	    "order": [[ 2, "asc" ]],
+    	     "columnDefs": [
+    	        {
+    	            "targets": [ 6 ],
+    	            "visible": true,
+    	            "searchable": true
+    	        },
+    		
+    	        {
+    	            "targets": [ 0 ],
+    	            "visible": true,
+    	            "orderable": false
+    	        }]				        
+    	});
+    
+    	$('#inactive').DataTable({
+    		"autoWidth": false,	
+    		"order": [[ 6, "desc" ]],
+    	     "columnDefs": [
+    	        {
+    	            "targets": [ 6 ],
+    	            "visible": true,
+    	            "searchable": true
+    	        }],
+    	     "columnDefs": [
+    	        {
+    	            "targets": [ 0 ],
+    	            "visible": true,
+    	            "orderable": false
+    	        }]				        
+    	});
+    
+    $('a[data-toggle="pill"]').on('show.bs.tab', function(e) {
+        localStorage.setItem('activeTab', $(e.target).attr('href'));
+    });
+    var activeTab = localStorage.getItem('activeTab');
+    if(activeTab){
+        $('#pills-tab a[href="' + activeTab + '"]').tab('show');
+    }
+    });
+    
+    $(document).on('click', '.batchaction', function() {
+        var atLeastOneIsChecked = $('input:checked').length > 0;
+        $('.modal-footer').html('<button type="button" id ="bdismiss"class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+        if (atLeastOneIsChecked = $('input:checked').length) {
+        	id = $(this).parents('form').attr('id');
+        	optionid = $(this).attr('id');
+        	id = '#' + id;
+        } else {
+    		id = 'noselect';
+        }
+    
+        switch(optionid) {
+            case 'newsubmitBtn': 
+              $('.body-text').html('<p>Tem a certeza que pretende solicitar acessos para os regitos selecionados?</p>');
+    					$('.title-text').html('Solicitar acesso'); 
+              break;
+            case 'pendentesubmitBtn':
+              $('.body-text').html('<p>Tem a certeza que pretende ativar os regitos selecionados?</p>');
+    					$('.title-text').html('Ativar registo'); 
+              break;
+    
+    				case 'expiradossubmitBtn':
+              $('.body-text').html('<p>Tem a certeza que pretende enviar notificação de acesso a expirar para os regitos selecionados?</p>');
+    					$('.title-text').html('Notificar'); 
+    					$('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+    					id = '#formexpirados';
+    					break;
+    
+    				case 'ativossubmitBtn':
+              $('.body-text').html('<p>Tem a certeza que pretende tornar inativos os registos selecionados?</p>');
+    					$('.title-text').html('Inativar Registo');
+    					$('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+    					$('#action').attr('value', 'Inativo');
+    					break;
+    				
+    				case 'inativossubmitBtn':
+              $('.body-text').html('<p>Tem a certeza que pretende ativar os registos selecionados?</p>');
+    					$('.title-text').html('Ativar registo'); 
+    					$('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+    					break;
+    				
+    				case 'noselect':
+              $('.body-text').html('<p>Nenhum registo selecionado.</p>');
+    					$('.title-text').html('Erro!'); 
+    					$('.modal-footer').html('<button type="button" id ="bdismiss"class="btn btn-secondary" data-dismiss="modal">Cancelar</button>');
+    					break;
+    				default:
+            console.log('No id');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+        }
+    });
+    
+    $(document).on("click", "#bsubmit", function(e) {
+    	e.preventDefault();
+    	$(id).submit()
+    });
+	</script>
+</body>
+</html>
+

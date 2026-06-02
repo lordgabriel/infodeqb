@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -i \"PHP\\\\|error\\\\|infodeq\\\\|deqwww\" \"C:\\\\xampp\\\\apache\\\\logs\\\\error.log\" | tail -20)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\infodeq\" -Directory | ForEach-Object { \"$\\($_.Name\\)/\" })",
+      "Bash(grep -rL \"inc/header.php\" C:/xampp/htdocs/infodeq --include=\"*.php\" --max-depth=1)",
+      "Bash(grep -rl \"<!DOCTYPE\" C:/xampp/htdocs/infodeq --include=\"*.php\" --max-depth=1)",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(sed -i 's|header\\(\"location:servdocadd.php\"\\)|header\\(\"location:add.php\"\\)|g' C:/xampp/htdocs/infodeq/servdoc/index.php)",
+      "Bash(sed -i 's|header\\(\"Location: error.php\"\\)|header\\(\"Location: \".HTTP_DIR.\"/infodeq/error.php\"\\)|g' C:/xampp/htdocs/infodeq/servdoc/index.php)",
+      "Bash(sed -i 's|action=\"servdoc.php\"|action=\"index.php\"|g' C:/xampp/htdocs/infodeq/servdoc/index.php)",
+      "Bash(sed -i \"s|header\\(\\\\\"location:./servdoc.php\\\\\"\\)|header\\(\\\\\"location:./index.php\\\\\"\\)|g\" C:/xampp/htdocs/infodeq/servdoc/add.php)",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\infodeq\\\\die\")",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\infodeq\\\\gestao\")",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\infodeq\\\\respostas\")",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\infodeq\\\\adi\")",
+      "Bash(grep -i \"#[0-9a-f]\\\\{3,6\\\\}\")"
+    ]
+  }
+}
