@@ -25,8 +25,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             <div class="card-header">
               <i class="fas fa-table"></i>
               Estudantes de mobilidade registados
-              <a class ="text-white" href="index.php"><button type="button" class="btn btn-secondary float-right col-md-1 "><?= t('NAV_HOME') ?></button></a>
-              <a class ="text-white" href="add.php"><button type="button" class="btn btn-secondary float-right col-md-1 mr-2"><?= t('MOBILE_NEW_RECORD') ?></button></a>
+              <a class ="text-white" href="index.php"><button type="button" class="btn btn-secondary float-end col-md-1 "><?= t('NAV_HOME') ?></button></a>
+              <a class ="text-white" href="add.php"><button type="button" class="btn btn-secondary float-end col-md-1 me-2"><?= t('MOBILE_NEW_RECORD') ?></button></a>
             </div>
 
 

@@ -341,9 +341,9 @@ $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slat
       <div class="iq-module-title">Preferência Serviço Docente</div>
       <div class="iq-module-sub">
         <?php if ($myServdocSubm): ?>
-          <i class="fas fa-check-circle mr-1" style="color:#0e9f6e"></i>Preferências submetidas
+          <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i>Preferências submetidas
         <?php else: ?>
-          <i class="fas fa-exclamation-circle mr-1" style="color:#d97706"></i>Por preencher
+          <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i>Por preencher
         <?php endif; ?>
       </div>
     </div>
@@ -358,9 +358,9 @@ $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slat
       <div class="iq-module-title">Áreas Disciplinares</div>
       <div class="iq-module-sub">
         <?php if ($myAreasSubm): ?>
-          <i class="fas fa-check-circle mr-1" style="color:#0e9f6e"></i>Resposta submetida
+          <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i>Resposta submetida
         <?php else: ?>
-          <i class="fas fa-exclamation-circle mr-1" style="color:#d97706"></i>Por preencher
+          <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i>Por preencher
         <?php endif; ?>
       </div>
     </div>

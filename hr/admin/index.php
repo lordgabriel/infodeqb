@@ -595,7 +595,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
 				<div class="iq-page-header">
-				  <h1><i class="fas fa-id-card fa-sm mr-2 text-muted"></i>Investigadores e Colaboradores</h1>
+				  <h1><i class="fas fa-id-card fa-sm me-2 text-muted"></i>Investigadores e Colaboradores</h1>
 				</div>
 
 				<div class="iq-stat-grid">
@@ -637,14 +637,14 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 						<!-- page content -->
 						<?php if (!empty($_SESSION['val_info'])): ?>
 				<div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
-				  <i class="fas fa-info-circle mr-1"></i><?= htmlspecialchars($_SESSION['val_info']) ?>
-				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <i class="fas fa-info-circle me-1"></i><?= htmlspecialchars($_SESSION['val_info']) ?>
+				  <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 				</div>
 				<?php unset($_SESSION['val_info']); endif; ?>
 				<?php if (!empty($_SESSION['pedido_err'])): ?>
 				<div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
-				  <i class="fas fa-exclamation-triangle mr-1"></i><?= htmlspecialchars($_SESSION['pedido_err']) ?>
-				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <i class="fas fa-exclamation-triangle me-1"></i><?= htmlspecialchars($_SESSION['pedido_err']) ?>
+				  <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 				</div>
 				<?php unset($_SESSION['pedido_err']); endif; ?>
 				<!-- ── Filtro por laboratório ──────────────────────────────────────── -->
@@ -653,7 +653,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
     <!-- Etiqueta -->
     <span style="white-space:nowrap;font-weight:600">
-      <i class="fas fa-filter fa-sm text-muted mr-1"></i>Filtro por laboratório:
+      <i class="fas fa-filter fa-sm text-muted me-1"></i>Filtro por laboratório:
     </span>
 
     <!-- Botão que abre o painel (não é Bootstrap dropdown) -->
@@ -661,9 +661,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
       <button type="button" id="labPanelBtn"
               class="btn btn-sm btn-outline-secondary"
               style="min-width:220px;text-align:left">
-        <i class="fas fa-flask fa-xs mr-1 text-muted"></i>
+        <i class="fas fa-flask fa-xs me-1 text-muted"></i>
         <span id="labBtnLabel">Todos os laboratórios</span>
-        <i class="fas fa-chevron-down fa-xs ml-1 text-muted" style="float:right;margin-top:3px"></i>
+        <i class="fas fa-chevron-down fa-xs ms-1 text-muted" style="float:right;margin-top:3px"></i>
       </button>
 
       <!-- Painel custom — fica aberto até o utilizador clicar Aplicar/Fechar/fora -->
@@ -724,7 +724,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
     <!-- Repor (só visível com filtro activo) -->
     <button type="button" id="labClearBtn" class="btn btn-sm btn-outline-danger"
             style="display:none">
-      <i class="fas fa-times fa-xs mr-1"></i>Repor
+      <i class="fas fa-times fa-xs me-1"></i>Repor
     </button>
 
     <!-- Modo OU / E (só com 2+ labs) -->
@@ -743,7 +743,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
       <input type="hidden" name="tab"       id="labExportTab"  value="active">
       <input type="hidden" name="labs_json" id="labExportLabs" value="[]">
       <button type="submit" id="labExportBtn" class="btn btn-sm btn-outline-success">
-        <i class="fas fa-file-excel fa-sm mr-1"></i>Exportar
+        <i class="fas fa-file-excel fa-sm me-1"></i>Exportar
       </button>
     </form>
 
@@ -753,40 +753,40 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
 							<li class="nav-item btn-dark"><a
 								class="nav-link active text-white" id="pills-new-tab"
-								data-toggle="pill" href="#pills-new" role="tab"
+								data-bs-toggle="pill" href="#pills-new" role="tab"
 								aria-controls="pills-new" aria-selected="true">
 								Novos registos
 								<?php if ($newrecords > 0): ?>
-								<span class="badge badge-light ml-1"><?= $newrecords ?></span>
+								<span class="badge badge-light ms-1"><?= $newrecords ?></span>
 								<?php endif; ?>
 							</a></li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white"
-								id="pills-pendent-tab" data-toggle="pill" href="#pills-pendent"
+								id="pills-pendent-tab" data-bs-toggle="pill" href="#pills-pendent"
 								role="tab" aria-controls="pills-pendent" aria-selected="false">
 								Pendentes
 								<?php if ($pendentrecords > 0): ?>
-								<span class="badge badge-warning ml-1"><?= $pendentrecords ?></span>
+								<span class="badge badge-warning ms-1"><?= $pendentrecords ?></span>
 								<?php endif; ?>
 							</a></li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white"
-								id="pills-expire-tab" data-toggle="pill" href="#pills-expire"
+								id="pills-expire-tab" data-bs-toggle="pill" href="#pills-expire"
 								role="tab" aria-controls="pills-expire" aria-selected="false">A
 									expirar</a></li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white"
-								id="pills-active-tab" data-toggle="pill" href="#pills-active"
+								id="pills-active-tab" data-bs-toggle="pill" href="#pills-active"
 								role="tab" aria-controls="pills-active" aria-selected="false">Ativos</a>
 							</li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white"
-								id="pills-inactive-tab" data-toggle="pill"
+								id="pills-inactive-tab" data-bs-toggle="pill"
 								href="#pills-inactive" role="tab" aria-controls="pills-inactive"
 								aria-selected="false">Inativos</a></li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white <?= $pedidosCount > 0 ? 'position-relative' : '' ?>"
-								id="pills-pedidos-tab" data-toggle="pill"
+								id="pills-pedidos-tab" data-bs-toggle="pill"
 								href="#pills-pedidos" role="tab" aria-controls="pills-pedidos"
 								aria-selected="false">
 								Pedidos
 								<?php if ($pedidosCount > 0): ?>
-								<span class="badge badge-warning ml-1"><?= $pedidosCount ?></span>
+								<span class="badge badge-warning ms-1"><?= $pedidosCount ?></span>
 								<?php endif; ?>
 							</a></li>
 						</ul>
@@ -803,7 +803,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												id="new">
 												<thead>
 													<tr>
-														<th width="1%" class="text-left"><input name="selector[]"
+														<th width="1%" class="text-start"><input name="selector[]"
 															type="checkbox" value=""></th>
 														<th>Código</th>
 														<th>Nome</th>
@@ -856,7 +856,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                     $valBadge = ' <span class="badge badge-warning" title="Validações pendentes" style="font-size:.7rem">⏳ val.</span>';
                 }
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
-                echo '<td class="text-left"><input name="selector[' .
+                echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
                 echo '<td>' . $row['codigo'] .
                         '<input type="hidden"  name="codigo[' .
@@ -871,9 +871,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . date("Y-m-d", $row['createdate']) . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '&amp;status=Novo"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '&amp;status=Novo"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i> </a>';
                 echo ' ';
@@ -886,17 +886,17 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												</tbody>
 												<tfooter>
 												<tr class="bg-white">
-													<td colspan="10" class="text-right py-2">
-														<span class="text-dark mr-2"><b>Com os selecionados:</b></span>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
-														   class="batchaction btn btn-sm btn-warning mr-1"
+													<td colspan="10" class="text-end py-2">
+														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
+														   class="batchaction btn btn-sm btn-warning me-1"
 														   id="novoValidacoesBtn" data-form-id="formnovoregisto">
-															<i class="fas fa-user-check mr-1"></i>Solicitar validações
+															<i class="fas fa-user-check me-1"></i>Solicitar validações
 														</a>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-success"
 														   id="novoAcessosBtn" data-form-id="formnovoregisto">
-															<i class="fas fa-paper-plane mr-1"></i>Pedir acessos
+															<i class="fas fa-paper-plane me-1"></i>Pedir acessos
 														</a>
 													</td>
 												</tr>
@@ -918,7 +918,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												id="pendent" style="width: 100%">
 												<thead>
 													<tr>
-														<th width="1%" class="text-left"><input name="selector[]"
+														<th width="1%" class="text-start"><input name="selector[]"
 															type="checkbox" value=""></th>
 														<th>Código</th>
 														<th>Nome</th>
@@ -937,7 +937,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
-                echo '<td class="text-left"><input name="selector[' .
+                echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
                 echo '<td>' . $row['codigo'] .
                         '<input type="hidden"  name="codigo[' .
@@ -950,9 +950,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['status'] . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i> </a></td>';
 
@@ -964,12 +964,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												</tbody>
 												<tfooter>
 												<tr class="bg-white">
-													<td colspan="8" class="text-right py-2">
-														<span class="text-dark mr-2"><b>Com os selecionados:</b></span>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
+													<td colspan="8" class="text-end py-2">
+														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-success"
 														   id="pendentesubmitBtn">
-															<i class="fas fa-check mr-1"></i>Ativar registo
+															<i class="fas fa-check me-1"></i>Ativar registo
 														</a>
 													</td>
 												</tr>
@@ -992,7 +992,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												id="expire" style="width: 100%">
 												<thead>
 													<tr>
-														<th width="1%" class="text-left"><input name="selector[]"
+														<th width="1%" class="text-start"><input name="selector[]"
 															type="checkbox" value=""></th>
 														<th>Código</th>
 														<th>Nome</th>
@@ -1015,7 +1015,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             while ($row = $sth_expire->fetch(PDO::FETCH_ASSOC)) {
                 $date = formatDate('Y-m-d', $row['datanotificacao']);
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
-                echo '<td class="text-left"><input name="selector[' .
+                echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
                 echo '<td>' . $row['codigo'] .
                         '<input type="hidden"  name="codigo[' .
@@ -1029,10 +1029,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['status'] . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm" ></i></a>
-														<a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+														<a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i> </a></td>';
                 echo '</tr>';
@@ -1044,17 +1044,17 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												</tbody>
 												<tfooter>
 												<tr class="bg-white">
-													<td colspan="9" class="text-right py-2">
-														<span class="text-dark mr-2"><b>Com os selecionados:</b></span>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
-														   class="batchaction btn btn-sm btn-info mr-1"
+													<td colspan="9" class="text-end py-2">
+														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
+														   class="batchaction btn btn-sm btn-info me-1"
 														   id="expiradossubmitBtn">
-															<i class="fas fa-bell mr-1"></i>Notificar
+															<i class="fas fa-bell me-1"></i>Notificar
 														</a>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-secondary"
 														   id="expiradosInativarBtn">
-															<i class="fas fa-user-slash mr-1"></i>Inativar registo
+															<i class="fas fa-user-slash me-1"></i>Inativar registo
 														</a>
 													</td>
 												</tr>
@@ -1076,7 +1076,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												id="active">
 												<thead>
 													<tr>
-														<td class="text-right" colspan="9">
+														<td class="text-end" colspan="9">
 															<form action="index.php" method="post" id="export-form">
 																<input type="submit"
 																	class="btn btn-info  btn-sm text-white"
@@ -1085,7 +1085,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 															</form>
 														</td>
 													</tr>
-													<th class="text-left"><input type="checkbox" name="selector[]" value=""></th>
+													<th class="text-start"><input type="checkbox" name="selector[]" value=""></th>
 													<th>Código</th>
 													<th>Nome</th>
 													<th>Email</th>
@@ -1104,7 +1104,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
-                echo '<td class="text-left"><input name="selector[' .
+                echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
                 echo '<td>' . $row['codigo'] .
                         '<input type="hidden"  name="codigo[' .
@@ -1119,9 +1119,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i> </a> ';
                 echo ' ';
@@ -1135,12 +1135,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												</tbody>
 												<tfooter>
 												<tr class="bg-white">
-													<td colspan="9" class="text-right py-2">
-														<span class="text-dark mr-2"><b>Com os selecionados:</b></span>
-														<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
+													<td colspan="9" class="text-end py-2">
+														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
+														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-secondary"
 														   id="ativossubmitBtn">
-															<i class="fas fa-user-slash mr-1"></i>Inativar registo
+															<i class="fas fa-user-slash me-1"></i>Inativar registo
 														</a>
 													</td>
 												</tr>
@@ -1162,7 +1162,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												id="inactive">
 												<thead>
 													<tr>
-														<th width="1%" class="text-left"><input name="selector[]"
+														<th width="1%" class="text-start"><input name="selector[]"
 															type="checkbox" value=""></th>
 														<th>Código</th>
 														<th>Nome</th>
@@ -1183,7 +1183,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
-                echo '<td class="text-left"><input name="selector[' .
+                echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
                 echo '<td>' . $row['codigo'] .
                         '<input type="hidden"  name="codigo[' .
@@ -1198,9 +1198,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ml-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ml-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i> </a>';
                 echo ' ';
@@ -1215,12 +1215,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											</tbody>
 											<tfooter>
 											<tr class="bg-white">
-												<td colspan="9" class="text-right py-2">
-													<span class="text-dark mr-2"><b>Com os selecionados:</b></span>
-													<a type="button" href="#" data-toggle="modal" data-target="#modalaction"
+												<td colspan="9" class="text-end py-2">
+													<span class="text-dark me-2"><b>Com os selecionados:</b></span>
+													<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 													   class="batchaction btn btn-sm btn-success"
 													   id="inativossubmitBtn">
-														<i class="fas fa-check mr-1"></i>Ativar registo
+														<i class="fas fa-check me-1"></i>Ativar registo
 													</a>
 												</td>
 											</tr>
@@ -1236,10 +1236,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 <!-- flash messages shown above tabs -->
 
 <?php if (empty($pedidos)): ?>
-  <p class="text-muted py-3 text-center"><i class="fas fa-check-circle text-success mr-1"></i>Sem pedidos pendentes.</p>
+  <p class="text-muted py-3 text-center"><i class="fas fa-check-circle text-success me-1"></i>Sem pedidos pendentes.</p>
 <?php else: ?>
   <table class="table table-sm table-hover mt-1">
-    <thead class="thead-light">
+    <thead class="">
       <tr>
         <th>Código</th><th>Nome</th><th>Tipo</th>
         <th>Submetido</th><th>Observações</th><th>Campos alterados</th><th>Ação</th>
@@ -1325,7 +1325,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         <?php else: ?>—<?php endif; ?>
       </td>
       <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-outline-secondary mr-1"
+        <button class="btn btn-sm btn-outline-secondary me-1"
           onclick='verPedido(<?= (int)$ped["id"] ?>,
             <?= json_encode($ped["dados_json"]) ?>,
             <?= json_encode($ped["dados_anteriores"] ?? "null") ?>,
@@ -1338,7 +1338,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             <input type="hidden" name="val_acao"  value="solicitar_pedido">
             <input type="hidden" name="pedido_id" value="<?= (int)$ped['id'] ?>">
             <input type="hidden" name="redirect"  value="index.php">
-            <button class="btn btn-sm btn-outline-warning mr-1"
+            <button class="btn btn-sm btn-outline-warning me-1"
                     title="Solicitar validação aos responsáveis dos espaços"
                     onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
               <i class="fas fa-user-check fa-xs"></i> Solicitar validações
@@ -1350,12 +1350,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
           <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
           <input type="hidden" name="pedido_action" value="Aprovado">
           <?php if ($bloqueado): ?>
-            <button class="btn btn-sm btn-success mr-1" disabled
+            <button class="btn btn-sm btn-success me-1" disabled
                     title="Aguarda validação dos responsáveis de espaço">
               <i class="fas fa-lock fa-xs"></i> Aprovar
             </button>
           <?php else: ?>
-            <button class="btn btn-sm btn-success mr-1">✓ Aprovar</button>
+            <button class="btn btn-sm btn-success me-1">✓ Aprovar</button>
           <?php endif; ?>
         </form>
         <form method="post" style="display:inline"
@@ -1370,17 +1370,17 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
     <tr>
       <td colspan="7" style="background:#f8f9fa;padding:6px 16px 10px 16px;border-top:none;">
         <small class="d-block mb-1 text-muted font-weight-bold">
-          <i class="fas fa-user-check mr-1"></i>Validações de espaço
+          <i class="fas fa-user-check me-1"></i>Validações de espaço
           <?php if ($todosOk): ?>
-            <span class="badge badge-success ml-1">Todas validadas ✓</span>
+            <span class="badge badge-success ms-1">Todas validadas ✓</span>
           <?php elseif ($temRejeitado): ?>
-            <span class="badge badge-danger ml-1">Com rejeição</span>
+            <span class="badge badge-danger ms-1">Com rejeição</span>
           <?php else: ?>
-            <span class="badge badge-warning ml-1">A aguardar resposta</span>
+            <span class="badge badge-warning ms-1">A aguardar resposta</span>
           <?php endif; ?>
         </small>
         <table class="table table-xs table-bordered mb-1" style="font-size:.8rem;background:#fff;">
-          <thead class="thead-light">
+          <thead class="">
             <tr>
               <th>Espaço</th><th>Responsável</th><th><?= t('STATUS') ?></th><th>Nota</th><th style="width:1%"><?= t('ACTIONS') ?></th>
             </tr>
@@ -1450,12 +1450,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 <?php if (!empty($pedidosAguarda)): ?>
 <hr class="my-3">
 <h6 class="text-muted mb-2">
-  <i class="fas fa-hourglass-half mr-1"></i>
+  <i class="fas fa-hourglass-half me-1"></i>
   A aguardar confirmação do SIGARRA
-  <span class="badge badge-secondary ml-1"><?= $pedidosAguardaCount ?></span>
+  <span class="badge badge-secondary ms-1"><?= $pedidosAguardaCount ?></span>
 </h6>
 <table class="table table-sm table-hover">
-  <thead class="thead-light">
+  <thead class="">
     <tr>
       <th>Código</th><th>Nome</th><th>Tipo</th>
       <th>Enviado ao SIGARRA</th><th>Detalhe</th><th>Ação</th>
@@ -1491,7 +1491,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
         <input type="hidden" name="pedido_action" value="Concluido">
         <button class="btn btn-sm btn-primary">
-          <i class="fas fa-check-double mr-1"></i> SIGARRA concluiu
+          <i class="fas fa-check-double me-1"></i> SIGARRA concluiu
         </button>
       </form>
     </td>
@@ -1512,7 +1512,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   <div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header">
       <h5 class="modal-title" id="modalPedidoTitle">Detalhe do pedido</h5>
-      <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
     </div>
     <div class="modal-body" id="modalPedidoBody" style="font-size:.84rem"></div>
   </div></div>
@@ -1531,7 +1531,7 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
     hasSpecific = true;
     html += '<h6 class="mb-2">Alteração de Data de Fim</h6>';
     html += '<table class="table table-sm table-bordered mb-3">';
-    html += '<thead class="thead-light"><tr><th>Data anterior</th><th>Nova data</th></tr></thead>';
+    html += '<thead class=""><tr><th>Data anterior</th><th>Nova data</th></tr></thead>';
     html += '<tbody><tr>';
     html += '<td class="text-muted">' + esc(d.datafim_antigo || '—') + '</td>';
     html += '<td><strong>' + esc(d.datafim_novo || '—') + '</strong></td>';
@@ -1543,23 +1543,23 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
     hasSpecific = true;
     html += '<h6 class="mb-2">Acesso DEQ</h6>';
     html += '<table class="table table-sm table-bordered mb-3">';
-    html += '<thead class="thead-light"><tr><th>Antes</th><th>Depois</th></tr></thead><tbody><tr>';
+    html += '<thead class=""><tr><th>Antes</th><th>Depois</th></tr></thead><tbody><tr>';
     html += '<td>' + (ant ? (ant.acessodeq ? 'Sim' : 'Não') : '—') + '</td>';
     html += '<td>' + (d.acessodeq ? 'Sim' : 'Não') + '</td>';
     html += '</tr></tbody></table>';
 
     html += '<h6 class="mb-2">Laboratórios / Gabinetes</h6>';
     html += '<table class="table table-sm table-bordered mb-3">';
-    html += '<thead class="thead-light"><tr><th style="width:50%">Adicionados</th><th>Removidos</th></tr></thead><tbody><tr>';
+    html += '<thead class=""><tr><th style="width:50%">Adicionados</th><th>Removidos</th></tr></thead><tbody><tr>';
 
     var add = (d.labs_adicionados_nomes || d.labs_adicionados || []);
     var rem = (d.labs_removidos_nomes   || d.labs_removidos   || []);
 
     var addHtml = add.length
-      ? add.map(function(n){ return '<span class="badge badge-success mr-1">+ '+esc(n)+'</span>'; }).join(' ')
+      ? add.map(function(n){ return '<span class="badge badge-success me-1">+ '+esc(n)+'</span>'; }).join(' ')
       : '<span class="text-muted">—</span>';
     var remHtml = rem.length
-      ? rem.map(function(n){ return '<span class="badge badge-danger mr-1">- '+esc(n)+'</span>'; }).join(' ')
+      ? rem.map(function(n){ return '<span class="badge badge-danger me-1">- '+esc(n)+'</span>'; }).join(' ')
       : '<span class="text-muted">—</span>';
 
     html += '<td>'+addHtml+'</td><td>'+remHtml+'</td></tr>';
@@ -1596,7 +1596,7 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
     }
     var cols = ant ? 3 : 2;
     html += '<table class="table table-sm table-bordered mb-0">'
-          + '<thead class="thead-light"><tr>'
+          + '<thead class=""><tr>'
           + '<th>Campo</th>' + (ant ? '<th>Antes</th>' : '') + '<th>Valor</th>'
           + '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
@@ -1616,7 +1616,7 @@ function esc(s) {
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title" id="exampleModalLabel">Terminar a sessão?</h5>
-				<button class="close" type="button" data-dismiss="modal"
+				<button class="btn-close" type="button" data-bs-dismiss="modal"
 					aria-label="Close">
 					<span aria-hidden="true">×</span>
 				</button>
@@ -1625,7 +1625,7 @@ function esc(s) {
 				sessão.</div>
 			<div class="modal-footer">
 				<button class="btn btn-secondary" type="button"
-					data-dismiss="modal"><?= t('CANCEL') ?></button>
+					data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
 				<a class="btn btn-info" href="../../logout.php">Sair</a>
 			</div>
 		</div>
@@ -1641,7 +1641,7 @@ function esc(s) {
 				<h5 class="modal-title" id="ativarlabel">
 					<span class="title-text"></span>
 				</h5>
-				<button type="button" class="close" data-dismiss="modal"
+				<button type="button" class="btn-close" data-bs-dismiss="modal"
 					aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
@@ -1651,7 +1651,7 @@ function esc(s) {
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary"
-					data-dismiss="modal">Não</button>
+					data-bs-dismiss="modal">Não</button>
 				<button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>
 			</div>
 		</div>

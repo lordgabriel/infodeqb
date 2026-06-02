@@ -117,8 +117,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 						<div class="col-md-12 col-xs-12 mt-4">
 							<div class="col-md-12 col-xs-12">
 								<table class="table table-bordered table-sm">
-									<thead class="thead-light">
-										<tr class="text-left ">
+									<thead class="">
+										<tr class="text-start ">
 											<th class="border-top-0"><?php echo $lang['PROGROUP']; ?></th>
 											<th class="border-top-0"><?php echo $lang['CATEGORY']; ?></th>
 											<th class="border-top-0"><?php echo $lang['BEGIN_DATE']; ?></th>
@@ -142,8 +142,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 						<div class="col-md-12 col-xs-12 mt-4">
 							<div class="col-md-12 col-xs-12">
 								<table class="table table-bordered table-sm">
-									<thead class="thead-light">
-										<tr class="text-left">
+									<thead class="">
+										<tr class="text-start">
 											<th class="border-top-0 "><?php echo $lang['WORK_RESP']; ?></th>
 											<th class="border-top-0 " style="width: 20%"><?php echo $lang['SIGNATURE']; ?></th>
 										</tr>
@@ -164,7 +164,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 							<div class="col-md-12 col-xs-12">
 								<?php
     $rowNum = 0;
-    $table = "<table class='table table-bordered table-sm '><thead class='thead-light' ><tr><th class='border-top-0'>" .
+    $table = "<table class='table table-bordered table-sm '><thead class='' ><tr><th class='border-top-0'>" .
             $lang['REQUESTED_ACCESS'] . "</th><th class='border-top-0'>" .
             $lang['WORKSPACE_RESP'] . "</th><th class='border-top-0' >" .
             $lang['SIGNATURE'] . "</th></tr><thead>";
@@ -184,7 +184,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 								<?php
 
     $rowNum = 1;
-    $table = "<table class='table table-bordered table-sm'><thead class='thead-light'><tr ><th class='col-md-4 border-top-0'>" .
+    $table = "<table class='table table-bordered table-sm'><thead class=''><tr ><th class='col-md-4 border-top-0'>" .
             $lang['DOOR_ID'] . "</th></tr><thead>";
     $table .= "<tr>";
     $table .= ($rowNum == 1) ? ("<td rowspan='%s' class='col-md-4'>" . $doorid .
@@ -207,7 +207,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 					<a style="color: #555555"
 						href="print.php?id=<?php print_r($id)?>&id1=<?php print_r($id1)?>">
 						<i class="fas fa-print fa-lg"></i>
-					</a> <a class="text-center text-dark ml-4" href="javascript:Back()"><i
+					</a> <a class="text-center text-dark ms-4" href="javascript:Back()"><i
 						class="fas fa-undo-alt fa-lg"></i></a>
 				</div>
 			</div>

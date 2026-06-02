@@ -70,14 +70,14 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header d-flex align-items-center" style="gap:8px">
-  <h1 class="mr-auto"><i class="fas fa-plus-circle fa-sm mr-2 text-muted"></i>Novo registo — Mobilidade IN</h1>
+  <h1 class="mr-auto"><i class="fas fa-plus-circle fa-sm me-2 text-muted"></i>Novo registo — Mobilidade IN</h1>
   <a href="index.php" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-left mr-1"></i>Lista
+    <i class="fas fa-arrow-left me-1"></i>Lista
   </a>
 </div>
           <div class="card mb-3">
             <div class="card-header py-2">
-              <i class="fas fa-user-graduate fa-sm mr-1 text-muted"></i>
+              <i class="fas fa-user-graduate fa-sm me-1 text-muted"></i>
               <strong>Dados do estudante</strong>
             </div>
 
@@ -361,16 +361,16 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 									<div class="col-md-5 ">
 					          	<div class="accordion" id="syllabus">
 												<div id="cartao" class="col-xs-12 card borda">
-													<label class="control-label bg-dark pl-2 text-light" >L.EQ - Unidades curriculares que se inscreve</label>
+													<label class="control-label bg-dark ps-2 text-light" >L.EQ - Unidades curriculares que se inscreve</label>
 													<div class="card-header" id="headingOne">
 														<h5 class="mb-0">
-															<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">1º Ano</button>
-															<button class="btn btn-outline-primary btn-sm " type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">2º Ano</button>
-															<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">3º Ano</button>
+															<button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">1º Ano</button>
+															<button class="btn btn-outline-primary btn-sm " type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">2º Ano</button>
+															<button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">3º Ano</button>
 														</h5>
 													</div>
 													<!-- 1º Ano -->
-													<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#syllabus">
+													<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-parent="#syllabus">
 														<div class="card-body">
 															<table class="table-sm">
 																<tr>
@@ -424,7 +424,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 														</div>
 													</div>
 													<!-- 2º Ano -->
-													<div id="collapseTwo" class="collapse" aria-labelledby="headingOne" data-parent="#syllabus">
+													<div id="collapseTwo" class="collapse" aria-labelledby="headingOne" data-bs-parent="#syllabus">
 														<div class="card-body ">
 															<table class="table-sm ">
 																<tr>
@@ -478,7 +478,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 														</div>
 													</div>
 													<!-- 3º Ano -->
-													<div id="collapseThree" class="collapse" aria-labelledby="headingOne" data-parent="#syllabus">
+													<div id="collapseThree" class="collapse" aria-labelledby="headingOne" data-bs-parent="#syllabus">
 														<div class="card-body">
 															<table class="table-sm">
 																<tr>
@@ -537,14 +537,14 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 										<div class="col-md-5">
 							      	<div class="accordion" id="syllabus2">
 												<div class="col-xs-12 card borda">
-													<label class="control-label bg-dark pl-2 text-light" >M.EQ - Unidades curriculares que se inscreve</label>
+													<label class="control-label bg-dark ps-2 text-light" >M.EQ - Unidades curriculares que se inscreve</label>
 													<div class="card-header" id="headingTwo">
 														<h5 class="mb-0">
-															<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#collapseOneMEQ" aria-expanded="false" aria-controls="collapseOne">1º Ano</button>
-															<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#collapseTwoMEQ" aria-expanded="false" aria-controls="collapseTwo">2º Ano</button>
+															<button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneMEQ" aria-expanded="false" aria-controls="collapseOne">1º Ano</button>
+															<button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoMEQ" aria-expanded="false" aria-controls="collapseTwo">2º Ano</button>
 														</h5>
 													</div>
-													<div id="collapseOneMEQ" class="collapse show" aria-labelledby="headingTwo" data-parent="#syllabus2">
+													<div id="collapseOneMEQ" class="collapse show" aria-labelledby="headingTwo" data-bs-parent="#syllabus2">
 														<div class="card-body ">
 															<table class="table-sm">
 																<tr>
@@ -597,7 +597,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 															</table>
 														</div>
 													</div>
-													<div id="collapseTwoMEQ" class="collapse" aria-labelledby="headingTwo" data-parent="#syllabus2">
+													<div id="collapseTwoMEQ" class="collapse" aria-labelledby="headingTwo" data-bs-parent="#syllabus2">
 														<div class="card-body">
 															<table class="table-sm">
 																<tr>
@@ -654,7 +654,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											</div>
 										</div>
 										<div class="col-md-2 card borda ">
-											<label class="control-label bg-dark pl-2 text-light " >UCs selecionadas</label>
+											<label class="control-label bg-dark ps-2 text-light " >UCs selecionadas</label>
 											<p id="demo" class="smaller"></p>
 										</div>
 									</div>

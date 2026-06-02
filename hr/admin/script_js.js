@@ -136,13 +136,16 @@ $(document).ready(function () {
         $table.find('tbody input[type="checkbox"]').prop('checked', this.checked);
     });
 
-    $('a[data-toggle="pill"]').on('show.bs.tab', function (e) {
+    // Bootstrap 5: data-bs-toggle; evento continua igual (shown.bs.tab)
+    $('a[data-bs-toggle="pill"]').on('show.bs.tab', function (e) {
         localStorage.setItem('activeTab', $(e.target).attr('href'));
     });
 
     var activeTab = localStorage.getItem('activeTab');
     if (activeTab) {
-        $('#pills-tab a[href="' + activeTab + '"]').tab('show');
+        // Bootstrap 5 não tem $.trigger('shown.bs.tab') — usar a API nativa
+        var tabEl = document.querySelector('#pills-tab a[href="' + activeTab + '"]');
+        if (tabEl) { new bootstrap.Tab(tabEl).show(); }
     }
 });
 
@@ -164,7 +167,7 @@ $(document).on('click', '.batchaction', function () {
     const checkedCount = $targetForm.find('input[type="checkbox"]:checked').length;
     const atLeastOneIsChecked = checkedCount > 0;
 
-    $('.modal-footer').html('<button type="button" id="bdismiss" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+    $('.modal-footer').html('<button type="button" id="bdismiss" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
 
     if (atLeastOneIsChecked) {
         selectedFormId = '#' + $targetForm.attr('id');
@@ -200,38 +203,38 @@ $(document).on('click', '.batchaction', function () {
         case 'expiradossubmitBtn':
             $('.body-text').html('<p>Tem a certeza que pretende enviar notificação de acesso a expirar para os registos selecionados?</p>');
             $('.title-text').html('Notificar');
-            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
             selectedFormId = '#formexpirados';
             break;
 
         case 'expiradosInativarBtn':
             $('.body-text').html('<p>Tem a certeza que pretende tornar inativos os registos selecionados?</p>');
             $('.title-text').html('Inativar Registo');
-            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
             $('#action').attr('value', 'Inativo');
             break;
 
         case 'ativossubmitBtn':
             $('.body-text').html('<p>Tem a certeza que pretende tornar inativos os registos selecionados?</p>');
             $('.title-text').html('Inativar Registo');
-            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
             break;
 
         case 'inativossubmitBtn':
             $('.body-text').html('<p>Tem a certeza que pretende ativar os registos selecionados?</p>');
             $('.title-text').html('Ativar registo');
-            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
             break;
 
         case 'noselect':
             $('.body-text').html('<p>Nenhum registo selecionado.</p>');
             $('.title-text').html('Erro!');
-            $('.modal-footer').html('<button type="button" id="bdismiss" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>');
+            $('.modal-footer').html('<button type="button" id="bdismiss" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>');
             break;
 
         default:
             console.log('No id');
-            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
+            $('.modal-footer').html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button><button type="submit" id="bsubmit" class="btn btn-info btn-ok">Sim</button>');
     }
 });
 
@@ -415,7 +418,7 @@ $('#labModeAnd').on('click', function () {
 });
 
 // Sincronizar tab de export ao mudar de separador
-$('a[data-toggle="pill"]').on('shown.bs.tab', function () { _labSyncExport(); });
+$('a[data-bs-toggle="pill"]').on('shown.bs.tab', function () { _labSyncExport(); });
 $('#labExportForm').on('submit', function () { _labSyncExport(); });
 
 // Init

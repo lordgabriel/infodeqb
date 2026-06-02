@@ -76,16 +76,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
-    <i class="fas fa-user-cog fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-user-cog fa-sm me-2 text-muted"></i>
     <?= t('SEC_ADMIN_TITLE') ?>
   </h1>
   <a href="<?= HTTP_DIR ?>/infodeqb/" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-left mr-1"></i>Dashboard
+    <i class="fas fa-arrow-left me-1"></i>Dashboard
   </a>
 </div>
 
 <div class="alert alert-secondary" style="display:block;font-size:.84rem">
-  <i class="fas fa-info-circle mr-1"></i>
+  <i class="fas fa-info-circle me-1"></i>
   Os <strong>admins globais</strong> estão definidos directamente em <code>inc/admins.php</code> e não são geridos aqui.
   Esta página gere apenas admins de módulos específicos.
 </div>
@@ -93,7 +93,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" style="font-size:.85rem">
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -102,14 +102,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="col-md-6 mb-4">
   <div class="card shadow-sm">
     <div class="card-header py-2 d-flex align-items-center">
-      <i class="fas <?= $modInfo['icon'] ?> mr-2" style="color:<?= $modInfo['color'] ?>"></i>
+      <i class="fas <?= $modInfo['icon'] ?> me-2" style="color:<?= $modInfo['color'] ?>"></i>
       <strong class="mr-auto"><?= htmlspecialchars($modInfo['label']) ?></strong>
       <span class="badge badge-secondary"><?= count($byModule[$modKey] ?? []) ?></span>
     </div>
     <div class="card-body p-0">
       <?php if (!empty($byModule[$modKey])): ?>
       <table class="table table-sm mb-0" style="font-size:.83rem">
-        <thead class="thead-light">
+        <thead class="">
           <tr>
             <th>Código UP</th>
             <th>Nome</th>
@@ -160,7 +160,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                  placeholder="Nome do utilizador" style="width:190px">
         </div>
         <button type="submit" class="btn btn-sm btn-primary">
-          <i class="fas fa-plus mr-1"></i><?= t('ADD') ?>
+          <i class="fas fa-plus me-1"></i><?= t('ADD') ?>
         </button>
       </form>
     </div>

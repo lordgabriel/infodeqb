@@ -202,7 +202,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
 				</div>
 				<div class="col-md-12 col-sm-12 col-xs-12 text-center">
-					<a class="text-center text-dark mr-4" href="javascript:Back()"><i
+					<a class="text-center text-dark me-4" href="javascript:Back()"><i
 						class="fas fa-undo-alt fa-lg"></i></a>
 					<button type="submit" class="btn btn-default"><?php echo $lang['SUBMIT'];  ?></button>
 

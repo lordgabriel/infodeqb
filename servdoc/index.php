@@ -332,7 +332,7 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
       <table class="table table-sm table-hover mb-0" id="tblUcs">
         <thead>
           <!-- Cabeçalhos ordenáveis -->
-          <tr class="thead-light">
+          <tr class="">
             <th>Unidade Curricular</th>
             <th style="width:11em">Área Científica</th>
             <th style="width:0;display:none">_area_raw</th>
@@ -343,7 +343,7 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
             <th>
               <div class="input-group input-group-sm">
                 <div class="input-group-prepend">
-                  <span class="input-group-text bg-white border-right-0 pr-1">
+                  <span class="input-group-text bg-white border-right-0 pe-1">
                     <i class="fas fa-search fa-xs text-muted"></i>
                   </span>
                 </div>
@@ -402,14 +402,14 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
     <div class="card-footer d-flex align-items-center py-2" style="gap:12px">
       <span class="badge badge-secondary px-2" id="cntBadge" style="font-size:.8rem">0 / 10</span>
       <span id="limitAlert" class="text-warning small" style="display:none">
-        <i class="fas fa-exclamation-triangle mr-1"></i>Máximo de 10 UCs atingido.
+        <i class="fas fa-exclamation-triangle me-1"></i>Máximo de 10 UCs atingido.
       </span>
       <div class="ml-auto d-flex" style="gap:8px">
         <?php if ($modoEdicao): ?>
         <a href="index.php" class="btn btn-outline-secondary btn-sm"><?= t('CANCEL') ?></a>
         <?php endif; ?>
         <button type="submit" class="btn btn-primary btn-sm">
-          <i class="fas fa-paper-plane mr-1"></i><?= $label ?>
+          <i class="fas fa-paper-plane me-1"></i><?= $label ?>
         </button>
       </div>
     </div>
@@ -514,7 +514,7 @@ $(document).ready(function () {
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
-    <i class="fas fa-chalkboard-teacher fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-chalkboard-teacher fa-sm me-2 text-muted"></i>
     <?= t('SERVDOC_TITLE') ?>
   </h1>
 </div>
@@ -522,9 +522,9 @@ $(document).ready(function () {
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3"
      role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='info'?'info-circle':'exclamation-circle') ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='info'?'info-circle':'exclamation-circle') ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -534,10 +534,10 @@ $(document).ready(function () {
 <?php if ($adminEditTarget): ?>
 <?php /* ── Admin a editar resposta de um docente ─────────────────── */ ?>
 <div class="alert alert-warning py-2 mb-3 d-flex align-items-center" style="font-size:.84rem">
-  <i class="fas fa-user-edit mr-2"></i>
+  <i class="fas fa-user-edit me-2"></i>
   <span class="mr-auto">A editar preferências de <strong><?= htmlspecialchars($adminEditTarget['Nome']) ?></strong></span>
-  <a href="index.php" class="btn btn-outline-secondary btn-sm ml-3">
-    <i class="fas fa-times mr-1"></i>Cancelar
+  <a href="index.php" class="btn btn-outline-secondary btn-sm ms-3">
+    <i class="fas fa-times me-1"></i>Cancelar
   </a>
 </div>
 <?php
@@ -571,14 +571,14 @@ function renderFormAdmin($todasUcs, $prefIndex, $targetId, $targetNome) {
     <div class="card-body p-0">
       <table class="table table-sm table-hover mb-0" id="tblUcs">
         <thead>
-          <tr class="thead-light">
+          <tr class="">
             <th>Unidade Curricular</th>
             <th style="width:11em">Área Científica</th>
             <th style="width:0;display:none">_area_raw</th>
             <th style="width:7em" class="text-center">Preferência</th>
           </tr>
           <tr class="filter-row">
-            <th><div class="input-group input-group-sm"><div class="input-group-prepend"><span class="input-group-text bg-white border-right-0 pr-1"><i class="fas fa-search fa-xs text-muted"></i></span></div><input type="text" id="filterUc" class="form-control border-left-0" placeholder="Pesquisar UC…" autocomplete="off"></div></th>
+            <th><div class="input-group input-group-sm"><div class="input-group-prepend"><span class="input-group-text bg-white border-right-0 pe-1"><i class="fas fa-search fa-xs text-muted"></i></span></div><input type="text" id="filterUc" class="form-control border-left-0" placeholder="Pesquisar UC…" autocomplete="off"></div></th>
             <th colspan="2"><select id="filterArea" class="form-control form-control-sm"><option value="">Todas as áreas</option><?php foreach ($areasUnicas as $a): ?><option value="<?= htmlspecialchars($a) ?>"><?= htmlspecialchars($a) ?></option><?php endforeach; ?></select></th>
             <th class="text-center"><label class="mb-0 d-flex align-items-center justify-content-center" style="gap:5px;font-size:.78rem;cursor:pointer;white-space:nowrap"><input type="checkbox" id="filterSel"><span>Só sel.</span></label></th>
           </tr>
@@ -599,10 +599,10 @@ function renderFormAdmin($todasUcs, $prefIndex, $targetId, $targetNome) {
     </div>
     <div class="card-footer d-flex align-items-center py-2" style="gap:12px">
       <span class="badge badge-secondary px-2" id="cntBadge" style="font-size:.8rem">0 / 10</span>
-      <span id="limitAlert" class="text-warning small" style="display:none"><i class="fas fa-exclamation-triangle mr-1"></i>Máximo de 10 UCs.</span>
+      <span id="limitAlert" class="text-warning small" style="display:none"><i class="fas fa-exclamation-triangle me-1"></i>Máximo de 10 UCs.</span>
       <div class="ml-auto d-flex" style="gap:8px">
         <a href="index.php" class="btn btn-outline-secondary btn-sm"><?= t('CANCEL') ?></a>
-        <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-save mr-1"></i><?= t('SAVE_CHANGES') ?></button>
+        <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-save me-1"></i><?= t('SAVE_CHANGES') ?></button>
       </div>
     </div>
   </div>
@@ -697,7 +697,7 @@ $(document).ready(function () {
 <?php if (!empty($pedidosPendentes)): ?>
 <div class="card shadow-sm mb-4 <?= $nPendentes > 0 ? 'border-warning' : '' ?>">
   <div class="card-header py-2 d-flex align-items-center">
-    <i class="fas fa-edit mr-2 <?= $nPendentes > 0 ? 'text-warning' : 'text-success' ?>"></i>
+    <i class="fas fa-edit me-2 <?= $nPendentes > 0 ? 'text-warning' : 'text-success' ?>"></i>
     <strong class="mr-auto">Pedidos de edição</strong>
     <?php if ($nPendentes > 0): ?>
     <span class="badge badge-warning"><?= $nPendentes ?> por aprovar</span>
@@ -705,7 +705,7 @@ $(document).ready(function () {
   </div>
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th style="width:16em">Docente</th>
           <th style="width:9em">Pedido em</th>
@@ -732,17 +732,17 @@ $(document).ready(function () {
             <span class="badge badge-warning"><?= t('SERVDOC_PENDING_U') ?></span>
             <?php endif; ?>
           </td>
-          <td class="align-middle text-right">
+          <td class="align-middle text-end">
             <?php if (!$req['aprovado']): ?>
             <form method="post" class="d-inline">
               <input type="hidden" name="_acao" value="aprovar_edicao">
               <input type="hidden" name="req_id" value="<?= (int)$req['id'] ?>">
               <button type="submit" class="btn btn-success btn-xs">
-                <i class="fas fa-check fa-xs mr-1"></i><?= t('SERVDOC_APPROVE') ?>
+                <i class="fas fa-check fa-xs me-1"></i><?= t('SERVDOC_APPROVE') ?>
               </button>
             </form>
             <?php endif; ?>
-            <form method="post" class="d-inline ml-1">
+            <form method="post" class="d-inline ms-1">
               <input type="hidden" name="_acao" value="revogar_edicao">
               <input type="hidden" name="req_id" value="<?= (int)$req['id'] ?>">
               <button type="submit" class="btn btn-outline-secondary btn-xs"
@@ -768,7 +768,7 @@ $(document).ready(function () {
       </div>
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
-          <thead class="thead-light">
+          <thead class="">
             <tr>
               <th>Área</th>
               <th class="text-center" style="width:5em">Docentes</th>
@@ -798,11 +798,11 @@ $(document).ready(function () {
     <div class="card shadow-sm h-100">
       <div class="card-header py-2">
         <strong>UCs mais pretendidas</strong>
-        <small class="text-muted ml-1">(rank ≥ 4)</small>
+        <small class="text-muted ms-1">(rank ≥ 4)</small>
       </div>
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
-          <thead class="thead-light">
+          <thead class="">
             <tr>
               <th>UC</th>
               <th style="width:9em">Área</th>
@@ -837,15 +837,15 @@ $(document).ready(function () {
 <!-- Pills para alternar vista -->
 <ul class="nav nav-pills mb-3" id="adminTabs">
   <li class="nav-item">
-    <a class="nav-link active" href="#tabDocentes" data-toggle="tab">
-      <i class="fas fa-users fa-xs mr-1"></i>Por docente
-      <span class="badge badge-light ml-1"><?= $totalResp ?> / <?= $totalDocentes ?></span>
+    <a class="nav-link active" href="#tabDocentes" data-bs-toggle="tab">
+      <i class="fas fa-users fa-xs me-1"></i>Por docente
+      <span class="badge badge-light ms-1"><?= $totalResp ?> / <?= $totalDocentes ?></span>
     </a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="#tabUcs" data-toggle="tab">
-      <i class="fas fa-book fa-xs mr-1"></i>Por UC
-      <span class="badge badge-light ml-1"><?= count($ucExplorerRaw) ?></span>
+    <a class="nav-link" href="#tabUcs" data-bs-toggle="tab">
+      <i class="fas fa-book fa-xs me-1"></i>Por UC
+      <span class="badge badge-light ms-1"><?= count($ucExplorerRaw) ?></span>
     </a>
   </li>
 </ul>
@@ -857,7 +857,7 @@ $(document).ready(function () {
 <div class="card shadow-sm mb-4">
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblDocentes" style="font-size:.82rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th>Nome</th>
           <th style="width:9em">Categoria</th>
@@ -879,7 +879,7 @@ $(document).ready(function () {
             <?php if ($temPrefsD): ?>
             data-id="<?= (int)$d['Codigo'] ?>"
             data-nome="<?= htmlspecialchars($d['Nome']) ?>"
-            data-toggle="modal" data-target="#modalDocente"
+            data-bs-toggle="modal" data-bs-target="#modalDocente"
             <?php endif; ?>>
           <td class="align-middle">
             <?php if ($temPrefsD): ?>
@@ -893,7 +893,7 @@ $(document).ready(function () {
           <td class="align-middle text-center"><?= $temPrefsD ? $d['n_prefs'] : '—' ?></td>
           <td class="align-middle text-center">
             <?php if ($temPrefsD): ?>
-            <span class="badge badge-success"><i class="fas fa-check fa-xs mr-1"></i><?= t('SERVDOC_RESPONDED') ?></span>
+            <span class="badge badge-success"><i class="fas fa-check fa-xs me-1"></i><?= t('SERVDOC_RESPONDED') ?></span>
             <?php else: ?>
             <span class="badge badge-warning"><?= t('SERVDOC_PENDING_U') ?></span>
             <?php endif; ?>
@@ -907,7 +907,7 @@ $(document).ready(function () {
                 <input type="hidden" name="_acao" value="aprovar_edicao">
                 <input type="hidden" name="req_id" value="<?= (int)$editReq['id'] ?>">
                 <button type="submit" class="btn btn-warning btn-xs">
-                  <i class="fas fa-unlock fa-xs mr-1"></i><?= t('SERVDOC_APPROVE') ?>
+                  <i class="fas fa-unlock fa-xs me-1"></i><?= t('SERVDOC_APPROVE') ?>
                 </button>
               </form>
               <?php endif; ?>
@@ -929,7 +929,7 @@ $(document).ready(function () {
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblUcAdmin" style="font-size:.82rem">
       <thead>
-        <tr class="thead-light">
+        <tr class="">
           <th>Unidade Curricular</th>
           <th style="width:11em">Área Científica</th>
           <th style="width:0;display:none">_area_raw</th>
@@ -942,7 +942,7 @@ $(document).ready(function () {
           <th>
             <div class="input-group input-group-sm">
               <div class="input-group-prepend">
-                <span class="input-group-text bg-white border-right-0 pr-1">
+                <span class="input-group-text bg-white border-right-0 pe-1">
                   <i class="fas fa-search fa-xs text-muted"></i>
                 </span>
               </div>
@@ -988,7 +988,7 @@ $(document).ready(function () {
             <?php if ($u['n_sel'] > 0): ?>
             data-codigo="<?= htmlspecialchars($u['codigo']) ?>"
             data-uc="<?= htmlspecialchars($u['uc']) ?>"
-            data-toggle="modal" data-target="#modalUc"
+            data-bs-toggle="modal" data-bs-target="#modalUc"
             <?php endif; ?>>
           <td class="align-middle">
             <?php if ($u['n_sel'] > 0): ?>
@@ -1028,13 +1028,13 @@ $(document).ready(function () {
     <div class="modal-content">
       <div class="modal-header py-2">
         <h5 class="modal-title" id="modalDocenteTitulo">Preferências</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body p-0" id="modalDocenteBody" style="max-height:65vh;overflow-y:auto"></div>
       <div class="modal-footer py-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal"><?= t('CLOSE') ?></button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><?= t('CLOSE') ?></button>
         <a id="btnAdminEditar" href="#" class="btn btn-warning btn-sm">
-          <i class="fas fa-edit mr-1"></i>Editar resposta
+          <i class="fas fa-edit me-1"></i>Editar resposta
         </a>
       </div>
     </div>
@@ -1047,7 +1047,7 @@ $(document).ready(function () {
     <div class="modal-content">
       <div class="modal-header py-2">
         <h5 class="modal-title" id="modalUcTitulo">Docentes</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body p-0" id="modalUcBody"></div>
     </div>
@@ -1126,7 +1126,7 @@ $(document).ready(function () {
     };
 
     // Modal docente
-    $(document).on('click', 'tr[data-target="#modalDocente"]', function () {
+    $(document).on('click', 'tr[data-bs-target="#modalDocente"]', function () {
         var id   = $(this).data('id');
         var nome = $(this).data('nome');
         $('#modalDocenteTitulo').text(nome);
@@ -1137,7 +1137,7 @@ $(document).ready(function () {
             return;
         }
         var html = '<table class="table table-sm mb-0" style="font-size:.82rem">'
-                 + '<thead class="thead-light"><tr><th>UC</th><th style="width:10em">Área</th>'
+                 + '<thead class=""><tr><th>UC</th><th style="width:10em">Área</th>'
                  + '<th style="width:7em">Plano</th><th class="text-center" style="width:8em">Preferência</th></tr></thead><tbody>';
         prefs.forEach(function (p) {
             html += '<tr><td>' + p.uc + '<small class="text-muted d-block" style="font-size:.72rem">' + p.codigo + '</small></td>'
@@ -1150,14 +1150,14 @@ $(document).ready(function () {
     });
 
     // Modal UC
-    $(document).on('click', 'tr[data-target="#modalUc"]', function () {
+    $(document).on('click', 'tr[data-bs-target="#modalUc"]', function () {
         var codigo = $(this).data('codigo');
         var uc     = $(this).data('uc');
         $('#modalUcTitulo').text(uc);
         var docentes = ucDocMap[codigo] || [];
         if (!docentes.length) { $('#modalUcBody').html('<p class="p-3 text-muted">Nenhum docente seleccionou esta UC.</p>'); return; }
         var html = '<table class="table table-sm mb-0" style="font-size:.83rem">'
-                 + '<thead class="thead-light"><tr><th>Docente</th><th class="text-center" style="width:8em">Preferência</th></tr></thead><tbody>';
+                 + '<thead class=""><tr><th>Docente</th><th class="text-center" style="width:8em">Preferência</th></tr></thead><tbody>';
         docentes.forEach(function (d) {
             html += '<tr><td>' + d.nome + '</td><td class="text-center">' + stars(d.rank) + '</td></tr>';
         });
@@ -1187,12 +1187,12 @@ $(document).ready(function () {
 <?php /* ── Formulário (primeira vez ou edição aprovada) ─────────── */ ?>
 <?php if ($modoEdicao): ?>
 <div class="alert alert-info py-2 mb-3" style="font-size:.84rem">
-  <i class="fas fa-edit mr-1"></i>
+  <i class="fas fa-edit me-1"></i>
   Edição aprovada — pode actualizar as suas preferências. As preferências anteriores serão substituídas.
 </div>
 <?php else: ?>
 <div class="alert alert-secondary py-2 mb-3" style="font-size:.84rem">
-  <i class="fas fa-info-circle mr-1"></i>
+  <i class="fas fa-info-circle me-1"></i>
   Indique, para o <strong>máximo de 10 UCs</strong>, a sua preferência de 1 (menor) a 5 (maior).
 </div>
 <?php endif; ?>
@@ -1204,33 +1204,33 @@ $(document).ready(function () {
 <?php /* Estado do pedido de edição */ ?>
 <?php if ($podeEditar): ?>
 <div class="alert alert-success py-2 mb-3 d-flex align-items-center" style="font-size:.84rem">
-  <i class="fas fa-unlock-alt mr-2"></i>
+  <i class="fas fa-unlock-alt me-2"></i>
   <span class="mr-auto">Edição <strong>aprovada</strong> pelo secretariado. Pode actualizar as suas preferências.</span>
-  <a href="index.php?editar=1" class="btn btn-success btn-sm ml-3">
-    <i class="fas fa-edit mr-1"></i><?= t('SERVDOC_EDIT_NOW') ?>
+  <a href="index.php?editar=1" class="btn btn-success btn-sm ms-3">
+    <i class="fas fa-edit me-1"></i><?= t('SERVDOC_EDIT_NOW') ?>
   </a>
 </div>
 <?php elseif ($pedidoPendente): ?>
 <div class="alert alert-warning py-2 mb-3 d-flex align-items-center" style="font-size:.84rem">
-  <i class="fas fa-clock mr-2"></i>
+  <i class="fas fa-clock me-2"></i>
   <span class="mr-auto">
     Pedido de edição enviado em <?= substr($pedidoEdicao['pedido_em'], 0, 16) ?>. Aguarda aprovação.
   </span>
   <form method="post" class="ml-3 mb-0">
     <input type="hidden" name="_acao" value="cancelar_pedido">
     <button type="submit" class="btn btn-outline-warning btn-sm">
-      <i class="fas fa-times mr-1"></i><?= t('SERVDOC_CANCEL_REQ') ?>
+      <i class="fas fa-times me-1"></i><?= t('SERVDOC_CANCEL_REQ') ?>
     </button>
   </form>
 </div>
 <?php else: ?>
 <div class="d-flex align-items-center mb-3" style="gap:10px">
   <span class="badge badge-success py-1 px-2" style="font-size:.8rem">
-    <i class="fas fa-check mr-1"></i>Preferências submetidas
+    <i class="fas fa-check me-1"></i>Preferências submetidas
   </span>
-  <button class="btn btn-outline-secondary btn-sm ml-auto"
-          data-toggle="modal" data-target="#modalSolicitarEdicao">
-    <i class="fas fa-edit mr-1"></i><?= t('SERVDOC_EDIT_REQ') ?>
+  <button class="btn btn-outline-secondary btn-sm ms-auto"
+          data-bs-toggle="modal" data-bs-target="#modalSolicitarEdicao">
+    <i class="fas fa-edit me-1"></i><?= t('SERVDOC_EDIT_REQ') ?>
   </button>
 </div>
 <?php endif; ?>
@@ -1238,11 +1238,11 @@ $(document).ready(function () {
 <div class="card shadow-sm mb-4">
   <div class="card-header py-2">
     <strong>As minhas preferências</strong>
-    <span class="badge badge-secondary ml-2"><?= count($prefActuais) ?> UCs</span>
+    <span class="badge badge-secondary ms-2"><?= count($prefActuais) ?> UCs</span>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th>Unidade Curricular</th>
           <th style="width:10em">Área Científica</th>
@@ -1282,7 +1282,7 @@ $(document).ready(function () {
         <input type="hidden" name="_acao" value="solicitar_edicao">
         <div class="modal-header">
           <h5 class="modal-title">Solicitar edição de preferências</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <p class="text-muted small">
@@ -1295,7 +1295,7 @@ $(document).ready(function () {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('SUBMIT') ?></button>
         </div>
       </form>

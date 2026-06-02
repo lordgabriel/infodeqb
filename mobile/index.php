@@ -43,12 +43,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <div class="mr-auto">
-    <h1><i class="fas fa-globe fa-sm mr-2 text-muted"></i><?= t('MOBILE_TITLE') ?></h1>
+    <h1><i class="fas fa-globe fa-sm me-2 text-muted"></i><?= t('MOBILE_TITLE') ?></h1>
     <small class="text-muted"><?= t('MOBILE_SUBTITLE') ?></small>
   </div>
   <?php if ($isMobileAdmin): ?>
   <a href="<?= HTTP_DIR ?>/infodeqb/mobile/in/add.php" class="btn btn-primary btn-sm">
-    <i class="fas fa-plus mr-1"></i><?= t('MOBILE_NEW_RECORD') ?>
+    <i class="fas fa-plus me-1"></i><?= t('MOBILE_NEW_RECORD') ?>
   </a>
   <?php endif; ?>
 </div>
@@ -57,28 +57,28 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="d-flex flex-wrap mb-4" style="gap:12px">
   <a href="<?= HTTP_DIR ?>/infodeqb/mobile/in/" class="card flex-fill shadow-sm text-center text-decoration-none" style="min-width:130px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-plane-arrival fa-xs mr-1"></i><?= t('MOBILE_STUDENTS_IN') ?></div>
+      <div class="text-muted small mb-1"><i class="fas fa-plane-arrival fa-xs me-1"></i><?= t('MOBILE_STUDENTS_IN') ?></div>
       <div class="h4 mb-0 font-weight-bold text-primary"><?= $stTotal ?></div>
       <div class="text-muted" style="font-size:.72rem">total histórico</div>
     </div>
   </a>
   <div class="card flex-fill shadow-sm text-center" style="min-width:130px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-calendar fa-xs mr-1"></i><?= htmlspecialchars($stAnoAtual['anoletivo'] ?? '') ?></div>
+      <div class="text-muted small mb-1"><i class="fas fa-calendar fa-xs me-1"></i><?= htmlspecialchars($stAnoAtual['anoletivo'] ?? '') ?></div>
       <div class="h4 mb-0 font-weight-bold"><?= $stAnoAtual['n'] ?? 0 ?></div>
       <div class="text-muted" style="font-size:.72rem">ano letivo actual</div>
     </div>
   </div>
   <div class="card flex-fill shadow-sm text-center" style="min-width:130px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-flag fa-xs mr-1"></i>Países de origem</div>
+      <div class="text-muted small mb-1"><i class="fas fa-flag fa-xs me-1"></i>Países de origem</div>
       <div class="h4 mb-0 font-weight-bold"><?= count($topPaises) ?>+</div>
       <div class="text-muted" style="font-size:.72rem">representados</div>
     </div>
   </div>
   <a href="<?= HTTP_DIR ?>/infodeqb/mobile/die/" class="card flex-fill shadow-sm text-center text-decoration-none" style="min-width:130px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-building fa-xs mr-1"></i><?= t('MOBILE_DIE') ?></div>
+      <div class="text-muted small mb-1"><i class="fas fa-building fa-xs me-1"></i><?= t('MOBILE_DIE') ?></div>
       <div class="h4 mb-0 font-weight-bold text-success"><?= $dieTotal ?></div>
       <div class="text-muted" style="font-size:.72rem"><?= $diePaises ?> países</div>
     </div>
@@ -115,14 +115,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="card-header py-2"><strong>Por programa</strong></div>
       <div class="card-body p-0">
         <table class="table table-sm mb-0" style="font-size:.83rem">
-          <thead class="thead-light">
-            <tr><th>Programa</th><th class="text-right" style="width:4em">Nº</th></tr>
+          <thead class="">
+            <tr><th>Programa</th><th class="text-end" style="width:4em">Nº</th></tr>
           </thead>
           <tbody>
           <?php foreach ($porPrograma as $prog): ?>
             <tr>
               <td><?= htmlspecialchars($prog['programa']) ?></td>
-              <td class="text-right font-weight-bold"><?= $prog['n'] ?></td>
+              <td class="text-end font-weight-bold"><?= $prog['n'] ?></td>
             </tr>
           <?php endforeach; ?>
           </tbody>

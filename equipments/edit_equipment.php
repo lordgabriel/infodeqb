@@ -153,12 +153,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
-    <i class="fas fa-<?= $equipId ? 'edit' : 'plus-circle' ?> fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-<?= $equipId ? 'edit' : 'plus-circle' ?> fa-sm me-2 text-muted"></i>
     <?= $equipId ? t('EDIT') . ' — ' . htmlspecialchars($eq['Equipamento'] ?? '') : t('EQUIP_NEW') ?>
   </h1>
   <a href="<?= $equipId ? 'equipment_details.php?id=' . $equipId : 'index.php' ?>"
      class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-times mr-1"></i><?= t('CANCEL') ?>
+    <i class="fas fa-times me-1"></i><?= t('CANCEL') ?>
   </a>
 </div>
 
@@ -294,7 +294,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <a href="<?= $equipId ? 'equipment_details.php?id='.$equipId : 'index.php' ?>"
        class="btn btn-outline-secondary"><?= t('CANCEL') ?></a>
     <button type="submit" class="btn btn-primary">
-      <i class="fas fa-save mr-1"></i><?= $equipId ? t('SAVE_CHANGES') : t('EQUIP_ADD') ?>
+      <i class="fas fa-save me-1"></i><?= $equipId ? t('SAVE_CHANGES') : t('EQUIP_ADD') ?>
     </button>
   </div>
 

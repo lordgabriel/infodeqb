@@ -6,7 +6,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header">
-  <h1><i class="fas fa-info-circle fa-sm mr-2 text-muted"></i>Aviso</h1>
+  <h1><i class="fas fa-info-circle fa-sm me-2 text-muted"></i>Aviso</h1>
 </div>
 
 <div class="alert alert-warning" role="alert">
@@ -15,7 +15,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     Em caso de dúvida contacte a Direção do Departamento
     (<a href="mailto:deqbdir@fe.up.pt">deqbdir@fe.up.pt</a>).
   </div>
-  <a href="<?php echo HTTP_DIR; ?>/infodeqb/" class="btn btn-sm btn-secondary ml-3 flex-shrink-0">Início</a>
+  <a href="<?php echo HTTP_DIR; ?>/infodeqb/" class="btn btn-sm btn-secondary ms-3 flex-shrink-0">Início</a>
 </div>
 
 <?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>

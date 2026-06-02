@@ -113,7 +113,7 @@ Database::disconnect();
 
     <?php if ($erro): ?>
       <div class="alert alert-danger">
-        <i class="fas fa-exclamation-circle mr-2"></i>
+        <i class="fas fa-exclamation-circle me-2"></i>
         <?= $erro ?>
       </div>
 
@@ -145,7 +145,7 @@ Database::disconnect();
             <td><?php
               $labsArr = !empty($val['labs_json']) ? json_decode($val['labs_json'], true) : null;
               if ($labsArr && count($labsArr) > 1):
-            ?><ul class="mb-0 pl-3">
+            ?><ul class="mb-0 ps-3">
               <?php foreach ($labsArr as $lb): ?>
                 <li><?= htmlspecialchars($lb['gab_nome']) ?></li>
               <?php endforeach; ?>

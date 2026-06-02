@@ -395,10 +395,10 @@ if (empty($flashMsg) && (!$colaborador || empty($todosRegistos))) {
 $topBtnLabel = '';
 $topBtnJs    = '';
 if ($podeAlterar && $isAtivo) {
-    $topBtnLabel = '<i class="fas fa-plus mr-1"></i>Pedir novo registo';
+    $topBtnLabel = '<i class="fas fa-plus me-1"></i>Pedir novo registo';
     $topBtnJs    = "abrirForm(true)";
 } elseif ($podeAlterar && $isInativo) {
-    $topBtnLabel = '<i class="fas fa-redo mr-1"></i>Renovar acesso';
+    $topBtnLabel = '<i class="fas fa-redo me-1"></i>Renovar acesso';
     $topBtnJs    = "abrirForm(false)";
 }
 
@@ -407,14 +407,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header d-flex align-items-center">
-  <h1 class="mr-auto"><i class="fas fa-id-card fa-sm mr-2 text-muted"></i>Os meus registos</h1>
+  <h1 class="mr-auto"><i class="fas fa-id-card fa-sm me-2 text-muted"></i>Os meus registos</h1>
 </div>
 
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType === 'success' ? 'check-circle' : ($flashType === 'info' ? 'info-circle' : 'exclamation-circle') ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType === 'success' ? 'check-circle' : ($flashType === 'info' ? 'info-circle' : 'exclamation-circle') ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -437,12 +437,12 @@ $tipoLabelsU = array(
 <?php if ($pedidosPendentes): ?>
 <div class="card mb-3 border-warning">
   <div class="card-header py-2 d-flex align-items-center" style="background:#fffbeb">
-    <i class="fas fa-clock text-warning mr-2"></i>
+    <i class="fas fa-clock text-warning me-2"></i>
     <strong style="color:#92400e" class="mr-auto">Pedidos em análise</strong>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm mb-0" style="font-size:.82rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr><th>Tipo</th><th><?= t('STATUS') ?></th><th>Submetido em</th><th>Observações</th></tr>
       </thead>
       <tbody>
@@ -467,7 +467,7 @@ $tipoLabelsU = array(
 <?php if ($temPendenteReg && !$pedidosPendentes): ?>
 <div class="card mb-3 border-info">
   <div class="card-header py-2 d-flex align-items-center" style="background:#e8f4f8">
-    <i class="fas fa-hourglass-half text-info mr-2"></i>
+    <i class="fas fa-hourglass-half text-info me-2"></i>
     <strong style="color:#0c5460" class="mr-auto">Registo em processamento</strong>
   </div>
   <div class="card-body py-2" style="font-size:.85rem">
@@ -479,8 +479,8 @@ $tipoLabelsU = array(
 
 <?php /* ── Barra de acção: botão fora da tabela ─────────────────── */ ?>
 <div class="d-flex align-items-center mb-3">
-  <h5 class="mb-0 mr-auto text-secondary" style="font-size:.95rem;font-weight:600">
-    <i class="fas fa-list fa-sm mr-1"></i>Registos
+  <h5 class="mb-0 me-auto text-secondary" style="font-size:.95rem;font-weight:600">
+    <i class="fas fa-list fa-sm me-1"></i>Registos
   </h5>
   <?php if ($topBtnLabel): ?>
   <button class="btn btn-primary btn-sm" onclick="<?= $topBtnJs ?>">
@@ -489,7 +489,7 @@ $tipoLabelsU = array(
   <?php elseif ($temPendente): ?>
   <button class="btn btn-secondary btn-sm" disabled
           title="Aguarda processamento de pedido em curso">
-    <i class="fas fa-lock mr-1"></i>Novo registo indisponível
+    <i class="fas fa-lock me-1"></i>Novo registo indisponível
   </button>
   <?php endif; ?>
 </div>
@@ -498,7 +498,7 @@ $tipoLabelsU = array(
 <div class="card mb-4">
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th style="width:7em"><?= t('STATUS') ?></th>
           <th>Grupo profissional</th>
@@ -535,7 +535,7 @@ $tipoLabelsU = array(
         </td>
         <td class="align-middle text-center text-nowrap">
           <a href="<?= HTTP_DIR ?>/infodeqb/hr/meu-registo-detalhe.php?id=<?= (int)$reg['autoid'] ?>"
-             class="btn btn-xs btn-outline-secondary mr-1" title="Ver detalhe">
+             class="btn btn-xs btn-outline-secondary me-1" title="Ver detalhe">
             <i class="fas fa-eye fa-xs"></i>
           </a>
           <?php if ($reg['status'] === 'Ativo' && $podeAlterar): ?>
@@ -562,7 +562,7 @@ $tipoLabelsU = array(
 <div class="card border-primary mb-4">
   <div class="card-header py-2 d-flex align-items-center">
     <strong class="mr-auto" id="formTitle">Solicitar alteração</strong>
-    <button type="button" class="btn btn-sm btn-outline-secondary ml-3"
+    <button type="button" class="btn btn-sm btn-outline-secondary ms-3"
             onclick="document.getElementById('formAlterar').style.display='none'">
       <i class="fas fa-times"></i>
     </button>
@@ -570,15 +570,15 @@ $tipoLabelsU = array(
   <div class="card-body">
 
     <div id="avisoGrupo" class="alert alert-warning py-2 mb-3" style="display:none;font-size:.83rem">
-      <i class="fas fa-exclamation-triangle mr-1"></i>
+      <i class="fas fa-exclamation-triangle me-1"></i>
       <strong>Mudança de grupo:</strong> será criado um novo registo e o actual passará a Inativo quando o novo for ativado.
     </div>
-    <div id="avisoNovoReg" class="alert alert-warning py-2 mb-3 text-left" style="display:none;font-size:.83rem; justify-content:flex-start;;">
-      <i class="fas fa-exclamation-triangle mr-1"></i>
+    <div id="avisoNovoReg" class="alert alert-warning py-2 mb-3 text-start" style="display:none;font-size:.83rem; justify-content:flex-start;;">
+      <i class="fas fa-exclamation-triangle me-1"></i>
       <strong>Novo registo:</strong> o registo actual ficará Inativo quando o novo for ativado. Preencha as novas datas.
     </div>
     <div id="avisoLabs" class="alert alert-secondary py-2 mb-3" style="display:none;font-size:.83rem">
-      <i class="fas fa-info-circle mr-1"></i>
+      <i class="fas fa-info-circle me-1"></i>
       A alteração de acessos a laboratórios requer aprovação pelo secretariado. Os restantes campos são aplicados imediatamente.
     </div>
 
@@ -782,12 +782,12 @@ $tipoLabelsU = array(
       </div><!-- /iq-form-2col -->
 
       <div class="iq-form-actions mt-2">
-        <button type="button" class="btn btn-secondary mr-auto"
+        <button type="button" class="btn btn-secondary me-auto"
                 onclick="document.getElementById('formAlterar').style.display='none'">
           <?= t('CANCEL') ?>
         </button>
         <button type="submit" class="btn btn-primary">
-          <i class="fas fa-paper-plane mr-1"></i> <?= t('SUBMIT') ?>
+          <i class="fas fa-paper-plane me-1"></i> <?= t('SUBMIT') ?>
         </button>
       </div>
     </form>

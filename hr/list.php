@@ -143,7 +143,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <div class="mr-auto">
-    <h1><i class="fas fa-users fa-sm mr-2 text-muted"></i>Pessoal ativo DEQB</h1>
+    <h1><i class="fas fa-users fa-sm me-2 text-muted"></i>Pessoal ativo DEQB</h1>
     <small class="text-muted" style="font-size:.85rem">
       <?= count($rows) ?> colaboradores / investigadores
     </small>
@@ -165,7 +165,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="card mb-4 shadow-sm">
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblLista">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th style="width:0"><?= t('CODE') ?></th>
           <th><?= t('NAME') ?></th>
