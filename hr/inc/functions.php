@@ -245,7 +245,8 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
         $to       = !empty($testRecipients) ? $testRecipients : array($DEV_ADMIN);
         $cc_list  = array();   // sem CC separado — todos já estão em $to
         $bcc_list = array();
-        $subject  = '[TESTE → ' . $origTo . '] ' . $subject;
+        // NÃO alterar o assunto — prefixo [TESTE] pode activar filtros anti-spam
+        // O banner dentro do corpo do email já identifica que é modo teste
         // Actualizar banner com nova lista de destinos
         $banner = str_replace(
             'Enviado para: ' . htmlspecialchars($isAdminDest ? $DEV_ADMIN : $DEV_USER),
