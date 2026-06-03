@@ -41,12 +41,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <h1 class="mr-auto mb-0">
-    <i class="fas fa-microscope fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-microscope fa-sm me-2 text-muted"></i>
     <?= t('EQUIP_TITLE') ?>
   </h1>
   <?php if ($podeGerir): ?>
   <a href="edit_equipment.php" class="btn btn-primary btn-sm">
-    <i class="fas fa-plus mr-1"></i><?= t('EQUIP_ADD') ?>
+    <i class="fas fa-plus me-1"></i><?= t('EQUIP_ADD') ?>
   </a>
   <?php endif; ?>
 </div>
@@ -90,8 +90,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="lab-group mb-4" data-lab="<?= htmlspecialchars($labNome) ?>">
   <div class="d-flex align-items-center mb-0 px-3 py-2 rounded-top"
        style="background:#e8f0fe">
-    <h6 class="mb-0 font-weight-bold mr-auto" style="font-size:.88rem;color:#1a56db">
-      <i class="fas fa-flask fa-xs mr-1"></i><?= htmlspecialchars($labNome) ?>
+    <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:#1a56db">
+      <i class="fas fa-flask fa-xs me-1"></i><?= htmlspecialchars($labNome) ?>
     </h6>
     <span class="badge" style="background:#1a56db;color:#fff"><?= count($eqs) ?></span>
     <?php if ($podeAdicionarAqui): ?>
@@ -105,7 +105,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card shadow-sm" style="border-top:none;border-radius:0 0 .375rem .375rem">
     <div class="card-body p-0">
       <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-        <thead class="thead-light">
+        <thead class="">
           <tr>
             <th style="width:20em">Equipamento</th>
             <th style="width:14em">Marca / Modelo</th>

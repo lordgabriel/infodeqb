@@ -87,28 +87,28 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:.5rem">
   <h1 class="mr-auto mb-0">
-    <i class="fas fa-user fa-sm mr-2 text-muted"></i><?= htmlspecialchars($colab['nome']) ?>
+    <i class="fas fa-user fa-sm me-2 text-muted"></i><?= htmlspecialchars($colab['nome']) ?>
   </h1>
   <a href="index.php" class="btn btn-sm btn-outline-secondary">
-    <i class="fas fa-arrow-left mr-1"></i> Voltar
+    <i class="fas fa-arrow-left me-1"></i> Voltar
   </a>
 </div>
 
 <!-- ══ Cartão: Dados Pessoais ══════════════════════════════════════ -->
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center">
-    <i class="fas fa-id-card mr-2 text-muted"></i>
+    <i class="fas fa-id-card me-2 text-muted"></i>
     <strong class="mr-auto">Dados Pessoais</strong>
     <a href="edituser.php?id=<?= htmlspecialchars($id) ?>"
-       class="btn btn-sm btn-outline-secondary mr-2" title="Editar dados pessoais">
-      <i class="fas fa-edit mr-1"></i> Editar
+       class="btn btn-sm btn-outline-secondary me-2" title="Editar dados pessoais">
+      <i class="fas fa-edit me-1"></i> Editar
     </a>
     <a href="print.php?id=<?= htmlspecialchars($id) ?>"
-       class="btn btn-sm btn-outline-secondary mr-2" title="Imprimir">
+       class="btn btn-sm btn-outline-secondary me-2" title="Imprimir">
       <i class="fas fa-print"></i>
     </a>
-    <button class="btn btn-sm btn-outline-danger" data-toggle="modal"
-            data-target="#modalDeleteColab" title="Apagar colaborador">
+    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+            data-bs-target="#modalDeleteColab" title="Apagar colaborador">
       <i class="fas fa-trash-alt"></i>
     </button>
   </div>
@@ -144,23 +144,23 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <!-- ══ Cartão: Registos ════════════════════════════════════════════ -->
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center">
-    <i class="fas fa-list mr-2 text-muted"></i>
+    <i class="fas fa-list me-2 text-muted"></i>
     <strong class="mr-auto">
       Registos
       <?php if ($statusFiltro): ?>
-        <span class="badge badge-info ml-1"><?= htmlspecialchars($statusFiltro) ?></span>
+        <span class="badge badge-info ms-1"><?= htmlspecialchars($statusFiltro) ?></span>
       <?php endif; ?>
     </strong>
     <?php if ($statusFiltro): ?>
       <a href="detail.php?id=<?= urlencode($id) ?>"
          class="btn btn-xs btn-outline-secondary">
-        <i class="fas fa-list fa-xs mr-1"></i>Ver todos
+        <i class="fas fa-list fa-xs me-1"></i>Ver todos
       </a>
     <?php endif; ?>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th class="text-muted" style="width:4%">ID</th>
           <th style="width:20%">Categoria</th>
@@ -177,7 +177,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <tr>
           <td colspan="8" class="py-1 px-3">
             <div class="alert alert-info alert-sm mb-0 py-1 px-2" style="font-size:.85rem;">
-              <i class="fas fa-info-circle mr-1"></i><?= htmlspecialchars($valInfo) ?>
+              <i class="fas fa-info-circle me-1"></i><?= htmlspecialchars($valInfo) ?>
             </div>
           </td>
         </tr>
@@ -234,7 +234,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             </a>
             <?php endif; ?>
             <button type="button" class="btn btn-xs btn-outline-danger"
-                    data-toggle="modal" data-target="#modalDel<?= (int)$row['autoid'] ?>"
+                    data-bs-toggle="modal" data-bs-target="#modalDel<?= (int)$row['autoid'] ?>"
                     title="Apagar">
               <i class="fas fa-trash-alt"></i>
             </button>
@@ -244,19 +244,19 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <tr>
           <td colspan="8" style="background:#f8f9fa;padding:6px 16px 10px 16px;border-top:none;">
             <small class="d-block mb-1 text-muted font-weight-bold">
-              <i class="fas fa-user-check mr-1"></i>Validações de espaço
+              <i class="fas fa-user-check me-1"></i>Validações de espaço
               <?php if ($rTodosOk): ?>
-                <span class="badge badge-success ml-1">Todas validadas ✓</span>
+                <span class="badge badge-success ms-1">Todas validadas ✓</span>
               <?php elseif ($rBloqueado): ?>
-                <span class="badge badge-warning ml-1">A aguardar / com rejeição</span>
+                <span class="badge badge-warning ms-1">A aguardar / com rejeição</span>
               <?php else: ?>
-                <span class="badge badge-secondary ml-1">Não solicitadas</span>
+                <span class="badge badge-secondary ms-1">Não solicitadas</span>
               <?php endif; ?>
             </small>
 
             <?php if ($rNVal > 0): ?>
             <table class="table table-xs table-bordered mb-1" style="font-size:.8rem;background:#fff;">
-              <thead class="thead-light">
+              <thead class="">
                 <tr><th>Espaço</th><th>Responsável</th><th>Estado</th><th>Nota</th><th style="width:1%">Ações</th></tr>
               </thead>
               <tbody>
@@ -315,7 +315,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                      value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
               <button class="btn btn-xs btn-success"
                       onclick="return confirm('Enviar pedido de acessos ao SIGARRA?')">
-                <i class="fas fa-paper-plane fa-xs mr-1"></i>Solicitar acessos ao SIGARRA
+                <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar acessos ao SIGARRA
               </button>
             </form>
             <?php else: ?>
@@ -326,7 +326,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                      value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
               <button class="btn btn-xs btn-outline-warning"
                       onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
-                <i class="fas fa-user-check fa-xs mr-1"></i>
+                <i class="fas fa-user-check fa-xs me-1"></i>
                 <?= $rNVal === 0 ? 'Solicitar validações' : 'Solicitar validações em falta' ?>
               </button>
             </form>
@@ -349,7 +349,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="modalDelLabel<?= (int)$row['autoid'] ?>">Apagar registo</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -360,7 +360,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="modal-footer">
           <input type="hidden" name="id"  value="<?= htmlspecialchars($colab['codigo']) ?>">
           <input type="hidden" name="id1" value="<?= (int)$row['autoid'] ?>">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
           <button type="submit" class="btn btn-danger">Sim, apagar</button>
         </div>
       </div>
@@ -377,7 +377,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="modalDeleteColabLabel">Apagar colaborador</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -389,7 +389,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="modal-footer">
           <input type="hidden" name="id"  value="<?= htmlspecialchars($colab['codigo']) ?>">
           <input type="hidden" name="id1" value="">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
           <button type="submit" class="btn btn-danger">Sim, apagar tudo</button>
         </div>
       </div>

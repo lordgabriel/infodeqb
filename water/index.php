@@ -143,26 +143,26 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <h1 class="mr-auto mb-0">
-    <i class="fas fa-water fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-water fa-sm me-2 text-muted"></i>
     <?= t('WATER_CONSUMPTION') ?>
   </h1>
-  <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#modalNovoResp">
-    <i class="fas fa-plus mr-1"></i> Responsável
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoResp">
+    <i class="fas fa-plus me-1"></i> Responsável
   </button>
-  <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#modalNovoUser">
-    <i class="fas fa-plus mr-1"></i> Utilizador
+  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoUser">
+    <i class="fas fa-plus me-1"></i> Utilizador
   </button>
   <a href="edit.php" class="btn btn-sm btn-outline-secondary">
-    <i class="fas fa-users-cog mr-1"></i> <?= t('WATER_MANAGE_USERS') ?>
+    <i class="fas fa-users-cog me-1"></i> <?= t('WATER_MANAGE_USERS') ?>
   </a>
 </div>
 
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3"
      role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -193,8 +193,8 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 <?php /* ── Formulário de inserção ──────────────────────────────── */ ?>
 <div class="card mb-4 border-primary">
   <div class="card-header py-2 d-flex align-items-center"
-       style="cursor:pointer" data-toggle="collapse" data-target="#formInserir">
-    <i class="fas fa-plus-circle text-primary mr-2"></i>
+       style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#formInserir">
+    <i class="fas fa-plus-circle text-primary me-2"></i>
     <strong class="mr-auto text-primary"><?= t('WATER_NEW_RECORD') ?></strong>
     <i class="fas fa-chevron-down fa-xs text-muted"></i>
   </div>
@@ -228,7 +228,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           </div>
           <div class="col-md-2 form-group mb-0">
             <button type="submit" class="btn btn-primary btn-sm btn-block">
-              <i class="fas fa-save mr-1"></i> <?= t('SAVE') ?>
+              <i class="fas fa-save me-1"></i> <?= t('SAVE') ?>
             </button>
           </div>
         </div>
@@ -253,12 +253,12 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
   </div>
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblConsumos">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th style="width:8em">Data</th>
           <th>Responsável</th>
           <th>Utilizador</th>
-          <th style="width:8em" class="text-right">Quantidade (L)</th>
+          <th style="width:8em" class="text-end">Quantidade (L)</th>
           <th style="width:5em" class="text-center"><?= t('ACTIONS') ?></th>
         </tr>
       </thead>
@@ -268,23 +268,23 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           <td class="align-middle"><?= htmlspecialchars($rec['data']) ?></td>
           <td class="align-middle"><?= htmlspecialchars($rec['resp_nome']) ?></td>
           <td class="align-middle"><?= htmlspecialchars($rec['user_nome']) ?></td>
-          <td class="align-middle text-right"><?= number_format((float)$rec['quantity'], 2, ',', ' ') ?></td>
+          <td class="align-middle text-end"><?= number_format((float)$rec['quantity'], 2, ',', ' ') ?></td>
           <td class="align-middle text-center text-nowrap">
-            <a href="#" class="btn-edit text-info mr-1"
+            <a href="#" class="btn-edit text-info me-1"
                data-id="<?= (int)$rec['autoid'] ?>"
                data-data="<?= htmlspecialchars($rec['data']) ?>"
                data-resp="<?= (int)$rec['resp_id'] ?>"
                data-user="<?= (int)$rec['user_id'] ?>"
                data-qtd="<?= htmlspecialchars($rec['quantity']) ?>"
                title="Editar"
-               data-toggle="modal" data-target="#modalEditar">
+               data-bs-toggle="modal" data-bs-target="#modalEditar">
               <i class="fas fa-edit fa-xs"></i>
             </a>
             <a href="#" class="btn-delete text-danger"
                data-id="<?= (int)$rec['autoid'] ?>"
                data-info="<?= htmlspecialchars($rec['data'] . ' — ' . $rec['user_nome'] . ' — ' . $rec['quantity'] . ' L') ?>"
                title="Apagar"
-               data-toggle="modal" data-target="#modalApagar">
+               data-bs-toggle="modal" data-bs-target="#modalApagar">
               <i class="fas fa-trash fa-xs"></i>
             </a>
           </td>
@@ -304,7 +304,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
         <input type="hidden" name="editid" id="editId">
         <div class="modal-header">
           <h5 class="modal-title">Editar registo</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -328,7 +328,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('SAVE') ?></button>
         </div>
       </form>
@@ -345,7 +345,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
         <input type="hidden" name="deleteid" id="deleteId">
         <div class="modal-header">
           <h5 class="modal-title">Apagar registo</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <p><?= t('CONFIRM_DELETE') ?></p>
@@ -353,7 +353,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           <p class="text-danger small mb-0"><?= t('IRREVERSIBLE') ?></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-danger"><?= t('DELETE') ?></button>
         </div>
       </form>
@@ -369,7 +369,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
         <input type="hidden" name="_acao" value="novo_resp">
         <div class="modal-header">
           <h5 class="modal-title">Novo responsável</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group mb-0">
@@ -379,7 +379,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('ADD') ?></button>
         </div>
       </form>
@@ -395,7 +395,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
         <input type="hidden" name="_acao" value="novo_user">
         <div class="modal-header">
           <h5 class="modal-title">Novo utilizador</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -412,7 +412,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('ADD') ?></button>
         </div>
       </form>
@@ -439,7 +439,7 @@ $(document).ready(function () {
         },
         dom: '<"d-flex align-items-center justify-content-between px-3 pt-3 pb-2"fi>t<"px-3 pb-3"p>',
         columnDefs: [
-            { targets: [3], className: 'text-right' },
+            { targets: [3], className: 'text-end' },
             { targets: [4], orderable: false, className: 'text-center' },
         ]
     });

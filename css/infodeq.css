@@ -1143,6 +1143,88 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .scroll-to-top:hover { background: var(--iq-blue-dark) !important; }
 
 /* ─────────────────────────────────────────
+   BOOTSTRAP 5 — compatibilidade
+   ───────────────────────────────────────── */
+
+/* btn-close: esconder o <span>&times;</span> do BS4 que pode ter ficado
+   no HTML; o BS5 usa background-image SVG */
+.btn-close span,
+.btn-close > * { display: none !important; }
+
+/* Badge: BS5 usa bg-* em vez de badge-* — manter as nossas classes BS4 */
+.badge-primary   { background-color: var(--iq-blue) !important; color: #fff !important; }
+.badge-success   { background-color: #0e9f6e !important; color: #fff !important; }
+.badge-danger    { background-color: #e02424 !important; color: #fff !important; }
+.badge-warning   { background-color: #f59e0b !important; color: #fff !important; }
+.badge-info      { background-color: #0ea5e9 !important; color: #fff !important; }
+.badge-secondary { background-color: var(--iq-gray-200) !important; color: var(--iq-gray-700) !important; }
+.badge-light     { background-color: var(--iq-gray-100) !important; color: var(--iq-gray-700) !important; }
+.badge-dark      { background-color: var(--iq-gray-800) !important; color: #fff !important; }
+
+/* BS5 removeu float-left/right — assegurar que float-start/end funcionam */
+.float-start { float: left !important; }
+.float-end   { float: right !important; }
+
+/* BS5: .form-group foi removido — manter para código legado */
+.form-group { margin-bottom: .9rem; }
+
+/* BS5: .close foi substituído por .btn-close */
+.close {
+  opacity: .5;
+  transition: opacity .15s;
+}
+.close:hover { opacity: .75; }
+
+/* iq-tn-user.open já não é usado (Alpine.js); manter por segurança */
+.iq-tn-user.open .iq-tn-user-dropdown { display: block; }
+
+/* Nav-pills com btn-dark (HR admin tabs) — BS5 não aplica bg ao <li> */
+.nav-item.btn-dark > .nav-link {
+  background: var(--iq-gray-200) !important;
+  color: var(--iq-gray-700) !important;
+  border-radius: var(--iq-r) !important;
+}
+.nav-item.btn-dark > .nav-link:hover:not(.active) {
+  background: var(--iq-gray-300) !important;
+  color: var(--iq-gray-900) !important;
+}
+.nav-item.btn-dark > .nav-link.active {
+  background: #343a40 !important;
+  color: #fff !important;
+}
+.nav-item.btn-dark > .nav-link .badge { color: inherit !important; }
+.nav-item.btn-dark > .nav-link.active .badge {
+  background: rgba(255,255,255,.25) !important;
+  color: #fff !important;
+}
+
+/* ADI ficha — cabeçalhos de secção escuros (primeiro nível) */
+.adi-section-header,
+.adi-ficha .card-header:first-of-type,
+.adi-ficha > .card > .card-header {
+  background: #343a40 !important;
+  color: #fff !important;
+  border-bottom-color: #23272b !important;
+}
+.adi-section-header .fas,
+.adi-ficha .card-header:first-of-type .fas {
+  color: rgba(255,255,255,.6) !important;
+}
+
+/* ServDoc — cabeçalho da tabela por-uc */
+#tblUcs thead th,
+#tblUcs thead tr:first-child th {
+  background: var(--iq-gray-800) !important;
+  color: #fff !important;
+  border-color: #495057 !important;
+}
+#tblUcs thead tr.filter-row th {
+  background: #fff !important;
+  color: var(--iq-text) !important;
+  border-top: 2px solid var(--iq-border) !important;
+}
+
+/* ─────────────────────────────────────────
    PRINT
    ───────────────────────────────────────── */
 @media print {

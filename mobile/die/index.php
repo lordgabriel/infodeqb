@@ -157,7 +157,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
                             <!-- Botão Exportar (só admin; continua sempre visível, mesmo dentro da empresa) -->
                             <?php if ($isAdmin): ?>
-                                <a href="export_contacts.php" class="btn btn-info text-white ml-2">
+                                <a href="export_contacts.php" class="btn btn-info text-white ms-2">
                                     Exportar Contactos
                                 </a>
                             <?php endif; ?>
@@ -203,7 +203,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
     <!-- PRIMEIRO: Todas as Empresas -->
     <div class="col-md-6">
       <h5>Empresas
-    <span class="badge badge-success p-2 ml-2" style="font-size:1rem;">
+    <span class="badge badge-success p-2 ms-2" style="font-size:1rem;">
          <?=$totalEmpresas?>
     </span>
       </h5>
@@ -221,7 +221,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
     <!-- SEGUNDO: Lista de Países -->
     <div class="col-md-6">
-      <h5>Países    <span class="badge badge-success p-2 ml-2" style="font-size:1rem;">
+      <h5>Países    <span class="badge badge-success p-2 ms-2" style="font-size:1rem;">
          <?=$totalPaises?>
     </span></h5>
 <div class="row">
@@ -232,7 +232,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
          <?= htmlspecialchars($p['pais']) ?>
 
-         <span class="badge badge-primary ml-2">
+         <span class="badge badge-primary ms-2">
              <?= (int)$p['c'] ?> empresas
          </span>
 
@@ -252,12 +252,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                             <?php foreach($empresas as $e): ?>
                               <li class="list-group-item">
                                 <div class="d-flex align-items-center">
-                                  <div><?= htmlspecialchars($e['empresa']) ?>                                        <span class="badge badge-primary badge-pill ml-2">
+                                  <div><?= htmlspecialchars($e['empresa']) ?>                                        <span class="badge badge-primary badge-pill ms-2">
                                             <?= (int)$e['c'] ?>
                                         </span></div>
                                   <a
                                     href="?pais=<?= urlencode($selectedPais) ?>&empresa=<?= urlencode($e['empresa']) ?>"
-                                    class="btn btn-sm btn-primary text-white ml-auto">
+                                    class="btn btn-sm btn-primary text-white ms-auto">
                                     Ver Contactos
                                   </a>
                                 </div>

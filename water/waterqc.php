@@ -80,7 +80,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
-    <i class="fas fa-tint fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-tint fa-sm me-2 text-muted"></i>
     <?= t('WATER_QC_TITLE') ?>
   </h1>
 </div>
@@ -88,9 +88,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert"
      style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType === 'success' ? 'check-circle' : 'exclamation-circle' ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType === 'success' ? 'check-circle' : 'exclamation-circle' ?> me-2"></i>
   <?= $flashMsg ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -98,8 +98,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php if ($isAdmin): ?>
 <div class="card mb-4 border-primary">
   <div class="card-header py-2 d-flex align-items-center"
-       style="cursor:pointer" data-toggle="collapse" data-target="#formInsert">
-    <i class="fas fa-plus-circle text-primary mr-2"></i>
+       style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#formInsert">
+    <i class="fas fa-plus-circle text-primary me-2"></i>
     <strong class="mr-auto text-primary"><?= t('WATER_LOG_TITLE') ?></strong>
     <i class="fas fa-chevron-down fa-xs text-muted"></i>
   </div>
@@ -121,7 +121,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <div class="col-md-6">
             <div class="card border-0 bg-light mb-3 p-3">
               <h6 class="font-weight-bold mb-3">
-                <i class="fas fa-flask fa-sm mr-1 text-success"></i> Água Destilada
+                <i class="fas fa-flask fa-sm me-1 text-success"></i> Água Destilada
               </h6>
               <div class="form-row">
                 <div class="col form-group mb-2">
@@ -159,7 +159,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <div class="col-md-6">
             <div class="card border-0 bg-light mb-3 p-3">
               <h6 class="font-weight-bold mb-3">
-                <i class="fas fa-flask fa-sm mr-1 text-primary"></i> Água Purificada
+                <i class="fas fa-flask fa-sm me-1 text-primary"></i> Água Purificada
               </h6>
               <div class="form-row">
                 <div class="col form-group mb-2">
@@ -196,7 +196,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
         <div class="mt-1">
           <button type="submit" class="btn btn-primary btn-sm">
-            <i class="fas fa-save mr-1"></i> <?= t('WATER_SAVE_READING') ?>
+            <i class="fas fa-save me-1"></i> <?= t('WATER_SAVE_READING') ?>
           </button>
         </div>
       </form>
@@ -239,12 +239,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <button class="wq-pill" data-preset="15d"><?= t('PERIOD_LAST_15') ?></button>
     <button class="wq-pill" data-preset="30d"><?= t('PERIOD_LAST_30') ?></button>
     <button class="wq-pill" data-preset="custom">
-      <i class="fas fa-calendar-alt fa-xs mr-1"></i><?= t('PERIOD_CUSTOM') ?>
+      <i class="fas fa-calendar-alt fa-xs me-1"></i><?= t('PERIOD_CUSTOM') ?>
     </button>
   </div>
   <a id="btnExport" href="#" target="_blank"
      class="btn btn-sm btn-outline-success" style="white-space:nowrap">
-    <i class="fas fa-file-excel mr-1"></i><?= t('WATER_EXPORT') ?>
+    <i class="fas fa-file-excel me-1"></i><?= t('WATER_EXPORT') ?>
   </a>
   </div><!-- fecha d-flex outer -->
 
@@ -267,7 +267,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <label class="small font-weight-bold mb-0"><?= t('PERIOD_TO') ?></label>
     <input type="date" id="wqAte" class="form-control form-control-sm" style="width:auto">
     <button class="btn btn-primary btn-sm" id="wqApply">
-      <i class="fas fa-check mr-1"></i><?= t('APPLY') ?>
+      <i class="fas fa-check me-1"></i><?= t('APPLY') ?>
     </button>
   </div>
 </div>
@@ -277,7 +277,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-line fa-sm mr-1 text-muted"></i>
+        <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
         Condutividade <small class="text-muted">(µS/cm)</small>
       </div>
       <div class="card-body py-3">
@@ -289,7 +289,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-line fa-sm mr-1 text-muted"></i>
+        <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
         pH
       </div>
       <div class="card-body py-3">
@@ -303,7 +303,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-line fa-sm mr-1 text-muted"></i>
+        <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
         TOC / TC / IC — Destilada
       </div>
       <div class="card-body py-3">
@@ -315,7 +315,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-line fa-sm mr-1 text-muted"></i>
+        <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
         TOC / TC / IC — Purificada
       </div>
       <div class="card-body py-3">

@@ -78,18 +78,20 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap (grid + base utilities; visuais sobrescritos pelo infodeq.css) -->
-  <link href="<?php echo $_base; ?>/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/v4-shims.css">
-  <!-- DataTables -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.10.18/af-2.3.3/b-1.5.6/b-colvis-1.5.6/b-flash-1.5.6/b-html5-1.5.6/b-print-1.5.6/cr-1.5.0/fc-3.2.5/fh-3.1.4/kt-2.5.0/r-2.2.2/rg-1.1.0/rr-1.2.4/sc-2.0.0/sl-1.3.0/datatables.min.css">
+  <!-- DataTables (tema Bootstrap 5) -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
   <!-- InfoDEQB design system -->
   <link href="<?php echo $_base; ?>/css/infodeq.css" rel="stylesheet">
 
-  <!-- jQuery -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.js"></script>
+  <!-- jQuery — necessário para scripts inline e DataTables nas páginas -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Alpine.js — reactividade leve (user dropdown, etc.) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
   <?php if (!empty($extraCss)): ?>
   <!-- CSS extra (sub-apps) -->
@@ -141,7 +143,7 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
       <ul class="iq-tn-menu">
         <li><a href="<?php echo $_base; ?>/equipments/"><?php echo t('NAV_EQUIPMENT'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/reagentes/"><?php echo t('NAV_REAGENTS'); ?></a></li>
-        <li><a href="<?php echo $_base; ?>/booking" target="_blank"><?php echo t('NAV_BOOKING'); ?> <i class="fa fa-external-link fa-xs ml-1"></i></a></li>
+        <li><a href="<?php echo $_base; ?>/booking" target="_blank"><?php echo t('NAV_BOOKING'); ?> <i class="fa fa-external-link fa-xs ms-1"></i></a></li>
         <li><a href="<?php echo $_base; ?>/water/waterqc.php"><?php echo t('NAV_WATER_QUALITY'); ?></a></li>
         <?php if ($_iqNavWaterAdmin): ?>
         <li class="iq-tn-sep"></li>
@@ -177,14 +179,23 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 
   </ul>
 
-  <!-- User -->
-  <div class="iq-tn-user" id="iqTnUser">
-    <button class="iq-tn-user-btn" onclick="iqToggleTnUser()" type="button">
+  <!-- User — Alpine.js dropdown (sem jQuery) -->
+  <div class="iq-tn-user" x-data="{ open: false }" @click.outside="open = false">
+    <button class="iq-tn-user-btn" @click="open = !open" type="button"
+            :aria-expanded="open.toString()">
       <span class="iq-tn-avatar"><?php echo htmlspecialchars($_initials); ?></span>
       <span class="iq-tn-user-name"><?php echo htmlspecialchars($_displayName ?: t('DASH_WELCOME')); ?></span>
-      <i class="fas fa-chevron-down fa-xs" style="opacity:.55;margin-left:2px"></i>
+      <i class="fas fa-chevron-down fa-xs" style="opacity:.55;margin-left:2px"
+         :style="open ? 'transform:rotate(180deg);transition:.2s' : 'transition:.2s'"></i>
     </button>
-    <div class="iq-tn-user-dropdown">
+    <div class="iq-tn-user-dropdown" x-show="open"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-75"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         style="display:none">
       <div class="iq-tn-user-head">
         <div class="name"><?php echo htmlspecialchars($_displayName); ?></div>
         <div class="email"><?php echo htmlspecialchars($_SESSION['user'] ?? ''); ?></div>
@@ -204,12 +215,3 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
      ══════════════════════════════════════════ -->
 <main class="iq-main">
 
-<script>
-function iqToggleTnUser() {
-  document.getElementById('iqTnUser').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  var u = document.getElementById('iqTnUser');
-  if (u && !u.contains(e.target)) u.classList.remove('open');
-});
-</script>

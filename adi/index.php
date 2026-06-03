@@ -122,11 +122,11 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 </style>
 
 <div class="iq-page-header">
-  <h1><i class="fas fa-building fa-sm mr-2 text-muted"></i>Distribuição de Espaços de Investigação</h1>
+  <h1><i class="fas fa-building fa-sm me-2 text-muted"></i>Distribuição de Espaços de Investigação</h1>
   <div class="iq-page-header-actions">
     <a href="<?php echo HTTP_DIR; ?>/infodeqb/adi/Criterios_Espacos_Investigacao_DEQB.pdf"
        class="btn btn-secondary btn-sm" target="_blank" download>
-      <i class="fas fa-file-download mr-1"></i> Critérios de atribuição
+      <i class="fas fa-file-download me-1"></i> Critérios de atribuição
     </a>
   </div>
 </div>
@@ -141,12 +141,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         <thead>
           <tr>
             <th rowspan="2">Nome</th>
-            <th rowspan="2" class="text-right">Área ocupada (m²)</th>
+            <th rowspan="2" class="text-end">Área ocupada (m²)</th>
             <th colspan="2" class="text-center">Área a atribuir (m²)</th>
           </tr>
           <tr>
-            <th class="text-right">Área DEQ+DEF</th>
-            <th class="text-right">Só Área DEF</th>
+            <th class="text-end">Área DEQ+DEF</th>
+            <th class="text-end">Só Área DEF</th>
           </tr>
         </thead>
         <tbody>
@@ -171,11 +171,11 @@ if ($result) {
             echo "<tr class='row-unidade font-weight-bold'>";
             echo "<td>" . htmlspecialchars($u) . "</td>";
             if ($isAdiAdmin || $temFiltro) {
-                echo "<td class='text-right'>" . number_format($ut['area_ocupada'],1,',','.') . "</td>";
-                echo "<td class='text-right'>" . number_format($ut['A_atribuir'],1,',','.') . "</td>";
-                echo "<td class='text-right'>" . ($isEF ? number_format($ut['area_EF'],1,',','.') : '—') . "</td>";
+                echo "<td class='text-end'>" . number_format($ut['area_ocupada'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . number_format($ut['A_atribuir'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . ($isEF ? number_format($ut['area_EF'],1,',','.') : '—') . "</td>";
             } else {
-                echo "<td class='text-right'>$nd</td><td class='text-right'>$nd</td><td class='text-right'>$nd</td>";
+                echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
             }
             echo "</tr>";
         }
@@ -186,11 +186,11 @@ if ($result) {
             echo "<tr class='row-grupo'>";
             echo "<td style='padding-left:1.25rem'><small class='font-weight-bold'>" . htmlspecialchars($g) . "</small></td>";
             if ($isAdiAdmin || $temFiltro) {
-                echo "<td class='text-right'><small>" . number_format($gt['area_ocupada'],1,',','.') . "</small></td>";
-                echo "<td class='text-right'><small>" . number_format($gt['A_atribuir'],1,',','.') . "</small></td>";
-                echo "<td class='text-right'><small>" . ($isEF ? number_format($gt['area_EF'],1,',','.') : '—') . "</small></td>";
+                echo "<td class='text-end'><small>" . number_format($gt['area_ocupada'],1,',','.') . "</small></td>";
+                echo "<td class='text-end'><small>" . number_format($gt['A_atribuir'],1,',','.') . "</small></td>";
+                echo "<td class='text-end'><small>" . ($isEF ? number_format($gt['area_EF'],1,',','.') : '—') . "</small></td>";
             } else {
-                echo "<td class='text-right'>$nd</td><td class='text-right'>$nd</td><td class='text-right'>$nd</td>";
+                echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
             }
             echo "</tr>";
         }
@@ -201,11 +201,11 @@ if ($result) {
             echo "<tr class='row-subgrupo'>";
             echo "<td style='padding-left:2.5rem'><small class='font-weight-bold'>" . htmlspecialchars($s) . "</small></td>";
             if ($isAdiAdmin || $temFiltro) {
-                echo "<td class='text-right'><small>" . number_format($st['area_ocupada'],1,',','.') . "</small></td>";
-                echo "<td class='text-right'><small>" . number_format($st['A_atribuir'],1,',','.') . "</small></td>";
-                echo "<td class='text-right'><small>" . ($isEF ? number_format($st['area_EF'],1,',','.') : '—') . "</small></td>";
+                echo "<td class='text-end'><small>" . number_format($st['area_ocupada'],1,',','.') . "</small></td>";
+                echo "<td class='text-end'><small>" . number_format($st['A_atribuir'],1,',','.') . "</small></td>";
+                echo "<td class='text-end'><small>" . ($isEF ? number_format($st['area_EF'],1,',','.') : '—') . "</small></td>";
             } else {
-                echo "<td class='text-right'>$nd</td><td class='text-right'>$nd</td><td class='text-right'>$nd</td>";
+                echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
             }
             echo "</tr>";
         }
@@ -216,11 +216,11 @@ if ($result) {
         echo "<a href='" . HTTP_DIR . "/infodeqb/adi/ficha.php?feup_id=" . urlencode($row['feup_id']) . "'>" . htmlspecialchars($row['nome']) . "</a>";
         echo "</td>";
         if ($isAdiAdmin || $temFiltro) {
-            echo "<td class='text-right'>" . number_format($area,1,',','.') . "</td>";
-            echo "<td class='text-right'>" . number_format($atr,1,',','.') . "</td>";
-            echo "<td class='text-right'>" . ($isEF ? number_format($areaEF,1,',','.') : '—') . "</td>";
+            echo "<td class='text-end'>" . number_format($area,1,',','.') . "</td>";
+            echo "<td class='text-end'>" . number_format($atr,1,',','.') . "</td>";
+            echo "<td class='text-end'>" . ($isEF ? number_format($areaEF,1,',','.') : '—') . "</td>";
         } else {
-            echo "<td class='text-right'>$nd</td><td class='text-right'>$nd</td><td class='text-right'>$nd</td>";
+            echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
         }
         echo "</tr>";
     }

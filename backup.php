@@ -32,10 +32,10 @@ $pdo = Database::connect();
 $tableFilter = null;
 if ($which === 'hr') {
     // Todas as tabelas infodeqb_ excepto DSD
-    $tableFilter = function($t) { return str_starts_with($t, 'infodeqb_') && !str_starts_with($t, 'infodeqb_dsd_'); };
+    $tableFilter = function($t) { return strpos($t, 'infodeqb_') === 0 && strpos($t, 'infodeqb_dsd_') !== 0; };
 } elseif ($which === 'dsd') {
     // Só tabelas DSD
-    $tableFilter = function($t) { return str_starts_with($t, 'infodeqb_dsd_'); };
+    $tableFilter = function($t) { return strpos($t, 'infodeqb_dsd_') === 0; };
 }
 // 'all' → sem filtro (dump completo)
 

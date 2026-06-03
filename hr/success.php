@@ -130,8 +130,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 						<div class="col-md-12 col-xs-12 mt-4">
 							<div class="col-md-12 col-xs-12">
 								<table class="table table-bordered table-sm">
-								<thead class="thead-light">
-									<tr class="text-left ">
+								<thead class="">
+									<tr class="text-start ">
 									<th class="border-top-0"><?php echo $lang['CATEGORY']; ?></th>
 									<th class="border-top-0"><?php echo $lang['BEGIN_DATE']; ?></th>
 									<th class="border-top-0"><?php echo $lang['END_DATE']; ?></th>
@@ -153,8 +153,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 						<div class="col-md-12 col-xs-12 mt-4">
 							<div class="col-md-12 col-xs-12">
 								<table class="table table-bordered table-sm">
-									<thead class="thead-light" >
-										<tr class="text-left">
+									<thead class="" >
+										<tr class="text-start">
 										<th class="border-top-0 "><?php echo $lang['WORK_RESP']; ?></th>
 										<th  class="border-top-0 " style="width: 20%"><?php echo $lang['SIGNATURE']; ?></th>
 										</tr>
@@ -175,7 +175,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 							<div class="col-md-12 col-xs-12">
 								<?php
 									$rowNum = 0;
-									$table = "<table class='table table-bordered table-sm'><thead class='thead-light'><tr><th class='border-top-0'>".$lang['REQUESTED_ACCESS']."</th><th class='border-top-0'>".$lang['WORKSPACE_RESP']."</th><th class='border-top-0' >".$lang['SIGNATURE']."</th></tr><thead>";
+									$table = "<table class='table table-bordered table-sm'><thead class=''><tr><th class='border-top-0'>".$lang['REQUESTED_ACCESS']."</th><th class='border-top-0'>".$lang['WORKSPACE_RESP']."</th><th class='border-top-0' >".$lang['SIGNATURE']."</th></tr><thead>";
 									foreach($uniquerespgab as $resp)
 									{
 									$rowNum ++;
@@ -191,7 +191,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
 									<?php
 									$rowNum = 0;
-									$table = "<table class='table table-bordered table-sm'><thead class='thead-light'><tr ><th class='col-md-4 border-top-0'>".$lang['DOOR_ID']."</th></tr><thead>";
+									$table = "<table class='table table-bordered table-sm'><thead class=''><tr ><th class='col-md-4 border-top-0'>".$lang['DOOR_ID']."</th></tr><thead>";
 									foreach($uniquerespgab as $resp)
 									{
 									$rowNum ++;

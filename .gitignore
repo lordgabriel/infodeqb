@@ -8,6 +8,9 @@ tmp/
 *.tmp
 *.log
 
+# ── Deploy local (contém credenciais reais) ───────────
+_deploy/
+
 # ── Configuração sensível ─────────────────────────────
 # (deqbwww.php está em htdocs/, fora deste repo)
 # Se houver config local dentro da pasta:

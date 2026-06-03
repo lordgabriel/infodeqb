@@ -159,32 +159,32 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:8px">
   <h1 class="mr-auto mb-0">
-    <i class="fas fa-archive fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-archive fa-sm me-2 text-muted"></i>
     <?= t('EXAM_TITLE') ?>
   </h1>
   <?php if ($isExamAdmin): ?>
   <button class="btn btn-primary btn-sm" id="btnNovoAuto"
-          data-toggle="collapse" data-target="#formPanel">
-    <i class="fas fa-plus mr-1"></i><?= t('EXAM_NEW_AUTO') ?>
+          data-bs-toggle="collapse" data-bs-target="#formPanel">
+    <i class="fas fa-plus me-1"></i><?= t('EXAM_NEW_AUTO') ?>
   </button>
   <?php endif; ?>
   <a href="files/Auto_Entrega_Eliminacao.doc" class="btn btn-outline-secondary btn-sm" download>
-    <i class="fas fa-file-download mr-1"></i>Auto de Entrega para Eliminação
+    <i class="fas fa-file-download me-1"></i>Auto de Entrega para Eliminação
   </a>
 </div>
 
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='warning'?'exclamation-triangle':'exclamation-circle') ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='warning'?'exclamation-triangle':'exclamation-circle') ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
 <?php /* ════════ FORMULÁRIO ══════════════════════════════════════ */ ?>
 <?php
 // Para admin: oculto por omissão (collapse); para utilizador: sempre visível
-$formWrapOpen  = $isExamAdmin ? '<div class="collapse mb-4" id="formPanel"><div class="card border-primary"><div class="card-header py-2 bg-primary text-white d-flex align-items-center"><strong class="mr-auto"><i class="fas fa-file-alt mr-2"></i>' . t('EXAM_NEW_AUTO') . '</strong>' . (isset($_SESSION['uid']) ? '<span class="badge badge-light ml-2" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '<button type="button" class="btn btn-sm btn-outline-light py-0 ml-2" data-toggle="collapse" data-target="#formPanel"><i class="fas fa-times fa-xs"></i></button></div><div class="card-body">' : '<div class="card mb-4"><div class="card-header py-2"><i class="fas fa-file-alt fa-sm mr-2 text-muted"></i><strong>' . t('EXAM_AUTO_TITLE') . '</strong>' . (isset($_SESSION['uid']) ? ' <span class="badge badge-secondary ml-1" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '</div><div class="card-body">';
+$formWrapOpen  = $isExamAdmin ? '<div class="collapse mb-4" id="formPanel"><div class="card border-primary"><div class="card-header py-2 bg-primary text-white d-flex align-items-center"><strong class="mr-auto"><i class="fas fa-file-alt me-2"></i>' . t('EXAM_NEW_AUTO') . '</strong>' . (isset($_SESSION['uid']) ? '<span class="badge badge-light ms-2" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '<button type="button" class="btn btn-sm btn-outline-light py-0 ms-2" data-bs-toggle="collapse" data-bs-target="#formPanel"><i class="fas fa-times fa-xs"></i></button></div><div class="card-body">' : '<div class="card mb-4"><div class="card-header py-2"><i class="fas fa-file-alt fa-sm me-2 text-muted"></i><strong>' . t('EXAM_AUTO_TITLE') . '</strong>' . (isset($_SESSION['uid']) ? ' <span class="badge badge-secondary ms-1" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '</div><div class="card-body">';
 $formWrapClose = $isExamAdmin ? '</div></div></div>' : '</div></div>';
 echo $formWrapOpen;
 ?>
@@ -220,7 +220,7 @@ echo $formWrapOpen;
       <div class="col-md-1 form-group mb-2">
         <label class="d-block">&nbsp;</label>
         <button type="submit" class="btn btn-info btn-sm btn-block">
-          <i class="fas fa-plus mr-1"></i>Adicionar
+          <i class="fas fa-plus me-1"></i>Adicionar
         </button>
       </div>
     </div>
@@ -229,7 +229,7 @@ echo $formWrapOpen;
   <?php if (!empty($pendentes)): ?>
   <div class="table-responsive mb-3">
     <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th>Curso</th><th style="width:7em">Ano Letivo</th>
           <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
@@ -244,8 +244,8 @@ echo $formWrapOpen;
           <td><?= htmlspecialchars($row['unidade_curricular']) ?></td>
           <td><?= htmlspecialchars($row['tipologia']) ?></td>
           <td class="text-center text-nowrap">
-            <a href="#" class="btn-edit-user text-info mr-1"
-               data-toggle="modal" data-target="#modalEditUser"
+            <a href="#" class="btn-edit-user text-info me-1"
+               data-bs-toggle="modal" data-bs-target="#modalEditUser"
                data-id="<?= (int)$row['autoid'] ?>"
                data-curso="<?= htmlspecialchars($row['curso'], ENT_QUOTES) ?>"
                data-ano="<?= htmlspecialchars($row['ano_letivo'], ENT_QUOTES) ?>"
@@ -254,7 +254,7 @@ echo $formWrapOpen;
               <i class="fas fa-edit fa-xs"></i>
             </a>
             <a href="#" class="btn-del-user text-danger"
-               data-toggle="modal" data-target="#modalDelUser"
+               data-bs-toggle="modal" data-bs-target="#modalDelUser"
                data-id="<?= (int)$row['autoid'] ?>">
               <i class="fas fa-trash fa-xs"></i>
             </a>
@@ -269,13 +269,13 @@ echo $formWrapOpen;
     <form method="post">
       <input type="hidden" name="_acao" value="submeter">
       <button type="submit" class="btn btn-primary btn-sm">
-        <i class="fas fa-paper-plane mr-1"></i><?= t('EXAM_SUBMIT_PDF') ?>
+        <i class="fas fa-paper-plane me-1"></i><?= t('EXAM_SUBMIT_PDF') ?>
       </button>
     </form>
   </div>
   <?php else: ?>
   <p class="text-muted small mb-0">
-    <i class="fas fa-info-circle mr-1"></i>Adicione linhas acima para criar o auto de incorporação.
+    <i class="fas fa-info-circle me-1"></i>Adicione linhas acima para criar o auto de incorporação.
   </p>
   <?php endif; ?>
 
@@ -289,7 +289,7 @@ echo $formWrapOpen;
     <li class="mb-0">No final do ano N, os arquivos do ano letivo N‑6/N‑5 são enviados para o Serviço de Arquivo da FEUP para eliminação.</li>
   </ol>
   <div class="alert alert-warning mb-0" style="display:block;font-size:.83rem">
-    <i class="fas fa-exclamation-triangle mr-2"></i>
+    <i class="fas fa-exclamation-triangle me-2"></i>
     Só devem ser entregues documentos dentro do prazo de arquivo obrigatório (5 anos). Caso esse prazo tenha sido ultrapassado, preencha o
     <a href="files/Auto_Entrega_Eliminacao.doc" class="font-weight-bold" download>Auto de Entrega para Eliminação</a>
     e solicite a eliminação ao Serviço de Arquivo.
@@ -303,19 +303,19 @@ echo $formWrapOpen;
 <div class="d-flex flex-wrap mb-3" style="gap:10px">
   <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="" style="cursor:pointer;min-width:110px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs mr-1"></i>Total</div>
+      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i>Total</div>
       <div class="h4 mb-0 font-weight-bold"><?= count($ticketsAgrupados) ?></div>
     </div>
   </div>
   <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="por-arquivar" style="cursor:pointer;min-width:130px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs mr-1"></i><i class="fas fa-clock fa-xs mr-1"></i>Por arquivar</div>
+      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i><i class="fas fa-clock fa-xs me-1"></i>Por arquivar</div>
       <div class="h4 mb-0 font-weight-bold text-warning"><?= $nPorArquivar ?></div>
     </div>
   </div>
   <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="arquivado" style="cursor:pointer;min-width:120px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs mr-1"></i><i class="fas fa-box fa-xs mr-1"></i>Arquivados</div>
+      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i><i class="fas fa-box fa-xs me-1"></i>Arquivados</div>
       <div class="h4 mb-0 font-weight-bold text-success"><?= $nArquivados ?></div>
     </div>
   </div>
@@ -341,14 +341,14 @@ echo $formWrapOpen;
       <div>
         <label class="d-block" style="font-size:.01rem">&nbsp;</label>
         <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm">
-          <i class="fas fa-times mr-1"></i><?= t('CLEAR') ?>
+          <i class="fas fa-times me-1"></i><?= t('CLEAR') ?>
         </button>
       </div>
       <div class="ml-auto d-flex align-items-end" style="gap:6px">
         <button type="button" id="btnToggleAll" class="btn btn-outline-secondary btn-sm" data-state="expanded">
-          <i class="fas fa-compress-alt fa-xs mr-1"></i>Colapsar tudo
+          <i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo
         </button>
-        <span class="text-muted small ml-2" id="countVisible"></span>
+        <span class="text-muted small ms-2" id="countVisible"></span>
       </div>
     </div>
   </div>
@@ -377,28 +377,28 @@ echo $formWrapOpen;
      data-data="<?= htmlspecialchars($first['data']) ?>">
   <div class="card-header py-2 d-flex align-items-center"
        style="background:#f8f9fa;cursor:pointer"
-       data-toggle="collapse" data-target="#<?= $bodyId ?>">
-    <i class="fas fa-chevron-down fa-xs text-muted mr-2 ticket-chevron"></i>
+       data-bs-toggle="collapse" data-bs-target="#<?= $bodyId ?>">
+    <i class="fas fa-chevron-down fa-xs text-muted me-2 ticket-chevron"></i>
     <div class="mr-auto">
       <code class="text-dark" style="font-size:.78rem"><?= htmlspecialchars($ticket) ?></code>
       <span class="text-muted mx-2" style="font-size:.8rem"><?= htmlspecialchars($first['data']) ?></span>
       <span style="font-size:.85rem"><?= htmlspecialchars($first['docente']) ?></span>
     </div>
-    <span class="badge badge-<?= $temCaixa ? 'success' : 'warning' ?> mr-2" style="font-size:.72rem">
-      <?= $temCaixa ? '<i class="fas fa-box fa-xs mr-1"></i>' . t('infodeqb_exam_archiveD') : '<i class="fas fa-clock fa-xs mr-1"></i>' . t('EXAM_TO_ARCHIVE') ?>
+    <span class="badge badge-<?= $temCaixa ? 'success' : 'warning' ?> me-2" style="font-size:.72rem">
+      <?= $temCaixa ? '<i class="fas fa-box fa-xs me-1"></i>' . t('infodeqb_exam_archiveD') : '<i class="fas fa-clock fa-xs me-1"></i>' . t('EXAM_TO_ARCHIVE') ?>
     </span>
-    <span class="badge badge-secondary mr-2"><?= $nLinhas ?> linha<?= $nLinhas>1?'s':'' ?></span>
+    <span class="badge badge-secondary me-2"><?= $nLinhas ?> linha<?= $nLinhas>1?'s':'' ?></span>
     <form method="post" class="d-inline" onclick="event.stopPropagation()">
       <input type="hidden" name="_acao"    value="admin_imprimir">
       <input type="hidden" name="ticketid" value="<?= htmlspecialchars($ticket) ?>">
       <button type="submit" class="btn btn-sm btn-outline-secondary">
-        <i class="fas fa-print fa-xs mr-1"></i><?= t('PRINT') ?>
+        <i class="fas fa-print fa-xs me-1"></i><?= t('PRINT') ?>
       </button>
     </form>
   </div>
   <div class="collapse show ticket-body" id="<?= $bodyId ?>">
     <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th>Curso</th><th style="width:7em">Ano Letivo</th>
           <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
@@ -417,8 +417,8 @@ echo $formWrapOpen;
           <td class="text-center"><?= htmlspecialchars($row['num_caixa'] ?? '') ?></td>
           <td class="text-center"><?= htmlspecialchars($row['num_armario'] ?? '') ?></td>
           <td class="text-center text-nowrap">
-            <a href="#" class="btn-edit-admin text-info mr-1"
-               data-toggle="modal" data-target="#modalEditAdmin"
+            <a href="#" class="btn-edit-admin text-info me-1"
+               data-bs-toggle="modal" data-bs-target="#modalEditAdmin"
                data-id="<?= (int)$row['autoid'] ?>"
                data-curso="<?= htmlspecialchars($row['curso'], ENT_QUOTES) ?>"
                data-ano="<?= htmlspecialchars($row['ano_letivo'], ENT_QUOTES) ?>"
@@ -428,7 +428,7 @@ echo $formWrapOpen;
                data-armario="<?= htmlspecialchars($row['num_armario'] ?? '', ENT_QUOTES) ?>">
               <i class="fas fa-edit fa-xs"></i></a>
             <a href="#" class="btn-del-admin text-danger"
-               data-toggle="modal" data-target="#modalDelAdmin"
+               data-bs-toggle="modal" data-bs-target="#modalDelAdmin"
                data-id="<?= (int)$row['autoid'] ?>">
               <i class="fas fa-trash fa-xs"></i></a>
           </td>
@@ -450,7 +450,7 @@ echo $formWrapOpen;
       <input type="hidden" name="editid" id="adminEditId">
       <div class="modal-header">
         <h5 class="modal-title">Editar linha</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -481,7 +481,7 @@ echo $formWrapOpen;
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
         <button type="submit" class="btn btn-primary"><?= t('SAVE') ?></button>
       </div>
     </form>
@@ -496,14 +496,14 @@ echo $formWrapOpen;
       <input type="hidden" name="deleteid" id="adminDelId">
       <div class="modal-header">
         <h5 class="modal-title">Eliminar linha</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
         <p><?= t('CONFIRM_DELETE') ?></p>
         <p class="text-danger small mb-0"><?= t('IRREVERSIBLE') ?></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
         <button type="submit" class="btn btn-danger"><?= t('DELETE') ?></button>
       </div>
     </form>
@@ -522,7 +522,7 @@ echo $formWrapOpen;
         <input type="hidden" name="editid" id="userEditId">
         <div class="modal-header">
           <h5 class="modal-title">Editar linha</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -545,7 +545,7 @@ echo $formWrapOpen;
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('SAVE') ?></button>
         </div>
       </form>
@@ -562,14 +562,14 @@ echo $formWrapOpen;
         <input type="hidden" name="deleteid" id="userDelId">
         <div class="modal-header">
           <h5 class="modal-title">Eliminar linha</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <p><?= t('CONFIRM_DELETE') ?></p>
           <p class="text-danger small mb-0"><?= t('IRREVERSIBLE') ?></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-danger"><?= t('DELETE') ?></button>
         </div>
       </form>
@@ -654,11 +654,11 @@ $(document).ready(function () {
         if (state === 'expanded') {
             $('.ticket-card:visible .ticket-body').collapse('hide');
             $btn.data('state','collapsed')
-                .html('<i class="fas fa-expand-alt fa-xs mr-1"></i>Expandir tudo');
+                .html('<i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo');
         } else {
             $('.ticket-card:visible .ticket-body').collapse('show');
             $btn.data('state','expanded')
-                .html('<i class="fas fa-compress-alt fa-xs mr-1"></i>Colapsar tudo');
+                .html('<i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo');
         }
     });
 
@@ -679,9 +679,9 @@ $(document).ready(function () {
 
     // ── Botão "Novo auto": actualizar chevron ─────────────────────
     $('#formPanel').on('show.bs.collapse', function () {
-        $('#btnNovoAuto').html('<i class="fas fa-times mr-1"></i><?= t('CLOSE') ?>');
+        $('#btnNovoAuto').html('<i class="fas fa-times me-1"></i><?= t('CLOSE') ?>');
     }).on('hide.bs.collapse', function () {
-        $('#btnNovoAuto').html('<i class="fas fa-plus mr-1"></i><?= t('EXAM_NEW_AUTO') ?>');
+        $('#btnNovoAuto').html('<i class="fas fa-plus me-1"></i><?= t('EXAM_NEW_AUTO') ?>');
     });
 
     <?php endif; ?>

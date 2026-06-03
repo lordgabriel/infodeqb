@@ -57,9 +57,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header d-flex align-items-center" style="gap:.75rem">
-  <h1 class="mr-auto"><i class="fas fa-file-alt fa-sm mr-2 text-muted"></i>Detalhe do registo</h1>
+  <h1 class="mr-auto"><i class="fas fa-file-alt fa-sm me-2 text-muted"></i>Detalhe do registo</h1>
   <a href="meu-registo.php" class="btn btn-sm btn-outline-secondary">
-    <i class="fas fa-arrow-left mr-1"></i> Voltar
+    <i class="fas fa-arrow-left me-1"></i> Voltar
   </a>
 </div>
 
@@ -90,7 +90,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- Dados Pessoais -->
     <div class="card mb-3">
       <div class="card-header py-2">
-        <i class="fas fa-user mr-2 text-muted"></i><strong>Dados Pessoais</strong>
+        <i class="fas fa-user me-2 text-muted"></i><strong>Dados Pessoais</strong>
       </div>
       <div class="card-body py-2">
         <table class="table table-sm table-borderless mb-0" style="font-size:.85rem">
@@ -109,7 +109,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- Período e Afiliação -->
     <div class="card mb-3">
       <div class="card-header py-2">
-        <i class="fas fa-calendar mr-2 text-muted"></i><strong>Período e Afiliação</strong>
+        <i class="fas fa-calendar me-2 text-muted"></i><strong>Período e Afiliação</strong>
       </div>
       <div class="card-body py-2">
         <table class="table table-sm table-borderless mb-0" style="font-size:.85rem">
@@ -130,7 +130,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- Classificação -->
     <div class="card mb-3">
       <div class="card-header py-2">
-        <i class="fas fa-tag mr-2 text-muted"></i><strong>Classificação</strong>
+        <i class="fas fa-tag me-2 text-muted"></i><strong>Classificação</strong>
       </div>
       <div class="card-body py-2">
         <table class="table table-sm table-borderless mb-0" style="font-size:.85rem">
@@ -153,7 +153,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- Acessos -->
     <div class="card mb-3">
       <div class="card-header py-2">
-        <i class="fas fa-key mr-2 text-muted"></i><strong>Acessos</strong>
+        <i class="fas fa-key me-2 text-muted"></i><strong>Acessos</strong>
       </div>
       <div class="card-body py-2">
         <table class="table table-sm table-borderless mb-0" style="font-size:.85rem">
@@ -172,7 +172,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             <td>
               <?php if ($labNomes): ?>
                 <?php foreach ($labNomes as $nome): ?>
-                  <span class="badge badge-light border mr-1 mb-1"
+                  <span class="badge badge-light border me-1 mb-1"
                         style="font-size:.8rem;font-weight:normal">
                     <?= htmlspecialchars($nome) ?>
                   </span>

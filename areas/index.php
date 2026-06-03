@@ -193,16 +193,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <div class="mr-auto">
-    <h1><i class="fas fa-sitemap fa-sm mr-2 text-muted"></i><?= t('AREAS_TITLE') ?></h1>
+    <h1><i class="fas fa-sitemap fa-sm me-2 text-muted"></i><?= t('AREAS_TITLE') ?></h1>
     <small class="text-muted">Associação dos docentes e investigadores de carreira</small>
   </div>
 </div>
 
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -215,25 +215,25 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div id="formPanel" class="collapse mb-4">
   <div style="border:2px solid #0d6efd;border-radius:8px;overflow:hidden">
     <div class="d-flex align-items-center px-3 py-2" style="background:#0d6efd">
-      <i class="fas fa-edit text-white mr-2"></i>
-      <strong class="text-white mr-auto">A minha resposta</strong>
+      <i class="fas fa-edit text-white me-2"></i>
+      <strong class="text-white me-auto">A minha resposta</strong>
       <?php if ($teminfodeqb_respostas): ?>
-      <span class="badge badge-light mr-3" style="font-weight:500;font-size:.75rem">
-        <i class="fas fa-check mr-1 text-success"></i><?= t('AREAS_SUBMITTED') ?>
+      <span class="badge badge-light me-3" style="font-weight:500;font-size:.75rem">
+        <i class="fas fa-check me-1 text-success"></i><?= t('AREAS_SUBMITTED') ?>
       </span>
       <?php endif; ?>
       <button type="button" class="btn btn-sm btn-outline-light py-0"
-              data-toggle="collapse" data-target="#formPanel">
-        <i class="fas fa-times fa-xs mr-1"></i><?= t('CLOSE') ?>
+              data-bs-toggle="collapse" data-bs-target="#formPanel">
+        <i class="fas fa-times fa-xs me-1"></i><?= t('CLOSE') ?>
       </button>
     </div>
     <div class="p-3 bg-white">
       <div id="avisoTotal" class="alert alert-warning py-2 mb-3" style="font-size:.84rem;display:none">
-        <i class="fas fa-exclamation-triangle mr-1"></i>
+        <i class="fas fa-exclamation-triangle me-1"></i>
         O total deve ser <strong>100%</strong>. Actual: <strong id="totalGeral">0</strong>%
       </div>
       <div id="avisoOk" class="alert alert-success py-2 mb-3" style="font-size:.84rem;display:none">
-        <i class="fas fa-check-circle mr-1"></i>Total correcto: <strong>100%</strong>. Pode submeter.
+        <i class="fas fa-check-circle me-1"></i>Total correcto: <strong>100%</strong>. Pode submeter.
       </div>
       <form id="formAreas" method="post">
         <input type="hidden" name="codigo_inquirido" value="<?= htmlspecialchars($codigo_inquirido) ?>">
@@ -275,10 +275,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         </div>
         <div class="d-flex align-items-center justify-content-end mt-3" style="gap:10px">
           <button type="button" class="btn btn-outline-secondary btn-sm"
-                  data-toggle="collapse" data-target="#formPanel"><?= t('CANCEL') ?></button>
+                  data-bs-toggle="collapse" data-bs-target="#formPanel"><?= t('CANCEL') ?></button>
           <button type="button" id="submitBtn" class="btn btn-primary btn-sm" disabled
-                  <?= $teminfodeqb_respostas ? 'data-toggle="modal" data-target="#modalConfirm"' : 'onclick="document.getElementById(\'formAreas\').submit()"' ?>>
-            <i class="fas fa-paper-plane mr-1"></i>
+                  <?= $teminfodeqb_respostas ? 'data-bs-toggle="modal" data-bs-target="#modalConfirm"' : 'onclick="document.getElementById(\'formAreas\').submit()"' ?>>
+            <i class="fas fa-paper-plane me-1"></i>
             <?= $teminfodeqb_respostas ? t('AREAS_UPDATE') : t('AREAS_SUBMIT') ?>
           </button>
         </div>
@@ -313,7 +313,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card flex-fill shadow-sm d-flex align-items-center justify-content-center p-3" style="min-width:180px">
     <button class="btn btn-primary btn-sm" id="btnAbrirForm">
-      <i class="fas fa-edit mr-1"></i>
+      <i class="fas fa-edit me-1"></i>
       <?= $teminfodeqb_respostas ? t('AREAS_FILL_EDIT') : t('AREAS_FILL') ?>
     </button>
   </div>
@@ -325,7 +325,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="card shadow-sm h-100">
       <div class="card-header py-2">
         <strong>ETI por área</strong>
-        <small class="text-muted ml-1 d-block" style="font-size:.75rem">
+        <small class="text-muted ms-1 d-block" style="font-size:.75rem">
           Barras: ETI total por área &nbsp;|&nbsp; Ponto ●: ETI da área principal
         </small>
       </div>
@@ -344,7 +344,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="card-body p-0" style="max-height:340px;overflow-y:auto">
         <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
-          <thead class="thead-light" style="position:sticky;top:0;z-index:1">
+          <thead class="" style="position:sticky;top:0;z-index:1">
             <tr>
               <th>Nome</th>
               <th class="text-center" style="width:7em">Estado</th>
@@ -357,7 +357,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 <?php if ($p['respondeu']): ?>
                 data-codigo="<?= htmlspecialchars($p['codigo']) ?>"
                 data-nome="<?= htmlspecialchars($p['nome']) ?>"
-                data-toggle="modal" data-target="#modalResposta"
+                data-bs-toggle="modal" data-bs-target="#modalResposta"
                 title="Ver resposta de <?= htmlspecialchars($p['nome']) ?>"
                 <?php endif; ?>>
               <td class="align-middle">
@@ -372,7 +372,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               </td>
               <td class="align-middle text-center">
                 <?php if ($p['respondeu']): ?>
-                <span class="badge badge-success"><i class="fas fa-check fa-xs mr-1"></i>Submetida</span>
+                <span class="badge badge-success"><i class="fas fa-check fa-xs me-1"></i>Submetida</span>
                 <?php else: ?>
                 <span class="badge badge-warning">Pendente</span>
                 <?php endif; ?>
@@ -390,11 +390,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="card shadow-sm mb-4">
   <div class="card-header py-2">
     <strong>ETI por subárea × área</strong>
-    <small class="text-muted ml-1">(cada pessoa = 1 ETI distribuído proporcionalmente pelo %)</small>
+    <small class="text-muted ms-1">(cada pessoa = 1 ETI distribuído proporcionalmente pelo %)</small>
   </div>
   <div class="card-body p-0" style="overflow-x:auto">
     <table class="table table-sm mb-0" style="font-size:.8rem;border-collapse:collapse">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th style="min-width:160px">Subárea</th>
           <?php foreach ($areas as $a): ?>
@@ -445,7 +445,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="modal-content">
       <div class="modal-header py-2">
         <h5 class="modal-title" id="modalRespostaTitulo">Resposta</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body p-0" id="modalRespostaBody" style="overflow-x:auto"></div>
     </div>
@@ -466,17 +466,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <span><span class="text-muted">Nome:</span> <strong><?= htmlspecialchars($nomeUtilizador) ?></strong></span>
       </div>
       <?php if ($teminfodeqb_respostas): ?>
-      <span class="badge badge-success ml-auto"><i class="fas fa-check mr-1"></i><?= t('AREAS_SUBMITTED') ?></span>
+      <span class="badge badge-success ms-auto"><i class="fas fa-check me-1"></i><?= t('AREAS_SUBMITTED') ?></span>
       <?php else: ?>
-      <span class="badge badge-warning ml-auto"><?= t('AREAS_NO_RESPONSE') ?></span>
+      <span class="badge badge-warning ms-auto"><?= t('AREAS_NO_RESPONSE') ?></span>
       <?php endif; ?>
     </div>
     <div id="avisoTotal" class="alert alert-warning py-2 mb-3" style="font-size:.84rem;display:none">
-      <i class="fas fa-exclamation-triangle mr-1"></i>
+      <i class="fas fa-exclamation-triangle me-1"></i>
       O total deve ser <strong>100%</strong>. Actual: <strong id="totalGeral">0</strong>%
     </div>
     <div id="avisoOk" class="alert alert-success py-2 mb-3" style="font-size:.84rem;display:none">
-      <i class="fas fa-check-circle mr-1"></i>Total correcto: <strong>100%</strong>. Pode submeter.
+      <i class="fas fa-check-circle me-1"></i>Total correcto: <strong>100%</strong>. Pode submeter.
     </div>
     <form id="formAreas" method="post">
       <input type="hidden" name="codigo_inquirido" value="<?= htmlspecialchars($codigo_inquirido) ?>">
@@ -518,8 +518,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="d-flex align-items-center justify-content-end mt-3">
         <button type="button" id="submitBtn" class="btn btn-primary btn-sm" disabled
-                <?= $teminfodeqb_respostas ? 'data-toggle="modal" data-target="#modalConfirm"' : 'onclick="document.getElementById(\'formAreas\').submit()"' ?>>
-          <i class="fas fa-paper-plane mr-1"></i>
+                <?= $teminfodeqb_respostas ? 'data-bs-toggle="modal" data-bs-target="#modalConfirm"' : 'onclick="document.getElementById(\'formAreas\').submit()"' ?>>
+          <i class="fas fa-paper-plane me-1"></i>
           <?= $teminfodeqb_respostas ? t('AREAS_UPDATE') : t('AREAS_SUBMIT') ?>
         </button>
       </div>
@@ -533,16 +533,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header">
       <h5 class="modal-title"><?= t('AREAS_REPLACE') ?></h5>
-      <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
     </div>
     <div class="modal-body">
       <p>Já existe uma resposta submetida. Os valores actuais serão substituídos.</p>
       <p class="text-muted small mb-0"><?= t('IRREVERSIBLE') ?></p>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
       <button type="button" class="btn btn-primary"
-              onclick="$('#modalConfirm').modal('hide');document.getElementById('formAreas').submit()">
+              onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirm')).hide();document.getElementById('formAreas').submit()">
         <?= t('YES') ?>
       </button>
     </div>
@@ -626,15 +626,18 @@ new Chart(document.getElementById('chartAreas'), {
 var todasinfodeqb_respostas = <?= json_encode($todasinfodeqb_respostasMap) ?>;
 
 // Botão "Preencher/Editar resposta": abre collapse e faz scroll para o topo
+// Bootstrap 5: usar API nativa em vez de $().collapse('show')
 $('#btnAbrirForm').on('click', function () {
-    var $panel = $('#formPanel');
-    if ($panel.hasClass('show')) {
+    var panelEl = document.getElementById('formPanel');
+    if (!panelEl) return;
+    if (panelEl.classList.contains('show')) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        $panel.collapse('show');
-        $panel.one('shown.bs.collapse', function () {
+        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(panelEl, { toggle: false });
+        panelEl.addEventListener('shown.bs.collapse', function () {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        }, { once: true });
+        bsCollapse.show();
     }
 });
 
@@ -645,7 +648,7 @@ $(document).on('click', 'tr.btn-ver-resposta', function () {
 
     var resp = todasinfodeqb_respostas[codigo] || {};
     var html = '<table class="table table-sm mb-0" style="font-size:.8rem;border-collapse:collapse">';
-    html += '<thead class="thead-light"><tr><th style="min-width:150px">Subárea</th>';
+    html += '<thead class=""><tr><th style="min-width:150px">Subárea</th>';
     areaLabels.forEach(function(a) { html += '<th class="text-center" style="min-width:65px">' + a + '</th>'; });
     html += '<th class="text-center" style="background:#e9ecef;min-width:60px">Total</th></tr></thead><tbody>';
 

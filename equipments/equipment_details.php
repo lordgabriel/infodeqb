@@ -88,22 +88,22 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="mr-auto">
     <h1><?= htmlspecialchars($eq['Equipamento'] ?? '') ?></h1>
     <small class="text-muted">
-      <i class="fas fa-flask fa-xs mr-1"></i><?= htmlspecialchars($eq['lab_nome'] ?? '') ?>
+      <i class="fas fa-flask fa-xs me-1"></i><?= htmlspecialchars($eq['lab_nome'] ?? '') ?>
       <?php if ($eq['Marca']): ?>
         &nbsp;·&nbsp;<?= htmlspecialchars($eq['Marca']) ?>
       <?php endif; ?>
     </small>
   </div>
   <a href="index.php" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-left mr-1"></i>Lista
+    <i class="fas fa-arrow-left me-1"></i>Lista
   </a>
   <?php if ($podeEditar): ?>
   <a href="edit_equipment.php?id=<?= $equipId ?>" class="btn btn-outline-primary btn-sm">
-    <i class="fas fa-edit mr-1"></i><?= t('EDIT') ?>
+    <i class="fas fa-edit me-1"></i><?= t('EDIT') ?>
   </a>
   <a href="delete.php?id=<?= $equipId ?>" class="btn btn-outline-danger btn-sm"
      onclick="return confirm('Eliminar este equipamento permanentemente?')">
-    <i class="fas fa-trash mr-1"></i><?= t('DELETE') ?>
+    <i class="fas fa-trash me-1"></i><?= t('DELETE') ?>
   </a>
   <?php endif; ?>
 </div>
@@ -112,7 +112,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3"
      role="alert" style="font-size:.85rem">
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -176,14 +176,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php if ($isAdmin): ?>
 <div class="card shadow-sm mb-4 border-warning">
   <div class="card-header py-2 d-flex align-items-center">
-    <i class="fas fa-key text-warning mr-2"></i>
+    <i class="fas fa-key text-warning me-2"></i>
     <strong class="mr-auto"><?= t('EQUIP_ACCESS_TITLE') ?></strong>
     <small class="text-muted">só visível ao admin global</small>
   </div>
   <div class="card-body">
     <?php if ($acessosEspecificos): ?>
     <table class="table table-sm mb-3" style="font-size:.83rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr><th>Utilizador (UP)</th><th>Concedido por</th><th>Data</th><th style="width:4em"></th></tr>
       </thead>
       <tbody>
@@ -219,7 +219,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                placeholder="ex: 248679" required style="width:160px">
       </div>
       <button type="submit" class="btn btn-warning btn-sm">
-        <i class="fas fa-key mr-1"></i><?= t('EQUIP_GRANT') ?>
+        <i class="fas fa-key me-1"></i><?= t('EQUIP_GRANT') ?>
       </button>
     </form>
   </div>

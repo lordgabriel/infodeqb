@@ -275,7 +275,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header">
-  <h1><i class="fas fa-user-edit fa-sm mr-2 text-muted"></i>Editar Colaborador</h1>
+  <h1><i class="fas fa-user-edit fa-sm me-2 text-muted"></i>Editar Colaborador</h1>
 </div>
 
 <?php if ($erroduplicado): echo $erroduplicado; endif; ?>
@@ -443,7 +443,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         ?>
         <span class="badge <?= $sBadge ?>" style="font-size:.85rem;padding:.35em .65em"><?= htmlspecialchars($data['status']) ?></span>
         <?php if ($dataestado): ?>
-          <small class="text-muted ml-2">desde <?= htmlspecialchars($dataestado) ?></small>
+          <small class="text-muted ms-2">desde <?= htmlspecialchars($dataestado) ?></small>
         <?php endif; ?>
       </div>
     </div>
@@ -473,8 +473,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
   <!-- ── Ações ── -->
   <div class="iq-form-actions">
-    <a href="javascript:history.back()" class="btn btn-secondary mr-auto">
-      <i class="fas fa-arrow-left mr-1"></i> Voltar
+    <a href="javascript:history.back()" class="btn btn-secondary me-auto">
+      <i class="fas fa-arrow-left me-1"></i> Voltar
     </a>
     <button type="submit" name="submit" value="" class="btn btn-primary">
       <?= $lang['SAVE'] ?>
@@ -485,7 +485,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <?php if ($sigarraNotifInfo): ?>
 <div class="alert alert-warning mt-3" role="alert">
-  <strong><i class="fas fa-exclamation-triangle mr-1"></i>Data de fim alterada.</strong>
+  <strong><i class="fas fa-exclamation-triangle me-1"></i>Data de fim alterada.</strong>
   O registo está <strong>Ativo</strong> — o SIGARRA deve ser informado da nova data
   (<strong><?= htmlspecialchars($sigarraNotifInfo['datafim_antigo']) ?></strong>
   → <strong><?= htmlspecialchars($sigarraNotifInfo['datafim_novo']) ?></strong>).
@@ -498,9 +498,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <input type="hidden" name="datafim_novo"   value="<?= htmlspecialchars($sigarraNotifInfo['datafim_novo']) ?>">
   <input type="hidden" name="datafim_antigo" value="<?= htmlspecialchars($sigarraNotifInfo['datafim_antigo']) ?>">
   <button class="btn btn-warning">
-    <i class="fas fa-paper-plane mr-1"></i> Notificar SIGARRA
+    <i class="fas fa-paper-plane me-1"></i> Notificar SIGARRA
   </button>
-  <a href="detail.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-outline-secondary ml-2">
+  <a href="detail.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-outline-secondary ms-2">
     Ignorar por agora
   </a>
 </form>

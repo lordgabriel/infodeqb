@@ -105,20 +105,20 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
-    <i class="fas fa-users-cog fa-sm mr-2 text-muted"></i>
+    <i class="fas fa-users-cog fa-sm me-2 text-muted"></i>
     Gerir responsáveis e utilizadores
   </h1>
   <a href="index.php" class="btn btn-sm btn-outline-secondary">
-    <i class="fas fa-arrow-left mr-1"></i> <?= t('BACK') ?>
+    <i class="fas fa-arrow-left me-1"></i> <?= t('BACK') ?>
   </a>
 </div>
 
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3"
      role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> mr-2"></i>
+  <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
-  <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
 
@@ -129,11 +129,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
         <strong>Responsáveis</strong>
-        <span class="badge badge-secondary ml-1"><?= count($resps) ?></span>
+        <span class="badge badge-secondary ms-1"><?= count($resps) ?></span>
       </div>
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0" id="tblResps">
-          <thead class="thead-light">
+          <thead class="">
             <tr>
               <th>Nome</th>
               <th class="text-center" style="width:5em">Utiliz.</th>
@@ -148,10 +148,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <td class="align-middle text-center"><?= (int)$r['n_users'] ?></td>
               <td class="align-middle text-center"><?= number_format((int)$r['n_registos']) ?></td>
               <td class="align-middle text-center text-nowrap">
-                <a href="#" class="btn-edit-resp text-info mr-1"
+                <a href="#" class="btn-edit-resp text-info me-1"
                    data-id="<?= (int)$r['id'] ?>"
                    data-nome="<?= htmlspecialchars($r['nome']) ?>"
-                   data-toggle="modal" data-target="#modalEditResp"
+                   data-bs-toggle="modal" data-bs-target="#modalEditResp"
                    title="Editar">
                   <i class="fas fa-edit fa-xs"></i>
                 </a>
@@ -159,7 +159,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 <a href="#" class="btn-del-resp text-danger"
                    data-id="<?= (int)$r['id'] ?>"
                    data-nome="<?= htmlspecialchars($r['nome']) ?>"
-                   data-toggle="modal" data-target="#modalDelResp"
+                   data-bs-toggle="modal" data-bs-target="#modalDelResp"
                    title="Remover">
                   <i class="fas fa-trash fa-xs"></i>
                 </a>
@@ -189,10 +189,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="card-header py-2">
         <div class="d-flex align-items-center mb-2">
           <strong class="mr-auto">Utilizadores</strong>
-          <span class="badge badge-secondary mr-2"><?= count($users) ?></span>
+          <span class="badge badge-secondary me-2"><?= count($users) ?></span>
           <button type="button" class="btn btn-xs btn-outline-secondary" id="btnToggleUsers"
                   data-state="expanded">
-            <i class="fas fa-compress-alt fa-xs mr-1"></i>Colapsar
+            <i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar
           </button>
         </div>
         <div class="d-flex" style="gap:6px">
@@ -222,11 +222,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="user-group">
         <div class="d-flex align-items-center px-3 py-2"
              style="background:#f8f9fa;border-bottom:1px solid #dee2e6;cursor:pointer"
-             data-toggle="collapse" data-target="#<?= $colId ?>"
+             data-bs-toggle="collapse" data-bs-target="#<?= $colId ?>"
              data-resp-nome="<?= htmlspecialchars(strtolower($respNome)) ?>">
-          <small class="font-weight-bold text-secondary mr-auto">
-            <i class="fas fa-chevron-down fa-xs mr-1 resp-chevron" style="transition:transform .15s"></i>
-            <i class="fas fa-user-tie fa-xs mr-1"></i><?= htmlspecialchars($respNome) ?>
+          <small class="font-weight-bold text-secondary me-auto">
+            <i class="fas fa-chevron-down fa-xs me-1 resp-chevron" style="transition:transform .15s"></i>
+            <i class="fas fa-user-tie fa-xs me-1"></i><?= htmlspecialchars($respNome) ?>
           </small>
           <span class="badge badge-secondary" style="font-size:.7rem"><?= count($respUsers) ?></span>
         </div>
@@ -247,22 +247,22 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 <span class="mr-auto text-truncate" style="max-width:120px;<?= $dimmed ?>"
                       title="<?= $nome_u ?><?= !$ativo ? ' (inactivo)' : '' ?>">
                   <?php if (!$ativo): ?>
-                  <i class="fas fa-ban fa-xs text-muted mr-1" title="Inactivo"></i>
+                  <i class="fas fa-ban fa-xs text-muted me-1" title="Inactivo"></i>
                   <?php endif; ?>
                   <?= htmlspecialchars($u['user']) ?>
                 </span>
                 <?php if ($ativo): ?>
                   <a href="#" class="btn-edit-user text-info mx-1"
                      data-id="<?= $uid ?>" data-nome="<?= $nome_u ?>" data-resp="<?= (int)$u['idresp'] ?>"
-                     data-toggle="modal" data-target="#modalEditUser" title="Editar">
+                     data-bs-toggle="modal" data-bs-target="#modalEditUser" title="Editar">
                     <i class="fas fa-edit fa-xs"></i></a>
                   <?php if ($nRec === 0): ?>
                   <a href="#" class="btn-del-user text-danger"
                      data-id="<?= $uid ?>" data-nome="<?= $nome_u ?>"
-                     data-toggle="modal" data-target="#modalDelUser" title="Eliminar">
+                     data-bs-toggle="modal" data-bs-target="#modalDelUser" title="Eliminar">
                     <i class="fas fa-trash fa-xs"></i></a>
                   <?php else: ?>
-                  <form method="post" class="d-inline ml-1">
+                  <form method="post" class="d-inline ms-1">
                     <input type="hidden" name="_acao"  value="desativar_user">
                     <input type="hidden" name="userid" value="<?= $uid ?>">
                     <button type="submit" class="btn btn-xs btn-outline-warning"
@@ -284,7 +284,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   <?php if ($nRec === 0): ?>
                   <a href="#" class="btn-del-user text-danger"
                      data-id="<?= $uid ?>" data-nome="<?= $nome_u ?>"
-                     data-toggle="modal" data-target="#modalDelUser" title="Eliminar definitivamente">
+                     data-bs-toggle="modal" data-bs-target="#modalDelUser" title="Eliminar definitivamente">
                     <i class="fas fa-trash fa-xs"></i></a>
                   <?php endif; ?>
                 <?php endif; ?>
@@ -310,7 +310,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="respid" id="editRespId">
         <div class="modal-header">
           <h5 class="modal-title">Editar responsável</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group mb-0">
@@ -320,7 +320,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('SAVE') ?></button>
         </div>
       </form>
@@ -337,14 +337,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="respid" id="delRespId">
         <div class="modal-header">
           <h5 class="modal-title">Remover responsável</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <p><?= t('REMOVE') ?> <strong id="delRespNome"></strong>?</p>
           <p class="text-danger small mb-0"><?= t('IRREVERSIBLE') ?></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-danger"><?= t('REMOVE') ?></button>
         </div>
       </form>
@@ -361,7 +361,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="userid" id="editUserId">
         <div class="modal-header">
           <h5 class="modal-title">Editar utilizador</h5>
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -377,7 +377,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
           <button type="submit" class="btn btn-primary"><?= t('SAVE') ?></button>
         </div>
       </form>
@@ -393,14 +393,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <input type="hidden" name="userid" id="delUserId">
       <div class="modal-header">
         <h5 class="modal-title">Remover utilizador</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
         <p>Remover <strong id="delUserNome"></strong>?</p>
         <p class="text-danger small mb-0"><?= t('IRREVERSIBLE') ?></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal"><?= t('CANCEL') ?></button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
         <button type="submit" class="btn btn-danger"><?= t('REMOVE') ?></button>
       </div>
     </form>
@@ -477,8 +477,8 @@ $('#btnToggleUsers').on('click', function () {
     $('#tblUsers .user-group:visible .collapse').collapse(expand ? 'hide' : 'show');
     $btn.data('state', expand ? 'collapsed' : 'expanded')
         .html(expand
-            ? '<i class="fas fa-expand-alt fa-xs mr-1"></i>Expandir'
-            : '<i class="fas fa-compress-alt fa-xs mr-1"></i>Colapsar');
+            ? '<i class="fas fa-expand-alt fa-xs me-1"></i>Expandir'
+            : '<i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar');
 });
 </script>
 

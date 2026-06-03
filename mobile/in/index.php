@@ -50,18 +50,18 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <div class="mr-auto">
-    <h1><i class="fas fa-plane-arrival fa-sm mr-2 text-muted"></i><?= t('MOBILE_IN_TITLE') ?></h1>
+    <h1><i class="fas fa-plane-arrival fa-sm me-2 text-muted"></i><?= t('MOBILE_IN_TITLE') ?></h1>
     <small class="text-muted">Estudantes de mobilidade incoming registados</small>
   </div>
   <a href="<?= HTTP_DIR ?>/infodeqb/mobile/" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-th-large mr-1"></i><?= t('MOBILE_DASHBOARD') ?>
+    <i class="fas fa-th-large me-1"></i><?= t('MOBILE_DASHBOARD') ?>
   </a>
   <?php if ($isMobileAdmin): ?>
   <a href="edit.php" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-list mr-1"></i><?= t('MOBILE_EDIT_RECORDS') ?>
+    <i class="fas fa-list me-1"></i><?= t('MOBILE_EDIT_RECORDS') ?>
   </a>
   <a href="add.php" class="btn btn-primary btn-sm">
-    <i class="fas fa-plus mr-1"></i><?= t('MOBILE_NEW_RECORD') ?>
+    <i class="fas fa-plus me-1"></i><?= t('MOBILE_NEW_RECORD') ?>
   </a>
   <?php endif; ?>
 </div>
@@ -79,7 +79,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <option value="%" <?= $filtro === '%' ? 'selected' : '' ?>>Todos</option>
     </select>
   </form>
-  <span class="badge badge-secondary ml-2"><?= $nTotal ?> estudante<?= $nTotal != 1 ? 's' : '' ?></span>
+  <span class="badge badge-secondary ms-2"><?= $nTotal ?> estudante<?= $nTotal != 1 ? 's' : '' ?></span>
 </div>
 
 <?php /* ── Gráficos por UC ──────────────────────────────────────── */ ?>
@@ -87,7 +87,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-bar fa-xs mr-1 text-muted"></i>
+        <i class="fas fa-chart-bar fa-xs me-1 text-muted"></i>
         <strong>L.EQ — Inscritos por UC</strong>
       </div>
       <div class="card-body py-3">
@@ -99,7 +99,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-6">
     <div class="card shadow-sm">
       <div class="card-header py-2">
-        <i class="fas fa-chart-bar fa-xs mr-1 text-muted"></i>
+        <i class="fas fa-chart-bar fa-xs me-1 text-muted"></i>
         <strong>M.EQ — Inscritos por UC</strong>
       </div>
       <div class="card-body py-3">
@@ -114,7 +114,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="card shadow-sm mb-4">
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblMobile" style="font-size:.83rem">
-      <thead class="thead-light">
+      <thead class="">
         <tr>
           <th>Nome</th>
           <th>Universidade</th>
