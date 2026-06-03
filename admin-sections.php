@@ -26,7 +26,7 @@ if (!empty($_POST)) {
         $code = trim($_POST['user_code'] ?? '');
         $name = trim($_POST['user_name'] ?? '');
         // Normalizar formato up356946@up.pt
-        if (!empty($code) && !str_contains($code, '@')) {
+        if (!empty($code) && strpos($code, '@') === false) {
             $code = 'up' . preg_replace('/\D/', '', $code) . '@up.pt';
         }
         if (!isset($modules[$mod]) || empty($code)) {

@@ -80,7 +80,7 @@ if (!empty($_POST)) {
                 $pdo->beginTransaction();
 
                 if ($equipId) {
-                    $sets = implode(', ', array_map(fn($k) => "$k = ?", array_keys($campos)));
+                    $sets = implode(', ', array_map(function($k) { return "$k = ?"; }, array_keys($campos)));
                     $vals = array_values($campos);
                     $vals[] = $equipId;
                     $pdo->prepare("UPDATE infodeqb_equipmentdeq SET $sets WHERE equipment_id = ?")
