@@ -6,9 +6,11 @@
  *
  * Pré-requisito: session_start() e require deqbwww.php já chamados.
  */
-require_once ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin
+require_once ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin, $_iqAdminsHr
 
-if (!$isAdmin) {
+$_isHrAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr);
+if (!$_isHrAdmin) {
     header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit;
 }
+unset($_isHrAdmin);
