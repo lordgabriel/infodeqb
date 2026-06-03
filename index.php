@@ -89,7 +89,7 @@ if ($isSectionAdmin) {
         $s=$pdo->prepare('SELECT r.autoid FROM infodeqb_rds_colaborador c JOIN infodeqb_rds_registo r ON c.codigo=r.codigo WHERE c.deleted!=1 AND r.deleted!=1 AND r.status=?');
         $s->execute(['Novo']);     $secHrNovo     = $s->rowCount();
         $s->execute(['Pendente']); $secHrPendente = $s->rowCount();
-        $sExp=$pdo->prepare('SELECT autoid FROM infodeqb_rds_colaborador c JOIN infodeqb_rds_registo r ON c.codigo=r.codigo WHERE c.deleted!=1 AND r.deleted!=1 AND r.status="Ativo" AND r.datafim<=?');
+        $sExp=$pdo->prepare('SELECT r.autoid FROM infodeqb_rds_colaborador c JOIN infodeqb_rds_registo r ON c.codigo=r.codigo WHERE c.deleted!=1 AND r.deleted!=1 AND r.status="Ativo" AND r.datafim<=?');
         $sExp->execute([date('Y/m/d', strtotime('+30 days'))]); $secHrNExpirar=$sExp->rowCount();
     }
     if ($isExamAdmin) {
