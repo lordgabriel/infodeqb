@@ -47,6 +47,24 @@ $rowsGrupo = $pdo->query('SELECT * FROM infodeqb_rds_grupo ORDER BY orderid')->f
 $rowsCat   = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categoriaid')->fetchAll(PDO::FETCH_ASSOC);
 $gabRows   = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
+// ── Forçar validação (ação separada) ─────────────────────────────
+if (!empty($_POST['_acao']) && $_POST['_acao'] === 'forcar_validacao') {
+    $valId = (int)($_POST['val_id'] ?? 0);
+    if ($valId) {
+        $pdo = Database::connect();
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_validacao
+             SET status='Validado', respondido_em=NOW(),
+                 nota='Aprovação forçada pelo administrador'
+             WHERE id=?"
+        )->execute([$valId]);
+        Database::disconnect();
+    }
+    header('Location: edit.php?id=' . urlencode($id) . '&id1=' . urlencode($id1 ?? '') . '&msg=val_forcada');
+    exit;
+}
+
 // ── Notificar SIGARRA (ação separada, sem recarregar o form) ──────
 if (!empty($_POST['_acao']) && $_POST['_acao'] === 'notificar_sigarra') {
     $nAutoid         = (int)($_POST['autoid']        ?? 0);
@@ -110,6 +128,7 @@ $WorkrespError    = null;
 $erroduplicado    = null;
 $status           = $data['status'];  // default: mantém estado atual
 $sigarraNotifInfo = null;             // dados para mostrar botão "Notificar SIGARRA"
+$statusValidos    = ['Novo','Pendente','Ativo','Inativo'];
 
 if (!empty($_POST)) {
 
@@ -129,6 +148,12 @@ if (!empty($_POST)) {
     $grupo            = $_POST['grupo'];
     $categoria        = $_POST['categoria'];
     $curso            = ($grupo == '2' || $grupo == '3') ? ($_POST['curso'] ?? '') : '';
+
+    // Permitir mudança de estado directamente pelo admin
+    $novoStatus = $_POST['status'] ?? $data['status'];
+    if (in_array($novoStatus, $statusValidos)) {
+        $status = $novoStatus;
+    }
 
     // Construir strings de acessos
     $result         = '';
@@ -197,6 +222,19 @@ if (!empty($_POST)) {
 
             $pdo->commit();
 
+            // Actualizar timestamps conforme mudança de estado
+            if ($status !== $data['status']) {
+                $tsNow = date('Y-m-d H:i:s');
+                $tsCol = null;
+                if ($status === 'Ativo')    $tsCol = 'dataativo';
+                if ($status === 'Inativo')  $tsCol = 'datainativo';
+                if ($status === 'Pendente') $tsCol = 'datacica';
+                if ($tsCol) {
+                    $pdo->prepare("UPDATE infodeqb_rds_registo SET $tsCol=? WHERE autoid=?")
+                        ->execute([$tsNow, $id1]);
+                }
+            }
+
             // Actualizar tabela relacional de acessos
             if (isset($_POST['acessos'])) {
                 $labsPost = array_values(array_unique(array_filter(
@@ -249,6 +287,14 @@ $fCurso     = isset($_POST['curso'])            ? $_POST['curso']           : ($
 $fResp      = isset($_POST['responsavel'])      ? $_POST['responsavel']     : $data['Codigo'];
 $fOutroresp = !empty($_POST['outroresponsavel'])? $_POST['outroresponsavel']: ($data['outroresponsavel'] ?? '');
 $fAcessodeq = isset($_POST['acessodeq'])        ? $_POST['acessodeq']       : $data['acessodeq'];
+
+// ── Validações pendentes para este registo ───────────────────────
+$validacoesPendentes = $pdo->prepare(
+    "SELECT * FROM infodeqb_rds_validacao
+     WHERE registo_id=? ORDER BY criado_em ASC"
+);
+$validacoesPendentes->execute([$id1]);
+$validacoes = $validacoesPendentes->fetchAll(PDO::FETCH_ASSOC);
 
 // Checkboxlist de labs
 $fAcessos = !empty($_POST) && isset($_POST['acessos'])
@@ -434,17 +480,28 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
     </div>
 
-    <!-- Estado atual (informativo) -->
-    <div class="row align-items-center mt-1">
+    <!-- Estado — editável pelo admin -->
+    <div class="row align-items-end mt-1">
       <div class="col-md-auto form-group mb-0">
         <label class="d-block"><?= $lang['STATUS'] ?></label>
-        <?php
-          $sBadge = ['Ativo'=>'badge-success','Pendente'=>'badge-warning','Novo'=>'badge-info','Inativo'=>'badge-secondary'][$data['status']] ?? 'badge-secondary';
-        ?>
-        <span class="badge <?= $sBadge ?>" style="font-size:.85rem;padding:.35em .65em"><?= htmlspecialchars($data['status']) ?></span>
-        <?php if ($dataestado): ?>
-          <small class="text-muted ms-2">desde <?= htmlspecialchars($dataestado) ?></small>
-        <?php endif; ?>
+        <div class="d-flex align-items-center" style="gap:8px">
+          <select name="status" class="form-control form-control-sm" style="width:auto">
+            <?php
+            $sBadges = ['Novo'=>'badge-info','Pendente'=>'badge-warning','Ativo'=>'badge-success','Inativo'=>'badge-secondary'];
+            foreach ($statusValidos as $st):
+            ?>
+            <option value="<?= $st ?>" <?= ($data['status'] === $st) ? 'selected' : '' ?>>
+              <?= $st ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+          <?php if ($dataestado): ?>
+            <small class="text-muted">desde <?= htmlspecialchars(substr($dataestado,0,10)) ?></small>
+          <?php endif; ?>
+        </div>
+        <small class="text-muted" style="font-size:.72rem">
+          <i class="fas fa-exclamation-triangle text-warning me-1"></i>Mudar o estado actualiza o timestamp correspondente
+        </small>
       </div>
     </div>
   </div>
@@ -482,6 +539,68 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
 
 </form>
+
+<?php if (!empty($validacoes)): ?>
+<!-- ── Validações de acesso ───────────────────────────────────── -->
+<div class="card mt-4">
+  <div class="card-header py-2 d-flex align-items-center">
+    <i class="fas fa-clipboard-check fa-sm me-2 text-muted"></i>
+    <strong>Validações de acesso a espaços</strong>
+    <span class="badge badge-secondary ms-2"><?= count($validacoes) ?></span>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
+      <thead>
+        <tr>
+          <th>Espaço / Gabinete</th>
+          <th>Responsável</th>
+          <th class="text-center" style="width:9em">Estado</th>
+          <th style="width:10em">Respondido em</th>
+          <th style="width:6em"></th>
+        </tr>
+      </thead>
+      <tbody>
+      <?php foreach ($validacoes as $val):
+        $vBadge  = ['Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger'][$val['status']] ?? 'badge-secondary';
+        $isPend  = $val['status'] === 'Pendente';
+      ?>
+        <tr class="<?= $isPend ? '' : 'text-muted' ?>">
+          <td class="align-middle">
+            <span class="<?= $isPend ? 'font-weight-600' : '' ?>">
+              <?= htmlspecialchars($val['gab_nome'] ?: $val['deq_id']) ?>
+            </span>
+          </td>
+          <td class="align-middle"><?= htmlspecialchars($val['resp_nome'] ?? '—') ?></td>
+          <td class="align-middle text-center">
+            <span class="badge <?= $vBadge ?>"><?= htmlspecialchars($val['status']) ?></span>
+            <?php if (!empty($val['nota'])): ?>
+              <br><small class="text-muted" style="font-size:.7rem"><?= htmlspecialchars(mb_substr($val['nota'],0,40)) ?></small>
+            <?php endif; ?>
+          </td>
+          <td class="align-middle">
+            <?= $val['respondido_em'] ? htmlspecialchars(substr($val['respondido_em'],0,16)) : '—' ?>
+          </td>
+          <td class="align-middle text-center">
+            <?php if ($isPend): ?>
+            <form method="post"
+                  action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
+                  onsubmit="return confirm('Forçar aprovação desta validação sem resposta do responsável?')">
+              <input type="hidden" name="_acao"  value="forcar_validacao">
+              <input type="hidden" name="val_id" value="<?= (int)$val['id'] ?>">
+              <button type="submit" class="btn btn-xs btn-outline-warning"
+                      title="Forçar validação — ignora o responsável do espaço">
+                <i class="fas fa-bolt fa-xs me-1"></i>Forçar
+              </button>
+            </form>
+            <?php endif; ?>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+<?php endif; ?>
 
 <?php if ($sigarraNotifInfo): ?>
 <div class="alert alert-warning mt-3" role="alert">
