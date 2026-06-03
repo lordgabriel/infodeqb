@@ -179,23 +179,18 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 
   </ul>
 
-  <!-- User — Alpine.js dropdown (sem jQuery) -->
-  <div class="iq-tn-user" x-data="{ open: false }" @click.outside="open = false">
-    <button class="iq-tn-user-btn" @click="open = !open" type="button"
-            :aria-expanded="open.toString()">
+  <!-- User — Bootstrap 5 dropdown nativo (sem Alpine.js, sem jQuery) -->
+  <div class="iq-tn-user dropdown">
+    <button class="iq-tn-user-btn dropdown-toggle" type="button"
+            id="iqUserDropBtn"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
       <span class="iq-tn-avatar"><?php echo htmlspecialchars($_initials); ?></span>
       <span class="iq-tn-user-name"><?php echo htmlspecialchars($_displayName ?: t('DASH_WELCOME')); ?></span>
-      <i class="fas fa-chevron-down fa-xs" style="opacity:.55;margin-left:2px"
-         :style="open ? 'transform:rotate(180deg);transition:.2s' : 'transition:.2s'"></i>
+      <i class="fas fa-chevron-down fa-xs" style="opacity:.55;margin-left:2px"></i>
     </button>
-    <div class="iq-tn-user-dropdown" x-show="open"
-         x-transition:enter="transition ease-out duration-100"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-75"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         style="display:none">
+    <div class="dropdown-menu dropdown-menu-end iq-tn-user-dropdown"
+         aria-labelledby="iqUserDropBtn">
       <div class="iq-tn-user-head">
         <div class="name"><?php echo htmlspecialchars($_displayName); ?></div>
         <div class="email"><?php echo htmlspecialchars($_SESSION['user'] ?? ''); ?></div>

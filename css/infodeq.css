@@ -233,19 +233,19 @@ body {
 }
 
 .iq-tn-user-dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  background: #fff;
-  border: 1px solid var(--iq-border);
-  border-radius: var(--iq-r);
-  box-shadow: var(--iq-sh-lg);
-  min-width: 215px;
-  z-index: 1050;
+  /* Bootstrap 5 .dropdown-menu gere display/position automaticamente */
+  background: #fff !important;
+  border: 1px solid var(--iq-border) !important;
+  border-radius: var(--iq-r) !important;
+  box-shadow: var(--iq-sh-lg) !important;
+  min-width: 215px !important;
+  padding: 0 !important;
   overflow: hidden;
+  margin-top: 8px !important;
 }
-.iq-tn-user.open .iq-tn-user-dropdown { display: block; }
+/* Remover o toggle de .open (já não usado — Bootstrap 5 trata disso) */
+/* Esconder o caret automático do Bootstrap no btn do user */
+.iq-tn-user-btn.dropdown-toggle::after { display: none; }
 .iq-tn-user-head {
   padding: 10px 14px;
   border-bottom: 1px solid var(--iq-border);
