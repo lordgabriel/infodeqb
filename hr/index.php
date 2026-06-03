@@ -177,12 +177,16 @@ if (! empty($_POST)) {
 
         $pdo->commit(); // ← commit antes do email: registo fica guardado mesmo que o email falhe
 
-        // Gravar acessos na tabela relacional (fora da transaction para não bloquear)
+        // Gravar acessos na tabela relacional (try-catch próprio para não bloquear o email)
         if ($novoRegId > 0 && !empty($_SESSION['deqid'])) {
-            $labsParaGravar = array_values(array_unique(array_filter(
-                array_map('trim', explode(';', $_SESSION['deqid']))
-            )));
-            setRegistoAcessos($pdo, $novoRegId, $labsParaGravar);
+            try {
+                $labsParaGravar = array_values(array_unique(array_filter(
+                    array_map('trim', explode(';', $_SESSION['deqid']))
+                )));
+                setRegistoAcessos($pdo, $novoRegId, $labsParaGravar);
+            } catch (Exception $eLabs) {
+                error_log('HR setRegistoAcessos falhou id=' . $novoRegId . ': ' . $eLabs->getMessage());
+            }
         }
 
     } catch (PDOException $e) {
