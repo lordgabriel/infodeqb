@@ -1,6 +1,8 @@
-# Shibboleth (autenticação FEUP) — desactivado em localhost
-# Descomentar no servidor de produção:
-#AuthType shibboleth
-#ShibRequestSetting requireSession true
-#require shib-session
-#Require shib-attr affiliation
+# Shibboleth (autenticação FEUP)
+# O bloco só é activado quando mod_shib está presente (produção).
+# Em localhost, o módulo não existe → Apache ignora o bloco.
+<IfModule mod_shib>
+  AuthType shibboleth
+  ShibRequestSetting requireSession true
+  Require shib-session
+</IfModule>
