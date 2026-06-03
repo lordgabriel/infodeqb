@@ -259,12 +259,16 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
     $mail->Port = 587;
     $mail->CharSet = 'UTF-8';
 
-    // FROM = utilizador autenticado (alinhamento DMARC/SPF)
-    // Reply-To aponta para deqdir@fe.up.pt para respostas
-    $mail->setFrom(mailUsername, 'InfoDEQB — DEQB/FEUP');
-    $mail->addReplyTo('deqdir@fe.up.pt', 'FEUP | Direção do DEQB');
-
-    // essencial para SPF / DMARC
+    // FROM: usa MAIL_FROM se definido em deqbwww.php, senão o utilizador autenticado
+    // Sender (Return-Path / envelope) = utilizador autenticado → SPF passa
+    $fromAddr = defined('MAIL_FROM') && MAIL_FROM ? MAIL_FROM : mailUsername;
+    $fromName = defined('MAIL_FROM_NAME') && MAIL_FROM_NAME ? MAIL_FROM_NAME : 'InfoDEQB — DEQB/FEUP';
+    $mail->setFrom($fromAddr, $fromName);
+    if ($fromAddr !== mailUsername) {
+        // Reply-To = FROM quando é endereço funcional
+        $mail->addReplyTo($fromAddr, $fromName);
+    }
+    // Sender (envelope) = utilizador SMTP autenticado (garante SPF)
     $mail->Sender = $mail->Username;
 
 
