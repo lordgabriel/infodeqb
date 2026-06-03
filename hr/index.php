@@ -49,7 +49,21 @@ $sqlinregister = "INSERT INTO infodeqb_rds_registo (codigo,datainicio,datafim,re
 $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-/* Insert new record */
+/* Insert new record — token de submissão única (evita double-submit) */
+if (!empty($_POST)) {
+    $submitToken = trim($_POST['_submit_token'] ?? '');
+    $sessionToken = $_SESSION['_hr_submit_token'] ?? '';
+
+    // Se o token foi já usado ou não corresponde → redirect para success
+    // (cobre browser Back + resend e submissões duplicadas)
+    if ($submitToken === '' || $submitToken !== $sessionToken) {
+        header('Location: success.php');
+        exit;
+    }
+    // Invalidar imediatamente para impedir re-uso
+    unset($_SESSION['_hr_submit_token']);
+}
+
 if (! empty($_POST)) {
     $codigo = $_POST['codigo'];
     $nome = $_POST['nome'];
@@ -339,7 +353,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   <h1>Registo de colaborador</h1>
 </div>
 
+<?php
+// Gerar token de submissão único para esta sessão de formulário
+$_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
+?>
 <form class="iq-form-2col-wrap" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+  <input type="hidden" name="_submit_token" value="<?= htmlspecialchars($_SESSION['_hr_submit_token']) ?>">
 
   <?php if (isset($erroduplicado)): ?>
     <div class="alert alert-danger"><?php echo $erroduplicado; ?></div>
