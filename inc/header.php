@@ -88,7 +88,9 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
   <!-- InfoDEQB design system -->
   <link href="<?php echo $_base; ?>/css/infodeq.css" rel="stylesheet">
 
-  <!-- Alpine.js — reactividade leve sem jQuery -->
+  <!-- jQuery — necessário para scripts inline e DataTables nas páginas -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Alpine.js — reactividade leve (user dropdown, etc.) -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
   <?php if (!empty($extraCss)): ?>

@@ -542,7 +542,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= t('CANCEL') ?></button>
       <button type="button" class="btn btn-primary"
-              onclick="$('#modalConfirm').modal('hide');document.getElementById('formAreas').submit()">
+              onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirm')).hide();document.getElementById('formAreas').submit()">
         <?= t('YES') ?>
       </button>
     </div>
@@ -626,15 +626,18 @@ new Chart(document.getElementById('chartAreas'), {
 var todasinfodeqb_respostas = <?= json_encode($todasinfodeqb_respostasMap) ?>;
 
 // Botão "Preencher/Editar resposta": abre collapse e faz scroll para o topo
+// Bootstrap 5: usar API nativa em vez de $().collapse('show')
 $('#btnAbrirForm').on('click', function () {
-    var $panel = $('#formPanel');
-    if ($panel.hasClass('show')) {
+    var panelEl = document.getElementById('formPanel');
+    if (!panelEl) return;
+    if (panelEl.classList.contains('show')) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        $panel.collapse('show');
-        $panel.one('shown.bs.collapse', function () {
+        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(panelEl, { toggle: false });
+        panelEl.addEventListener('shown.bs.collapse', function () {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        }, { once: true });
+        bsCollapse.show();
     }
 });
 

@@ -328,6 +328,12 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
   <input type="hidden" name="_acao" value="<?= htmlspecialchars($acao) ?>">
 
   <div class="card shadow-sm mb-0">
+    <div class="card-header py-2 d-flex align-items-center"
+         style="background:#343a40;color:#fff;border-bottom-color:#23272b">
+      <i class="fas fa-table fa-sm me-2" style="opacity:.6"></i>
+      <strong><?= $modoEdicao ? t('SERVDOC_UPDATE') : 'Unidades Curriculares' ?></strong>
+      <small class="ms-2" style="opacity:.6;font-size:.78rem">— indique a sua preferência (1–5) por UC</small>
+    </div>
     <div class="card-body p-0">
       <table class="table table-sm table-hover mb-0" id="tblUcs">
         <thead>

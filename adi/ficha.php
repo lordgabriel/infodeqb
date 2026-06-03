@@ -218,7 +218,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <?php /* ── Painel de pontuações ────────────────────────────────── */ ?>
 <div class="card shadow-sm mb-4">
-  <div class="card-header py-2">
+  <div class="card-header py-2" style="background:#343a40;color:#fff;border-bottom-color:#23272b">
     <strong>Pontuação e Área</strong>
   </div>
   <div class="card-body">
