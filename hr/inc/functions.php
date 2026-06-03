@@ -215,14 +215,20 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
         $httpBase = (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/hr/email_dev/';
         $htmlUrl  = $httpBase . basename($htmlFile);
 
-        // Banner informativo no email (mostra destinatários reais)
+        // Redirecionar destinatários ANTES de gerar o banner
+        $origTo   = implode(', ', (array)$to);
+        $to       = !empty($testRecipients) ? $testRecipients : array($DEV_ADMIN);
+        $cc_list  = array();
+        $bcc_list = array();
+
+        // Banner informativo (gerado com os destinatários reais já actualizados)
         $modeLabel = $isLocalhost ? 'DEV/LOCALHOST' : 'PRODUÇÃO — MODO TESTE';
         $banner  = "\n<div style='font-family:monospace;background:#fffbe6;border:2px solid #f90;padding:12px 16px;font-size:13px'>";
         $banner .= "<strong>⚠ $modeLabel — Email interceptado</strong><br>";
-        $banner .= "Destinatário real: " . htmlspecialchars(implode(', ', (array)$to)) . "<br>";
-        $banner .= "CC real: "   . htmlspecialchars(implode(', ', (array)$cc_list)) . "<br>";
+        $banner .= "Destinatário real: " . htmlspecialchars($origTo) . "<br>";
+        $banner .= "CC real: "   . htmlspecialchars(implode(', ', array('deqdir@fe.up.pt','fmartins@fe.up.pt'))) . "<br>";
         $banner .= "Assunto: " . htmlspecialchars($subject) . "<br>";
-        $banner .= "Enviado para: " . htmlspecialchars($isAdminDest ? $DEV_ADMIN : $DEV_USER);
+        $banner .= "Enviado para: " . htmlspecialchars(implode(', ', $to));
         $banner .= "</div>\n";
         $htmlOut = preg_replace('/(<body[^>]*>)/i', '$1' . $banner, $body, 1, $count);
         if (!$count) { $htmlOut = $banner . $body; }
@@ -232,27 +238,13 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
         $logFile = ROOT_DIR . '/infodeqb/hr/email_dev.log';
         $entry   = str_repeat('-', 60) . "\n";
         $entry  .= date('Y-m-d H:i:s') . " [$modeLabel]\n";
-        $entry  .= 'Para:    ' . implode(', ', (array)$to)      . "\n";
-        $entry  .= 'CC:      ' . implode(', ', (array)$cc_list)  . "\n";
-        $entry  .= 'Assunto: ' . $subject . "\n";
-        $entry  .= 'Enviado: ' . ($isAdminDest ? $DEV_ADMIN : $DEV_USER) . "\n";
-        $entry  .= 'Preview: ' . $htmlUrl . "\n";
+        $entry  .= 'Para orig: ' . $origTo . "\n";
+        $entry  .= 'Enviado:   ' . implode(', ', $to) . "\n";
+        $entry  .= 'Assunto:   ' . $subject . "\n";
+        $entry  .= 'FROM:      ' . mailUsername . "\n";
+        $entry  .= 'Preview:   ' . $htmlUrl . "\n";
         file_put_contents($logFile, $entry, FILE_APPEND | LOCK_EX);
 
-        // Redirecionar TODOS os emails para os endereços de teste
-        // (sem distinção admin/user para evitar deduplicação que faz perder emails)
-        $origTo   = implode(', ', (array)$to);
-        $to       = !empty($testRecipients) ? $testRecipients : array($DEV_ADMIN);
-        $cc_list  = array();   // sem CC separado — todos já estão em $to
-        $bcc_list = array();
-        // NÃO alterar o assunto — prefixo [TESTE] pode activar filtros anti-spam
-        // O banner dentro do corpo do email já identifica que é modo teste
-        // Actualizar banner com nova lista de destinos
-        $banner = str_replace(
-            'Enviado para: ' . htmlspecialchars($isAdminDest ? $DEV_ADMIN : $DEV_USER),
-            'Enviado para: ' . htmlspecialchars(implode(', ', $to)),
-            $banner
-        );
         // tenta envio real mas não falha se SMTP não estiver acessível ↓
     }
 
