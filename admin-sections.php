@@ -11,10 +11,11 @@ $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $modules = [
-    'hr'     => ['label' => t('SEC_MODULE_HR'),     'icon' => 'fa-users',           'color' => '#6f42c1'],
-    'water'  => ['label' => t('SEC_MODULE_WATER'),  'icon' => 'fa-water',           'color' => '#0e7490'],
-    'exam'   => ['label' => t('SEC_MODULE_EXAM'),   'icon' => 'fa-archive',         'color' => '#b45309'],
-    'mobile' => ['label' => t('SEC_MODULE_MOBILE'), 'icon' => 'fa-plane-arrival',   'color' => '#1a56db'],
+    'hr'     => ['label' => t('SEC_MODULE_HR'),     'icon' => 'fa-users',                'color' => '#6f42c1'],
+    'water'  => ['label' => t('SEC_MODULE_WATER'),  'icon' => 'fa-water',                'color' => '#0e7490'],
+    'exam'   => ['label' => t('SEC_MODULE_EXAM'),   'icon' => 'fa-archive',              'color' => '#b45309'],
+    'mobile' => ['label' => t('SEC_MODULE_MOBILE'), 'icon' => 'fa-plane-arrival',        'color' => '#1a56db'],
+    'dsd'    => ['label' => 'Distribuição Serviço Docente', 'icon' => 'fa-chalkboard-teacher', 'color' => '#0e7a55'],
 ];
 
 $flashMsg = ''; $flashType = 'success';

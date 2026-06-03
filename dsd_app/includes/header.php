@@ -30,8 +30,22 @@ if (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1'])) {
     $_SESSION['user']        = $_SERVER['eppn'];
     $_SESSION['DisplayName'] = isset($_SERVER['DisplayName']) ? $_SERVER['DisplayName'] : '';
     $_SESSION['CommonName']  = isset($_SERVER['CommonName'])  ? $_SERVER['CommonName']  : '';
-    $_SESSION['Code']        = substr($_SERVER['eppn'], 2, strpos($_SERVER['eppn'], '@') - 2);
+    // Normalizar Code para formato up356946@up.pt (igual ao session.php principal)
+    if (empty($_SESSION['Code']) || strpos($_SESSION['Code'], '@') === false) {
+        $_upNum = substr($_SERVER['eppn'], 2, strpos($_SERVER['eppn'], '@') - 2);
+        $_SESSION['Code'] = 'up' . $_upNum . '@up.pt';
+        unset($_upNum);
+    }
 }
+
+// ── Controlo de acesso: apenas admin global e admin DSD ──────────
+require_once ROOT_DIR . '/infodeqb/inc/admins.php';
+$_dsdAccess = $isAdmin || !empty($_iqAdminsDsd) && in_array($_iqCurrentUser, $_iqAdminsDsd);
+if (!$_dsdAccess) {
+    header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
+    exit;
+}
+unset($_dsdAccess);
 
 // ── CSS extra: app.css do dsd_app ────────────────────────────────
 $extraCss = BASE_URL . '/assets/css/app.css';

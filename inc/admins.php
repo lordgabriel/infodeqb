@@ -18,7 +18,7 @@ $_iqCurrentUser = $_SESSION['Code'] ?? '';
 // ── Admins globais (hardcoded — nunca geridos pela UI) ────────────
 $isAdmin = in_array($_iqCurrentUser, [
     'up356946@up.pt',   // Luís Martins
-    'up444525@up.pt',
+    
 ]);
 
 // ── Admins de secção — carregar da BD (cache em sessão 5 min) ─────
@@ -44,5 +44,6 @@ $_iqAdminsHr     = $_SESSION[$_cacheKey]['hr']     ?? [];
 $_iqAdminsWater  = $_SESSION[$_cacheKey]['water']  ?? [];
 $_iqAdminsExam   = $_SESSION[$_cacheKey]['exam']   ?? [];
 $_iqAdminsMobile = $_SESSION[$_cacheKey]['mobile'] ?? [];
+$_iqAdminsDsd    = $_SESSION[$_cacheKey]['dsd']    ?? [];
 
 unset($_cacheKey, $_cacheTs, $_admRows, $_admByModule, $_r, $_e);
