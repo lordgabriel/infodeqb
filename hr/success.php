@@ -1,223 +1,169 @@
 <?php
-    //session_start();
-require_once $_SERVER['DOCUMENT_ROOT'].'/deqbwww.php';
-include $_SERVER['DOCUMENT_ROOT'].'/infodeqb/session.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
+include    $_SERVER['DOCUMENT_ROOT'] . '/infodeqb/session.php';
+require_once ROOT_DIR . '/infodeqb/hr/inc/functions.php';
 
-  //Retrieve Language
-  $sites = array('en'=>'en','pt'=>'pt');
-  $language = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-  // Set default language if a '$lang' version of site is not available
-  if (!isset($sites[$language])) {
-    $language= 'en';
-  }
-  include "./lang/lang.".$sites[$language].".php";
+// Linguagem
+$sites    = array('en' => 'en', 'pt' => 'pt');
+$language = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'pt', 0, 2);
+if (!isset($sites[$language])) $language = 'pt';
+include __DIR__ . '/lang/lang.' . $sites[$language] . '.php';
 
-
-if (isset($_SESSION['registo']))
-{
-  //print_r ($_SESSION["registo"]);
-  $result = "";
-  $result2 = "";
-  $codigo = $_SESSION["registo"]['codigo'];
-  $nome = $_SESSION["registo"]['nome'];
-  $email = $_SESSION["registo"]['email'];
-  $emailalt = $_SESSION["registo"]['emailalt'];
-  $telefone = $_SESSION["registo"]['telefone'];
-  $datainicio = date("d-m-Y",strtotime($_SESSION["registo"]['datainicio']));
-  $datafim =  date("d-m-Y",strtotime($_SESSION["registo"]['datafim']));
-  $responsavel = $_SESSION["registo"]['responsavel'];
-  $outroresponsavel = $_SESSION["registo"]['outroresponsavel'];
-  $acessodeq = $_SESSION["acessodeq"];
-  $grupo = $_SESSION["registo"]['grupo'];
-  $categoria = $_SESSION["registo"]['categoria'];
-  $curso = $_SESSION["registo"]['curso'];
-  $result=($acessodeq == "1"?"DEQ;":'')." ".$_SESSION["result"];
-  $result2=($acessodeq == "1"?"DEQ;":'')." ".$_SESSION["deqid"];
-  $result3=($acessodeq == "1"?"DEQ;":'')." ".$_SESSION["gabid"];
-  $optacessos="";
-  $acessos =array_map ('trim', explode(";",$result2));
-
-  $pdo = Database::connect();
-  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $ops='';
-  $grup='';
-  $cat='';
-  $gab='';
-  $sql = 'SELECT * FROM infodeqb_rds_responsaveis order by respespaco';
-  $sqlgrupo = 'SELECT * FROM infodeqb_rds_grupo order by grupoid';
-  $sqlcat = 'SELECT * FROM infodeqb_rds_categoria order by categoriaid';
-//echo $result3;
-  foreach ($pdo->query($sql) as $row) {
-  if ($_SESSION["registo"]['responsavel'] == $row["Codigo"]) {
-      $ops.= $row["respespaco"];
-    } else { }
-  }
-
-
-  foreach ($pdo->query($sqlgrupo) as $rowgrupo) {
-    if ( $grupo == $rowgrupo["grupoid"]) {
-      $grup.= $rowgrupo["grupo_pro"];
-    }
-  }
-
-  foreach ($pdo->query($sqlcat) as $rowcat) {
-    if ( $categoria == $rowcat["categoriaid"]) {
-      $cat.= $rowcat["categoria"];
-    }
-  }
-
-
-  $respgab=[];
-  foreach ($acessos as $i => $item) {
-    $sqlgab= 'SELECT * FROM infodeqb_rds_gabinetes inner join infodeqb_rds_responsaveis on Codigo=responsavel WHERE (deqid ="'.$acessos[$i].'")';
-    foreach ($pdo->query($sqlgab) as $rowgab){
-    $respgab[].= $rowgab["respespaco"];
-    }
-  }
-  $uniquerespgab = array_unique($respgab);
-
-  sort($uniquerespgab);
-  Database::disconnect();
+if (!isset($_SESSION['registo'])) {
+    header('Location: index.php');
+    exit;
 }
-else {
-//echo "no session";
-header("Location: index.php");
+
+// ── Dados básicos da sessão ──────────────────────────────────────────
+$reg      = $_SESSION['registo'];
+$codigo   = $reg['codigo']           ?? '';
+$nome     = $reg['nome']             ?? '';
+$email    = $reg['email']            ?? '';
+$emailalt = $reg['emailalt']         ?? '';
+$datainicio = date('d-m-Y', strtotime($reg['datainicio'] ?? 'now'));
+$datafim    = date('d-m-Y', strtotime($reg['datafim']   ?? 'now'));
+$acessodeq  = $_SESSION['acessodeq'] ?? 0;
+$grupo    = $reg['grupo']    ?? 0;
+$categoria= $reg['categoria']?? 0;
+$curso    = $reg['curso']    ?? '';
+
+// ── Telefone: reconstituir indicativo + número ───────────────────────
+$telNum = preg_replace('/[^0-9]/', '', trim($reg['telefone_numero'] ?? ''));
+$telInd = trim($reg['telefone_indicativo'] ?? '+351');
+$telefone = $telNum ? ($telInd . ' ' . $telNum) : ($reg['telefone'] ?? '');
+
+// ── BD ───────────────────────────────────────────────────────────────
+$pdo = Database::connect();
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+// Responsável de trabalho
+$respNome = '';
+if (!empty($reg['responsavel']) && $reg['responsavel'] != '0') {
+    $r = $pdo->prepare('SELECT respespaco FROM infodeqb_rds_responsaveis WHERE Codigo=?');
+    $r->execute([$reg['responsavel']]);
+    $respNome = $r->fetchColumn() ?: $reg['outroresponsavel'] ?? '';
+} else {
+    $respNome = $reg['outroresponsavel'] ?? '';
 }
+
+// Grupo e Categoria
+$grupNome = $pdo->prepare('SELECT grupo_pro FROM infodeqb_rds_grupo WHERE grupoid=?');
+$grupNome->execute([$grupo]);
+$grupNome = $grupNome->fetchColumn() ?: '';
+
+$catNome = $pdo->prepare('SELECT categoria FROM infodeqb_rds_categoria WHERE categoriaid=?');
+$catNome->execute([$categoria]);
+$catNome = $catNome->fetchColumn() ?: '';
+
+// ── Espaços agrupados por responsável ────────────────────────────────
+// deqids: a partir da sessão (deqid guardado em formato "E-101; E-102; ...")
+$deqidsRaw = $_SESSION['deqid'] ?? '';
+$deqids    = array_values(array_filter(array_map('trim', explode(';', $deqidsRaw))));
+
+// Acesso DEQ (porta norte) como primeiro item se activo
+if ($acessodeq == 1) {
+    array_unshift($deqids, 'DEQ');
+}
+
+// Para cada deqid: obter nome do gabinete e responsável
+$byResp = array(); // ['resp_nome' => ['lab_nome', ...]]
+
+foreach ($deqids as $deqid) {
+    if ($deqid === 'DEQ') {
+        $byResp['(Porta Norte / Acesso DEQ)'][] = 'Acesso Porta Norte DEQ';
+        continue;
+    }
+    $q = $pdo->prepare(
+        'SELECT g.nomegab, r.respespaco AS resp_nome
+         FROM infodeqb_rds_gabinetes g
+         LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+         WHERE g.deqid = ? LIMIT 1'
+    );
+    $q->execute([$deqid]);
+    $row = $q->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        $resp = !empty($row['resp_nome']) ? $row['resp_nome'] : '(sem responsável)';
+        $byResp[$resp][] = $row['nomegab'] ?: $deqid;
+    }
+}
+
+Database::disconnect();
 
 $pageTitle = 'Registo Concluído';
-include ROOT_DIR.'/infodeqb/inc/header.php';
+include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
-				<!-- Breadcrumbs-->
-				<ol class="breadcrumb hidden-print">
-					<li class="breadcrumb-item d-print-none "><a href="#"> Registo de colaboradores</a></li>
-				</ol>
-				<div class="card  mb-3 d-print-none">
-					<div class="card-header  ">
-						<i class="fas fa-table"></i>
-						<?php echo $lang['INFO']; ?>
-					</div>
-					<div class="row  ">
-						<div class="col-md-12 col-xs-12   ">
-							<div class="col-md-12 col-xs-12 alert-success">
-								<br><?php echo $lang['SUCCESS']; ?>
-								<center><br>
-								</center>
-							</div>
-						</div>
-					</div>
-				</div>
+<div class="iq-page-header">
+  <h1><i class="fas fa-check-circle fa-sm me-2 text-success"></i>Registo submetido</h1>
+</div>
 
-				<div class="card mb-3">
-					<div class="card-header">
-						<i class="fas fa-table"></i>
-						<?php echo $lang['RECORD']; ?>
-					</div>
-					<div class="row ">
-						<div class="col-md-12 col-xs-12 mt-4">
-							<div class="col-md-12 col-xs-12">
-								<table class="table table-borderless table-sm">
-									<tr><td><b><?php echo $lang['FEUP_CODE']; ?></b> <?PHP echo (!empty($codigo)?$codigo:'')?></td></tr>
-									<tr><td><b><?php echo $lang['NAME']; ?></b> <?PHP echo (!empty($nome)?$nome:'')?></td> </tr>
-									<tr><td><b><?php echo $lang['EMAIL']; ?></b> <?PHP echo (!empty($email)?$email:'')?></td> </tr>
-									<tr><td><b><?php echo $lang['ALT_EMAIL']; ?> </b><?PHP echo (!empty ($emailalt)?$emailalt:'N.A')?></td> </tr>
-									<tr><td><b><?php echo $lang['PHONE_PRINT']; ?> </b><?php echo (!empty($telefone)?$telefone:'')?> </td></tr>
-								</table>
-							</div>
-						</div>
-					</div>
-					<div class="row ">
-						<div class="col-md-12 col-xs-12 mt-4">
-							<div class="col-md-12 col-xs-12">
-								<table class="table table-bordered table-sm">
-								<thead class="">
-									<tr class="text-start ">
-									<th class="border-top-0"><?php echo $lang['CATEGORY']; ?></th>
-									<th class="border-top-0"><?php echo $lang['BEGIN_DATE']; ?></th>
-									<th class="border-top-0"><?php echo $lang['END_DATE']; ?></th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-									<td ><?php echo (!empty($cat)?$cat:'').(!empty($grup)?' ('.$grup.')':'')?></td>
-									<td ><?php echo (!empty($datainicio)?$datainicio:'')?></td>
-									<td ><?php echo (!empty($datafim)?$datafim:'')?></td>
-									</tr>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
+<div class="alert alert-success mb-4" style="font-size:.9rem">
+  <i class="fas fa-check me-2"></i><?= $lang['SUCCESS'] ?? 'O seu registo foi submetido com sucesso e será analisado pelo secretariado.' ?>
+</div>
 
-					<div class="row ">
-						<div class="col-md-12 col-xs-12 mt-4">
-							<div class="col-md-12 col-xs-12">
-								<table class="table table-bordered table-sm">
-									<thead class="" >
-										<tr class="text-start">
-										<th class="border-top-0 "><?php echo $lang['WORK_RESP']; ?></th>
-										<th  class="border-top-0 " style="width: 20%"><?php echo $lang['SIGNATURE']; ?></th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr >
-										<td ><?PHP echo (($responsavel!='0')?$ops:$outroresponsavel)?></td>
-										<td ></td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
+<!-- ── Dados pessoais ─────────────────────────────────────── -->
+<div class="card mb-3">
+  <div class="card-header py-2">
+    <i class="fas fa-user fa-sm me-2 text-muted"></i><strong><?= $lang['RECORD'] ?? 'Dados do registo' ?></strong>
+  </div>
+  <div class="card-body py-2">
+    <table class="table table-sm table-borderless mb-0" style="font-size:.88rem;max-width:560px">
+      <tr><th style="width:40%;color:#6b7280"><?= $lang['FEUP_CODE']   ?? 'Código FEUP' ?></th><td><?= htmlspecialchars($codigo) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['NAME']        ?? 'Nome' ?></th><td><?= htmlspecialchars($nome) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['EMAIL']       ?? 'Email' ?></th><td><?= htmlspecialchars($email) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['ALT_EMAIL']   ?? 'Email alt.' ?></th><td><?= htmlspecialchars($emailalt ?: 'N.A.') ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['PHONE_PRINT'] ?? 'Telefone' ?></th><td><?= htmlspecialchars($telefone ?: '—') ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['CATEGORY']    ?? 'Categoria' ?></th><td><?= htmlspecialchars($catNome . ($grupNome ? ' (' . $grupNome . ')' : '')) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['BEGIN_DATE']  ?? 'Início' ?></th><td><?= htmlspecialchars($datainicio) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['END_DATE']    ?? 'Fim' ?></th><td><?= htmlspecialchars($datafim) ?></td></tr>
+      <tr><th style="color:#6b7280"><?= $lang['WORK_RESP']   ?? 'Responsável' ?></th><td><?= htmlspecialchars($respNome ?: '—') ?></td></tr>
+      <?php if ($curso): ?>
+      <tr><th style="color:#6b7280">Curso</th><td><?= htmlspecialchars($curso) ?></td></tr>
+      <?php endif; ?>
+    </table>
+  </div>
+</div>
 
-					<div class="row ">
-						<div class="col-md-12 col-xs-12 mt-4">
-							<div class="col-md-12 col-xs-12">
-								<?php
-									$rowNum = 0;
-									$table = "<table class='table table-bordered table-sm'><thead class=''><tr><th class='border-top-0'>".$lang['REQUESTED_ACCESS']."</th><th class='border-top-0'>".$lang['WORKSPACE_RESP']."</th><th class='border-top-0' >".$lang['SIGNATURE']."</th></tr><thead>";
-									foreach($uniquerespgab as $resp)
-									{
-									$rowNum ++;
-									$table .= "<tr>";
-									$table .= ($rowNum == 1) ? ("<td rowspan='%s' >".$result."</td>"): "";
-									$table .= "<td >".$resp."</td>";
-									$table .= "<td ></td>";
-									$table .= "</tr>";
-									}
-									$table .= "</table>";
-									printf($table, $rowNum);
-									?>
+<!-- ── Acessos pedidos agrupados por responsável ─────────── -->
+<?php if (!empty($byResp)): ?>
+<div class="card mb-4">
+  <div class="card-header py-2">
+    <i class="fas fa-key fa-sm me-2 text-muted"></i><strong><?= $lang['REQUESTED_ACCESS'] ?? 'Acessos pedidos' ?></strong>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm table-hover mb-0" style="font-size:.86rem">
+      <thead>
+        <tr>
+          <th style="width:40%"><?= $lang['WORKSPACE_RESP'] ?? 'Responsável' ?></th>
+          <th>Espaços / Gabinetes</th>
+        </tr>
+      </thead>
+      <tbody>
+      <?php foreach ($byResp as $resp => $labs): ?>
+        <tr>
+          <td class="align-top fw-semibold"><?= htmlspecialchars($resp) ?></td>
+          <td>
+            <?php foreach ($labs as $lab): ?>
+              <span class="badge badge-secondary me-1 mb-1" style="font-size:.78rem;font-weight:normal">
+                <?= htmlspecialchars($lab) ?>
+              </span>
+            <?php endforeach; ?>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+<?php endif; ?>
 
-									<?php
-									$rowNum = 0;
-									$table = "<table class='table table-bordered table-sm'><thead class=''><tr ><th class='col-md-4 border-top-0'>".$lang['DOOR_ID']."</th></tr><thead>";
-									foreach($uniquerespgab as $resp)
-									{
-									$rowNum ++;
-									$table .= "<tr>";
-									$table .= ($rowNum == 1) ? ("<td rowspan='%s' class='col-md-4'>".$result3."</td>"): "";
-									$table .= "</tr>";
-									}
-									$table .= "</table>";
-									printf($table, $rowNum);
-								?>
-								<p><br><strong><?php echo $lang['DATE']; ?></strong><br><br>
-							</div>
-						</div>
-					</div>
-				</div>
+<div class="d-flex gap-2">
+  <a href="meu-registo.php" class="btn btn-primary btn-sm">
+    <i class="fas fa-id-card me-1"></i>Ver o meu registo
+  </a>
+  <a href="<?= HTTP_DIR ?>/infodeqb/" class="btn btn-outline-secondary btn-sm">
+    <i class="fas fa-home me-1"></i>Dashboard
+  </a>
+</div>
 
-<script>
-$(document).ready(function() {
-$('#dataTable').DataTable();
-} );
-</script>
-
-<script>
-function myFunction() {
-window.print();
-}
-</script>
-
-<?php include ROOT_DIR.'/infodeqb/inc/footer.php'; ?>
+<?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>
