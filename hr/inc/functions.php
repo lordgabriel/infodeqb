@@ -239,12 +239,19 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
         $entry  .= 'Preview: ' . $htmlUrl . "\n";
         file_put_contents($logFile, $entry, FILE_APPEND | LOCK_EX);
 
-        // Redirecionar destinatários para endereços de teste
-        $origTo  = implode(', ', (array)$to);
-        $to      = $isAdminDest ? array($DEV_ADMIN) : array($DEV_USER);
-        $cc_list = array($DEV_ADMIN); // admin recebe cópia de tudo
+        // Redirecionar TODOS os emails para os endereços de teste
+        // (sem distinção admin/user para evitar deduplicação que faz perder emails)
+        $origTo   = implode(', ', (array)$to);
+        $to       = !empty($testRecipients) ? $testRecipients : array($DEV_ADMIN);
+        $cc_list  = array();   // sem CC separado — todos já estão em $to
         $bcc_list = array();
-        $subject = '[TESTE → ' . $origTo . '] ' . $subject;
+        $subject  = '[TESTE → ' . $origTo . '] ' . $subject;
+        // Actualizar banner com nova lista de destinos
+        $banner = str_replace(
+            'Enviado para: ' . htmlspecialchars($isAdminDest ? $DEV_ADMIN : $DEV_USER),
+            'Enviado para: ' . htmlspecialchars(implode(', ', $to)),
+            $banner
+        );
         // tenta envio real mas não falha se SMTP não estiver acessível ↓
     }
 
