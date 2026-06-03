@@ -17,7 +17,7 @@ function getLabsDoUtilizador(PDO $pdo, int $userIdNum, bool $isAdmin): array {
         return $pdo->query('SELECT lab_id FROM infodeqb_labs_ensino')
                    ->fetchAll(PDO::FETCH_COLUMN);
     }
-    $s = $pdo->prepare('SELECT lab_id FROM Infodeqb_lab_responsibles WHERE user_id = ?');
+    $s = $pdo->prepare('SELECT lab_id FROM infodeqb_lab_responsibles WHERE user_id = ?');
     $s->execute([$userIdNum]);
     return $s->fetchAll(PDO::FETCH_COLUMN);
 }
@@ -34,7 +34,7 @@ function podeGerirEquipamento(PDO $pdo, int $userIdNum, bool $isAdmin, array $eq
 
     // Admin do lab
     $s = $pdo->prepare(
-        'SELECT 1 FROM Infodeqb_lab_responsibles WHERE user_id = ? AND lab_id = ?'
+        'SELECT 1 FROM infodeqb_lab_responsibles WHERE user_id = ? AND lab_id = ?'
     );
     $s->execute([$userIdNum, $equipment['Laboratorio']]);
     if ($s->fetchColumn()) return true;
@@ -53,7 +53,7 @@ function podeGerirEquipamento(PDO $pdo, int $userIdNum, bool $isAdmin, array $eq
 function podeAdicionarAoLab(PDO $pdo, int $userIdNum, bool $isAdmin, string $labId): bool {
     if ($isAdmin) return true;
     $s = $pdo->prepare(
-        'SELECT 1 FROM Infodeqb_lab_responsibles WHERE user_id = ? AND lab_id = ?'
+        'SELECT 1 FROM infodeqb_lab_responsibles WHERE user_id = ? AND lab_id = ?'
     );
     $s->execute([$userIdNum, $labId]);
     return (bool)$s->fetchColumn();
