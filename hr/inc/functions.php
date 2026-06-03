@@ -266,10 +266,10 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
     $mail->Port = 587;
     $mail->CharSet = 'UTF-8';
 
-    $mail->setFrom(
-        'deqdir@fe.up.pt',
-        'FEUP | Direção do DEQB'
-        );
+    // FROM = utilizador autenticado (alinhamento DMARC/SPF)
+    // Reply-To aponta para deqdir@fe.up.pt para respostas
+    $mail->setFrom(mailUsername, 'InfoDEQB — DEQB/FEUP');
+    $mail->addReplyTo('deqdir@fe.up.pt', 'FEUP | Direção do DEQB');
 
     // essencial para SPF / DMARC
     $mail->Sender = $mail->Username;
@@ -287,7 +287,6 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
         $mail->addBCC($bcc);
     }
 
-    $mail->AddReplyTo("deqbdir@fe.up.pt", "");
     $mail->WordWrap = 50; // set word wrap to 50 characters
     $mail->IsHTML(true); // set email format to HTML
     $mail->Subject = $subject;
