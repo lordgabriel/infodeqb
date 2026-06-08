@@ -719,6 +719,26 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
   width: 13px; height: 13px; flex-shrink: 0; cursor: pointer;
 }
 
+/* ── Preview de labs seleccionados ─────────────────────────────── */
+.labs-preview {
+  min-height: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.lab-tag {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
 /* ─────────────────────────────────────────
    DASHBOARD — FERRAMENTAS
    ───────────────────────────────────────── */

@@ -431,7 +431,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-md-5 form-group">
+      <div class="col-md-5 form-group" id="cat-col-wrap">
         <label><?= $lang['CATEGORY'] ?></label>
         <select id="category" name="categoria" class="form-control" required>
           <?php foreach ($rowsCat as $rc): ?>
@@ -522,6 +522,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="iq-checkboxlist" id="acessos-list">
         <?= $gab ?>
       </div>
+      <div class="labs-preview mt-2" id="labs-preview-edit"></div>
     </div>
   </div>
 
@@ -628,28 +629,54 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <script>
 // ── Mapeamento grupo → categorias (carregado da BD) ───────────────
-var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
-var allCatOptions   = document.getElementById('category')
+var grupoCategorias    = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+var gruposSemCategoria = [2, 3, 4, 6, 7];
+var allCatOptions      = document.getElementById('category')
     ? document.getElementById('category').innerHTML : '';
-var allGrupoOptions = document.getElementById('grupo')
+var allGrupoOptions    = document.getElementById('grupo')
     ? document.getElementById('grupo').innerHTML : '';
 
-// Categoria actualmente guardada no registo (preservar mesmo que "legacy")
+// Categoria actualmente guardada (preservar mesmo que "legacy")
 var catAtual = <?= (int)($fCategoria ?? 0) ?>;
 
 function filtrarCategorias(grupoId, preservarAtual) {
-    var sel = document.getElementById('category');
+    var sel  = document.getElementById('category');
+    var wrap = document.getElementById('cat-col-wrap');
     if (!sel) return;
+
+    if (gruposSemCategoria.indexOf(grupoId) !== -1) {
+        if (!preservarAtual || !catAtual) {
+            if (wrap) wrap.style.display = 'none';
+        }
+        return;
+    }
+    if (wrap) wrap.style.display = '';
     var permitidas = grupoCategorias[grupoId] || null;
-    sel.innerHTML = allCatOptions;
+    sel.innerHTML  = allCatOptions;
     if (!permitidas) return;
     Array.from(sel.options).forEach(function(opt) {
         if (opt.disabled) return;
         var id = parseInt(opt.value);
-        // Preservar a categoria actual do registo (compatibilidade com dados existentes)
         if (preservarAtual && id === catAtual) return;
         if (permitidas.indexOf(id) === -1) opt.remove();
     });
+}
+
+// ── Preview de labs seleccionados ────────────────────────────────
+function atualizarPreviewLabs(listId, previewId) {
+    var list = document.getElementById(listId);
+    var prev = document.getElementById(previewId);
+    if (!list || !prev) return;
+    var checks = list.querySelectorAll('input[type=checkbox]:checked');
+    if (checks.length === 0) {
+        prev.innerHTML = '<span style="font-size:12px;color:#999">Nenhum selecionado</span>';
+    } else {
+        var html = '';
+        checks.forEach(function(c) {
+            html += '<span class="lab-tag">' + (c.parentElement.textContent || c.value).trim() + '</span>';
+        });
+        prev.innerHTML = html;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -700,6 +727,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (inpInicio && inpFim) {
         inpInicio.addEventListener('change', function () { inpFim.min    = this.value; });
         inpFim.addEventListener('change',    function () { inpInicio.max = this.value; });
+    }
+
+    // ── Preview de labs (edit) ────────────────────────────────────
+    var labList = document.getElementById('acessos-list');
+    if (labList) {
+        labList.addEventListener('change', function () {
+            atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
+        });
+        atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
     }
 });
 </script>

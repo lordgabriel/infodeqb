@@ -500,7 +500,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
           <?php echo $option_grupo; ?>
         </select>
       </div>
-      <div class="col-md-5 form-group">
+      <div class="col-md-5 form-group" id="cat-col-wrap">
         <label><?php echo $lang['CATEGORY']; ?></label>
         <select id="category" name="categoria" class="form-control" required>
           <?php echo $option_cat; ?>
@@ -560,6 +560,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       <div class="iq-checkboxlist" id="acessos-list">
         <?php echo $gabChecks; ?>
       </div>
+      <div class="labs-preview mt-2" id="labs-preview-main"></div>
     </div>
   </div>
 
@@ -575,26 +576,47 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 </form>
 
 <script>
-// ── Mapeamento grupo → categorias permitidas (carregado da BD) ────
-var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
-
-// Cópia de todas as <option> da categoria para restaurar
-var allCatOptions = document.getElementById('category')
+// ── Mapeamento grupo → categorias (carregado da BD) ──────────────
+var grupoCategorias    = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+var gruposSemCategoria = [2, 3, 4, 6, 7];
+var allCatOptions      = document.getElementById('category')
     ? document.getElementById('category').innerHTML : '';
 
 function filtrarCategorias(grupoId) {
-    var sel = document.getElementById('category');
+    var sel  = document.getElementById('category');
+    var wrap = document.getElementById('cat-col-wrap');
     if (!sel) return;
+
+    if (gruposSemCategoria.indexOf(grupoId) !== -1) {
+        if (wrap) wrap.style.display = 'none';
+        return;
+    }
+    if (wrap) wrap.style.display = '';
     var permitidas = grupoCategorias[grupoId] || null;
-    sel.innerHTML = allCatOptions; // repõe tudo
+    sel.innerHTML  = allCatOptions;
     if (!permitidas) return;
     Array.from(sel.options).forEach(function(opt) {
-        if (opt.disabled) return; // placeholder
-        if (permitidas.indexOf(parseInt(opt.value)) === -1) {
-            opt.remove();
-        }
+        if (opt.disabled) return;
+        if (permitidas.indexOf(parseInt(opt.value)) === -1) opt.remove();
     });
     if (sel.options.length > 0) sel.selectedIndex = 0;
+}
+
+// ── Preview de labs seleccionados ────────────────────────────────
+function atualizarPreviewLabs(listId, previewId) {
+    var list = document.getElementById(listId);
+    var prev = document.getElementById(previewId);
+    if (!list || !prev) return;
+    var checks = list.querySelectorAll('input[type=checkbox]:checked');
+    if (checks.length === 0) {
+        prev.innerHTML = '<span style="font-size:12px;color:#999">Nenhum selecionado</span>';
+    } else {
+        var html = '';
+        checks.forEach(function(c) {
+            html += '<span class="lab-tag">' + (c.parentElement.textContent || c.value).trim() + '</span>';
+        });
+        prev.innerHTML = html;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -604,10 +626,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (selGrupo) {
         selGrupo.addEventListener('change', function () {
             filtrarCategorias(parseInt(this.value));
-            // mostrar/ocultar campo curso
             var mostrarCurso = [2,3,7].indexOf(parseInt(this.value)) !== -1;
             document.getElementById('curso').style.display = mostrarCurso ? '' : 'none';
-            // desabilitar acesso DEQ para externos (grupo 3)
             var selDeq = document.querySelector('select[name=acessodeq]');
             if (parseInt(this.value) === 3) {
                 selDeq.value = '0'; selDeq.disabled = true;
@@ -615,8 +635,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 selDeq.disabled = false;
             }
         });
-        // Aplicar na carga se já houver valor selecionado
         if (selGrupo.value) filtrarCategorias(parseInt(selGrupo.value));
+    }
+
+    // ── Preview de labs ───────────────────────────────────────────
+    var labList = document.getElementById('acessos-list');
+    if (labList) {
+        labList.addEventListener('change', function () {
+            atualizarPreviewLabs('acessos-list', 'labs-preview-main');
+        });
+        atualizarPreviewLabs('acessos-list', 'labs-preview-main');
     }
 
     // ── Código UP: filtra grupos para estudantes (9 dígitos) ──────

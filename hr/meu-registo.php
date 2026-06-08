@@ -753,7 +753,7 @@ $tipoLabelsU = array(
                   <?php endforeach; ?>
                 </select>
               </div>
-              <div class="col-md-6 form-group">
+              <div class="col-md-6 form-group" id="cat-col-wrap-ped">
                 <label>Categoria</label>
                 <select name="categoria" id="categoria_ped" class="form-control" required>
                   <?php foreach ($cats as $c): ?>
@@ -803,7 +803,7 @@ $tipoLabelsU = array(
             </div>
             <div class="form-group iq-fill">
               <label>Laboratórios / gabinetes</label>
-              <div class="iq-checkboxlist" id="acessos_ped">
+              <div class="iq-checkboxlist" id="acessos_ped" onchange="atualizarPreviewLabs('acessos_ped','labs-preview-ped')">
               <?php
               $selDeqids = $registoAtivo ? getRegistoAcessos($pdo, (int)$registoAtivo['autoid']) : array();
               $prevPiso  = null; $openGrp = false;
@@ -824,6 +824,7 @@ $tipoLabelsU = array(
               </label>
               <?php endforeach; if ($openGrp) echo '</div>'; ?>
               </div>
+              <div class="labs-preview mt-2" id="labs-preview-ped"></div>
             </div>
           </div>
         </div><!-- /col direita -->
@@ -854,11 +855,29 @@ var acessosOriginais  = <?= json_encode($registoAtivo ? getRegistoAcessos($pdo, 
 var acessodeqOriginal = <?= $registoAtivo ? (int)$registoAtivo['acessodeq'] : 0 ?>;
 
 // Mapeamento grupo → categorias (carregado da BD)
-var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+var grupoCategorias    = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+var gruposSemCategoria = [2, 3, 4, 6, 7];
 // Categoria actualmente guardada (preservar mesmo que não esteja na lista do novo grupo)
 var catAtualPed = <?= (int)(($registoAtivo['categoria'] ?? 0)) ?>;
 var allCatOpts = document.getElementById('categoria_ped')
     ? document.getElementById('categoria_ped').innerHTML : '';
+
+// ── Preview de labs seleccionados ────────────────────────────────
+function atualizarPreviewLabs(listId, previewId) {
+    var list = document.getElementById(listId);
+    var prev = document.getElementById(previewId);
+    if (!list || !prev) return;
+    var checks = list.querySelectorAll('input[type=checkbox]:checked');
+    if (checks.length === 0) {
+        prev.innerHTML = '<span style="font-size:12px;color:#999">Nenhum selecionado</span>';
+    } else {
+        var html = '';
+        checks.forEach(function(c) {
+            html += '<span class="lab-tag">' + (c.parentElement.textContent || c.value).trim() + '</span>';
+        });
+        prev.innerHTML = html;
+    }
+}
 
 function abrirForm(novoReg) {
     var el = document.getElementById('formAlterar');
@@ -876,8 +895,19 @@ function abrirForm(novoReg) {
     if (novoReg) {
         title.textContent = 'Pedir novo registo';
         avisoN.style.display = '';
+        // Limpar datas
         document.getElementById('datainicio_ped').value = '';
         document.getElementById('datafim_ped').value    = '';
+        // Limpar Classificação (grupo, categoria)
+        var selG = document.getElementById('grupo_ped');
+        var selC = document.getElementById('categoria_ped');
+        if (selG) { selG.selectedIndex = 0; filtrarCategoriasPed(parseInt(selG.value), false); }
+        if (selC) selC.selectedIndex = 0;
+        // Limpar Acessos
+        var selDeq = document.getElementById('acessodeq_ped');
+        if (selDeq) selDeq.value = '0';
+        document.querySelectorAll('#acessos_ped input[type=checkbox]').forEach(function(c) { c.checked = false; });
+        atualizarPreviewLabs('acessos_ped', 'labs-preview-ped');
     } else if (isInativo) {
         title.textContent = 'Solicitar renovação';
     } else {
@@ -916,10 +946,19 @@ function verificarLabs() {
 }
 
 function filtrarCategoriasPed(grupoId, preservarAtual) {
-    var sel = document.getElementById('categoria_ped');
+    var sel  = document.getElementById('categoria_ped');
+    var wrap = document.getElementById('cat-col-wrap-ped');
     if (!sel) return;
+
+    if (gruposSemCategoria.indexOf(grupoId) !== -1) {
+        if (!preservarAtual || !catAtualPed) {
+            if (wrap) wrap.style.display = 'none';
+        }
+        return;
+    }
+    if (wrap) wrap.style.display = '';
     var permitidas = grupoCategorias[grupoId] || null;
-    sel.innerHTML = allCatOpts;
+    sel.innerHTML  = allCatOpts;
     if (!permitidas) return;
     Array.from(sel.options).forEach(function(o) {
         if (o.disabled) return;
@@ -932,15 +971,16 @@ function filtrarCategoriasPed(grupoId, preservarAtual) {
 document.addEventListener('DOMContentLoaded', function () {
     var selG = document.getElementById('grupo_ped');
     if (selG) {
-        // Filtrar no carregamento preservando a categoria actual do registo
         if (selG.value) filtrarCategoriasPed(parseInt(selG.value), true);
 
         selG.addEventListener('change', function () {
-            // Ao mudar de grupo (nova selecção), não preservar categoria anterior
             filtrarCategoriasPed(parseInt(this.value), false);
             verificarGrupo();
         });
     }
+
+    // ── Preview de labs (meu-registo) ─────────────────────────────
+    atualizarPreviewLabs('acessos_ped', 'labs-preview-ped');
     var selR = document.getElementById('responsavel_ped');
     if (selR) {
         selR.addEventListener('change', function () {
