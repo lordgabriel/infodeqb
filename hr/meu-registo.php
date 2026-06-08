@@ -32,8 +32,9 @@ $language  = (substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2) === 'pt') ? 'pt' : 
 include ROOT_DIR . '/infodeqb/hr/lang/lang.' . $language . '.php';
 
 // ── Dados de referência ───────────────────────────────────────────
-$grupos  = $pdo->query('SELECT * FROM infodeqb_rds_grupo ORDER BY orderid')->fetchAll(PDO::FETCH_ASSOC);
-$cats    = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categoriaid')->fetchAll(PDO::FETCH_ASSOC);
+$grupos      = $pdo->query('SELECT * FROM infodeqb_rds_grupo ORDER BY orderid')->fetchAll(PDO::FETCH_ASSOC);
+$cats        = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categoriaid')->fetchAll(PDO::FETCH_ASSOC);
+$grupoCatMap = getGrupoCategoriasMap($pdo);
 $resps   = $pdo->query('SELECT * FROM infodeqb_rds_responsaveis WHERE Codigo != 0 ORDER BY respespaco')->fetchAll(PDO::FETCH_ASSOC);
 $gabRows = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
@@ -852,11 +853,10 @@ var isInativo         = <?= $isInativo ? 'true' : 'false' ?>;
 var acessosOriginais  = <?= json_encode($registoAtivo ? getRegistoAcessos($pdo, (int)$registoAtivo['autoid']) : array()) ?>;
 var acessodeqOriginal = <?= $registoAtivo ? (int)$registoAtivo['acessodeq'] : 0 ?>;
 
-var grupoCategorias = {
-    1:[1,2,3,5,6,7], 2:[4,5], 3:[9,80], 4:[3,6,9,10],
-    5:[1,2,3,5,6,7,10], 6:[6,9,10,80], 7:[4,9],
-    8:[11,12,13,14,15,16,17], 9:[1,2,3,5,6]
-};
+// Mapeamento grupo → categorias (carregado da BD)
+var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+// Categoria actualmente guardada (preservar mesmo que não esteja na lista do novo grupo)
+var catAtualPed = <?= (int)(($registoAtivo['categoria'] ?? 0)) ?>;
 var allCatOpts = document.getElementById('categoria_ped')
     ? document.getElementById('categoria_ped').innerHTML : '';
 
@@ -915,18 +915,29 @@ function verificarLabs() {
     document.getElementById('avisoLabs').style.display = labMudou ? '' : 'none';
 }
 
+function filtrarCategoriasPed(grupoId, preservarAtual) {
+    var sel = document.getElementById('categoria_ped');
+    if (!sel) return;
+    var permitidas = grupoCategorias[grupoId] || null;
+    sel.innerHTML = allCatOpts;
+    if (!permitidas) return;
+    Array.from(sel.options).forEach(function(o) {
+        if (o.disabled) return;
+        var id = parseInt(o.value);
+        if (preservarAtual && id === catAtualPed) return;
+        if (permitidas.indexOf(id) === -1) o.remove();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var selG = document.getElementById('grupo_ped');
     if (selG) {
+        // Filtrar no carregamento preservando a categoria actual do registo
+        if (selG.value) filtrarCategoriasPed(parseInt(selG.value), true);
+
         selG.addEventListener('change', function () {
-            var sel      = document.getElementById('categoria_ped');
-            var permitidas = grupoCategorias[parseInt(this.value)] || null;
-            sel.innerHTML = allCatOpts;
-            if (permitidas) {
-                Array.from(sel.options).forEach(function(o) {
-                    if (!o.disabled && permitidas.indexOf(parseInt(o.value)) === -1) o.remove();
-                });
-            }
+            // Ao mudar de grupo (nova selecção), não preservar categoria anterior
+            filtrarCategoriasPed(parseInt(this.value), false);
             verificarGrupo();
         });
     }

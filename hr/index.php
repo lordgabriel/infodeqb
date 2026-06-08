@@ -37,7 +37,8 @@ $status = 'Novo';
 // SQL statements
 $sqlresp = 'SELECT * FROM infodeqb_rds_responsaveis where not Codigo=0 order by respespaco';
 $sqlgrupo = 'SELECT * FROM infodeqb_rds_grupo where grupoid BETWEEN 1 AND 7 order by orderid';
-$sqlcategoria = 'SELECT * FROM infodeqb_rds_categoria where categoriaid not in (11,12,13,14,15,16,17)  order by categoriaid';
+$sqlcategoria = 'SELECT * FROM infodeqb_rds_categoria where categoriaid not in (11,12,13,14,15,16,17) order by categoriaid';
+$grupoCatMap = getGrupoCategoriasMap($pdo);
 $sqlgab = 'SELECT * FROM infodeqb_rds_gabinetes WHERE not (visible = 0) order by edificio, piso, nomegab';
 $sqlinuser = "INSERT INTO infodeqb_rds_colaborador (codigo,nome,email,emailalt,telefone,createdate)
               VALUES (?,?,?,?,?,?)
@@ -574,18 +575,8 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 </form>
 
 <script>
-// ── Mapeamento grupo → categorias permitidas ──────────────────────
-var grupoCategorias = {
-    1: [1,2,3,5,6,7],
-    2: [4,5],
-    3: [9,80],
-    4: [3,6,9,10],
-    5: [1,2,3,5,6,7,10],
-    6: [6,9,10,80],
-    7: [4,9],
-    8: [11,12,13,14,15,16,17],
-    9: [1,2,3,5,6]
-};
+// ── Mapeamento grupo → categorias permitidas (carregado da BD) ────
+var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
 
 // Cópia de todas as <option> da categoria para restaurar
 var allCatOptions = document.getElementById('category')

@@ -519,6 +519,22 @@ function _reabrirValidacao($pdo, $valId) {
  * Notifica o próprio e admins quando um novo pedido de registo é submetido
  * (via meu-registo.php — utilizador já autenticado).
  */
+/**
+ * Carrega o mapeamento grupo_id → [categoria_id, ...] da BD.
+ * Usado pelos formulários para filtragem dinâmica de categorias.
+ * Retorna array associativo: ['1' => [4,9,10,...], '5' => [6,23,24], ...]
+ */
+function getGrupoCategoriasMap(PDO $pdo): array {
+    $rows = $pdo->query(
+        'SELECT grupo_id, categoria_id FROM infodeqb_rds_grupo_categoria ORDER BY grupo_id, categoria_id'
+    )->fetchAll(PDO::FETCH_ASSOC);
+    $map = array();
+    foreach ($rows as $r) {
+        $map[(int)$r['grupo_id']][] = (int)$r['categoria_id'];
+    }
+    return $map;
+}
+
 function _emailNovoRegisto($nome, $email, $codigo, $datainicio, $datafim, $tipo = 'Novo registo') {
     $info = array(
         'nome'   => $nome,

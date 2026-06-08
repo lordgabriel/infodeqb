@@ -45,6 +45,7 @@ switch ($data['status']) {
 $rowsResp  = $pdo->query('SELECT * FROM infodeqb_rds_responsaveis WHERE Codigo != 0 ORDER BY respespaco')->fetchAll(PDO::FETCH_ASSOC);
 $rowsGrupo = $pdo->query('SELECT * FROM infodeqb_rds_grupo ORDER BY orderid')->fetchAll(PDO::FETCH_ASSOC);
 $rowsCat   = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categoriaid')->fetchAll(PDO::FETCH_ASSOC);
+$grupoCatMap = getGrupoCategoriasMap($pdo);
 $gabRows   = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Forçar validação (ação separada) ─────────────────────────────
@@ -626,18 +627,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; ?>
 
 <script>
-// ── Mapeamento grupo → categorias ────────────────────────────────
-var grupoCategorias = {
-    1:[1,2,3,5,6,7], 2:[4,5], 3:[9,80], 4:[3,6,9,10],
-    5:[1,2,3,5,6,7,10], 6:[6,9,10,80], 7:[4,9],
-    8:[11,12,13,14,15,16,17], 9:[1,2,3,5,6]
-};
-var allCatOptions  = document.getElementById('category')
+// ── Mapeamento grupo → categorias (carregado da BD) ───────────────
+var grupoCategorias = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
+var allCatOptions   = document.getElementById('category')
     ? document.getElementById('category').innerHTML : '';
 var allGrupoOptions = document.getElementById('grupo')
     ? document.getElementById('grupo').innerHTML : '';
 
-function filtrarCategorias(grupoId) {
+// Categoria actualmente guardada no registo (preservar mesmo que "legacy")
+var catAtual = <?= (int)($fCategoria ?? 0) ?>;
+
+function filtrarCategorias(grupoId, preservarAtual) {
     var sel = document.getElementById('category');
     if (!sel) return;
     var permitidas = grupoCategorias[grupoId] || null;
@@ -645,7 +645,10 @@ function filtrarCategorias(grupoId) {
     if (!permitidas) return;
     Array.from(sel.options).forEach(function(opt) {
         if (opt.disabled) return;
-        if (permitidas.indexOf(parseInt(opt.value)) === -1) opt.remove();
+        var id = parseInt(opt.value);
+        // Preservar a categoria actual do registo (compatibilidade com dados existentes)
+        if (preservarAtual && id === catAtual) return;
+        if (permitidas.indexOf(id) === -1) opt.remove();
     });
 }
 
@@ -654,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var selGrupo = document.getElementById('grupo');
     if (selGrupo) {
         selGrupo.addEventListener('change', function () {
-            filtrarCategorias(parseInt(this.value));
+            filtrarCategorias(parseInt(this.value), false);
             var mostrarCurso = [2,3,7].indexOf(parseInt(this.value)) !== -1;
             document.getElementById('curso').style.display = mostrarCurso ? '' : 'none';
             var selDeq = document.getElementById('acessodeq');
@@ -664,7 +667,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 selDeq.disabled = false;
             }
         });
-        if (selGrupo.value) filtrarCategorias(parseInt(selGrupo.value));
+        // No carregamento, preservar a categoria actual do registo
+        if (selGrupo.value) filtrarCategorias(parseInt(selGrupo.value), true);
     }
 
     var selResp = document.querySelector('select[name=responsavel]');
@@ -686,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             } else {
                 selG.innerHTML = allGrupoOptions;
-                if (selG.value) filtrarCategorias(parseInt(selG.value));
+                if (selG.value) filtrarCategorias(parseInt(selG.value), true);
             }
         });
     }
