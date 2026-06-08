@@ -516,6 +516,57 @@ function _reabrirValidacao($pdo, $valId) {
 }
 
 /**
+ * Notifica o próprio e admins quando um novo pedido de registo é submetido
+ * (via meu-registo.php — utilizador já autenticado).
+ */
+function _emailNovoRegisto($nome, $email, $codigo, $datainicio, $datafim, $tipo = 'Novo registo') {
+    $info = array(
+        'nome'   => $nome,
+        'codigo' => $codigo,
+        'inicio' => $datainicio,
+        'fim'    => $datafim,
+        'tipo'   => $tipo,
+    );
+    $body = format_email($info, 'mail_novo_registo.html');
+    try {
+        send_email(
+            array($email),
+            $body,
+            'Acessos DEQ: Pedido de registo submetido',
+            array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')
+        );
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        error_log('HR _emailNovoRegisto falhou para ' . $codigo . ': ' . $e->getMessage());
+    } catch (Exception $e) {
+        error_log('HR _emailNovoRegisto falhou para ' . $codigo . ': ' . $e->getMessage());
+    }
+}
+
+/**
+ * Notifica o próprio e admins quando um pedido de alteração é submetido.
+ */
+function _emailPedidoAlteracao($nome, $email, $codigo, $detalhe) {
+    $info = array(
+        'nome'    => $nome,
+        'codigo'  => $codigo,
+        'detalhe' => $detalhe,
+    );
+    $body = format_email($info, 'mail_pedido_alteracao.html');
+    try {
+        send_email(
+            array($email),
+            $body,
+            'Acessos DEQ: Pedido de alteração submetido',
+            array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')
+        );
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        error_log('HR _emailPedidoAlteracao falhou para ' . $codigo . ': ' . $e->getMessage());
+    } catch (Exception $e) {
+        error_log('HR _emailPedidoAlteracao falhou para ' . $codigo . ': ' . $e->getMessage());
+    }
+}
+
+/**
  * Notifica o secretariado quando um responsável rejeita uma validação.
  */
 function _notificarRejeicaoValidacao($val, $colab_nome) {

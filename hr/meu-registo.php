@@ -167,6 +167,10 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
     // Inativo → sempre cria novo registo (novo período)
     $criarNovoReg   = $isInativo || $novoRegisoFlag || $grupoMudou;
 
+    // Flags para email a enviar APÓS commit
+    $_pendEmailNovoReg = null;
+    $_pendEmailPedAlt  = null;
+
     try {
         $pdo->beginTransaction();
 
@@ -210,11 +214,22 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
 
             if ($grupoMudou) {
                 $msgs[] = 'Pedido de novo registo (mudança de grupo profissional) criado e enviado para validação.';
+                $_tipoReg = 'Mudança de grupo profissional';
             } elseif ($isInativo) {
                 $msgs[] = 'Pedido de renovação criado e enviado para validação.';
+                $_tipoReg = 'Renovação / novo período';
             } else {
                 $msgs[] = 'Pedido de novo registo criado e enviado para validação.';
+                $_tipoReg = 'Novo registo';
             }
+            $_pendEmailNovoReg = array(
+                'nome'   => $d['nome'] ?: ($colaborador['nome'] ?? ''),
+                'email'  => $colaborador['email'] ?? '',
+                'codigo' => $codigoNum,
+                'inicio' => $d['datainicio'],
+                'fim'    => $d['datafim'],
+                'tipo'   => $_tipoReg,
+            );
 
         } elseif ($registoAtivo) {
             // ── 2b. Alterações sem mudança de grupo ───────────────
@@ -313,6 +328,12 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         $existPed['id'],
                     ));
                     $msgs[] = 'Pedido de alteração atualizado (data e/ou acessos).';
+                    $_pendEmailPedAlt = array(
+                        'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
+                        'email'   => $colaborador['email'] ?? '',
+                        'codigo'  => $codigoNum,
+                        'detalhe' => 'Atualização de data e/ou acessos a laboratórios',
+                    );
                 } else {
                     $pdo->prepare(
                         "INSERT INTO infodeqb_rds_pedido
@@ -326,6 +347,12 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         $d['observacoes'] ?: null,
                     ));
                     $msgs[] = 'Pedido de alteração submetido para aprovação pelo secretariado.';
+                    $_pendEmailPedAlt = array(
+                        'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
+                        'email'   => $colaborador['email'] ?? '',
+                        'codigo'  => $codigoNum,
+                        'detalhe' => 'Alteração de data de fim e/ou acessos a laboratórios',
+                    );
                 }
             }
 
@@ -338,6 +365,26 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
         $pdo->commit();
         if ($flashType !== 'info') $flashType = 'success';
         $flashMsg = implode(' ', $msgs);
+
+        // ── Emails de notificação (fora da transacção) ────────────
+        if ($_pendEmailNovoReg && !empty($_pendEmailNovoReg['email'])) {
+            _emailNovoRegisto(
+                $_pendEmailNovoReg['nome'],
+                $_pendEmailNovoReg['email'],
+                $_pendEmailNovoReg['codigo'],
+                $_pendEmailNovoReg['inicio'],
+                $_pendEmailNovoReg['fim'],
+                $_pendEmailNovoReg['tipo']
+            );
+        }
+        if ($_pendEmailPedAlt && !empty($_pendEmailPedAlt['email'])) {
+            _emailPedidoAlteracao(
+                $_pendEmailPedAlt['nome'],
+                $_pendEmailPedAlt['email'],
+                $_pendEmailPedAlt['codigo'],
+                $_pendEmailPedAlt['detalhe']
+            );
+        }
 
         // Recarregar estado
         $registoAtivo = loadRegisto($pdo, $codigoNum);

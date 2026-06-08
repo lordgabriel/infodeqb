@@ -157,14 +157,25 @@ if (! empty($_POST)) {
         $q = $pdo->prepare($sql);
         $q->execute([$timestamp, $id1]);
 
-        // Ao activar: se o registo tem substitui_registo → inativar o registo anterior
+        // Ao activar: inativar o registo anterior (via substitui_registo se existir,
+        // e também qualquer outro registo Ativo da mesma pessoa — evitar colisão de estados)
         if ($_POST['action'] === 'Ativo') {
-            $chkSubst = $pdo->prepare('SELECT substitui_registo FROM infodeqb_rds_registo WHERE autoid = ?');
+            $chkSubst = $pdo->prepare('SELECT substitui_registo, codigo FROM infodeqb_rds_registo WHERE autoid = ?');
             $chkSubst->execute([$id1]);
-            $substId = $chkSubst->fetchColumn();
+            $substRow = $chkSubst->fetch(PDO::FETCH_ASSOC);
+            $substId  = $substRow ? $substRow['substitui_registo'] : null;
+            $codPess  = $substRow ? $substRow['codigo'] : null;
+
             if ($substId) {
                 $pdo->prepare('UPDATE infodeqb_rds_registo SET status = "Inativo", datainativo = ? WHERE autoid = ?')
                     ->execute([$timestamp, $substId]);
+            }
+            // Inativar qualquer outro registo Ativo da mesma pessoa (sem email — acção silenciosa)
+            if ($codPess) {
+                $pdo->prepare(
+                    'UPDATE infodeqb_rds_registo SET status = "Inativo", datainativo = ?
+                     WHERE codigo = ? AND status = "Ativo" AND autoid != ? AND deleted = 0'
+                )->execute([$timestamp, $codPess, (int)$id1]);
             }
         }
 
