@@ -38,7 +38,6 @@ $status = 'Novo';
 $sqlresp = 'SELECT * FROM infodeqb_rds_responsaveis where not Codigo=0 order by respespaco';
 $sqlgrupo = 'SELECT * FROM infodeqb_rds_grupo where grupoid BETWEEN 1 AND 7 order by orderid';
 $sqlcategoria = 'SELECT * FROM infodeqb_rds_categoria where categoriaid not in (11,12,13,14,15,16,17) order by categoriaid';
-$grupoCatMap = getGrupoCategoriasMap($pdo);
 $sqlgab = 'SELECT * FROM infodeqb_rds_gabinetes WHERE not (visible = 0) order by edificio, piso, nomegab';
 $sqlinuser = "INSERT INTO infodeqb_rds_colaborador (codigo,nome,email,emailalt,telefone,createdate)
               VALUES (?,?,?,?,?,?)
@@ -49,6 +48,7 @@ $sqlinregister = "INSERT INTO infodeqb_rds_registo (codigo,datainicio,datafim,re
 // DB Connection
 $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$grupoCatMap = getGrupoCategoriasMap($pdo);
 
 /* Insert new record — token de submissão única (evita double-submit) */
 if (!empty($_POST)) {
