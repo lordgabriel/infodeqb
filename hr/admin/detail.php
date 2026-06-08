@@ -103,10 +103,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
        class="btn btn-sm btn-outline-secondary me-2" title="Editar dados pessoais">
       <i class="fas fa-edit me-1"></i> Editar
     </a>
-    <a href="print.php?id=<?= htmlspecialchars($id) ?>"
-       class="btn btn-sm btn-outline-secondary me-2" title="Imprimir">
-      <i class="fas fa-print"></i>
-    </a>
     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
             data-bs-target="#modalDeleteColab" title="Apagar colaborador">
       <i class="fas fa-trash-alt"></i>
@@ -219,20 +215,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td class="align-middle"><?= htmlspecialchars($row['datainicio']) ?></td>
           <td class="align-middle"><?= htmlspecialchars($row['datafim']) ?></td>
           <td class="text-center text-nowrap align-middle">
-            <a href="print.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
-               title="Imprimir" class="btn btn-xs btn-outline-secondary">
-              <i class="fas fa-print"></i>
-            </a>
             <a href="edit.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
                title="Editar" class="btn btn-xs btn-outline-secondary">
               <i class="fas fa-edit"></i>
             </a>
-            <?php if (!$statusFiltro): ?>
-            <a href="copy.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
-               title="Duplicar" class="btn btn-xs btn-outline-secondary">
-              <i class="fas fa-copy"></i>
-            </a>
-            <?php endif; ?>
             <button type="button" class="btn btn-xs btn-outline-danger"
                     data-bs-toggle="modal" data-bs-target="#modalDel<?= (int)$row['autoid'] ?>"
                     title="Apagar">
