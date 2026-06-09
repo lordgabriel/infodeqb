@@ -62,7 +62,7 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
     $rid = (int)$_POST['registo_id'];
 
     $qReg = $pdo->prepare(
-        "SELECT r.datainicio, r.datafim, r.acessosid, c.nome AS colab_nome
+        "SELECT r.datainicio, r.datafim, r.acessosid, c.nome AS colab_nome, c.codigo AS colab_codigo
          FROM infodeqb_rds_registo r
          JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
          WHERE r.autoid = ?"
@@ -72,12 +72,59 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
 
     if ($reg) {
         $deqids = getRegistoAcessos($pdo, $rid);
-        $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim']);
+        $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo']);
 
         if ($n === 0) {
             $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
         } else {
             $_SESSION['val_info'] = 'Pedido de validação enviado a ' . $n . ' responsável(is).';
+        }
+    }
+}
+
+// ── Solicitar validação para um responsável específico ───────────────────────
+elseif ($acao === 'solicitar_resp' && !empty($_POST['registo_id']) && !empty($_POST['resp_codigo'])) {
+    $rid        = (int)$_POST['registo_id'];
+    $respFilter = trim($_POST['resp_codigo']);
+
+    $qReg = $pdo->prepare(
+        "SELECT r.datainicio, r.datafim, c.nome AS colab_nome, c.codigo AS colab_codigo
+         FROM infodeqb_rds_registo r
+         JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+         WHERE r.autoid = ?"
+    );
+    $qReg->execute([$rid]);
+    $reg = $qReg->fetch(PDO::FETCH_ASSOC);
+
+    if ($reg) {
+        // Filtrar apenas os labs deste responsável
+        $todosDeqids = getRegistoAcessos($pdo, $rid);
+        $labsResp    = array();
+        foreach ($todosDeqids as $deqid) {
+            $qG = $pdo->prepare(
+                "SELECT r.Codigo
+                 FROM infodeqb_rds_gabinetes g
+                 LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+                 WHERE g.deqid = ? LIMIT 1"
+            );
+            $qG->execute([$deqid]);
+            $rc = $qG->fetchColumn();
+            if ((string)$rc === $respFilter) {
+                $labsResp[] = $deqid;
+            }
+        }
+        if (!empty($labsResp)) {
+            // Forçar criação mesmo que já exista Pendente anterior (apagar primeiro)
+            $pdo->prepare(
+                "DELETE FROM infodeqb_rds_validacao
+                 WHERE registo_id=? AND resp_codigo=? AND status='Pendente'"
+            )->execute([$rid, $respFilter]);
+            $n = _criarValidacoes($pdo, null, $rid, $labsResp, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo']);
+            $_SESSION['val_info'] = $n > 0
+                ? 'Pedido de validação enviado ao responsável.'
+                : 'Não foi possível enviar — sem espaços com responsável definido.';
+        } else {
+            $_SESSION['val_info'] = 'Nenhum espaço encontrado para este responsável.';
         }
     }
 }

@@ -9,7 +9,13 @@ if (!isset($_SESSION['user']) || empty($_SESSION['user'])) {
 }
 $username = $_SESSION['user'];
 
-require ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin
+require ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin, $_iqAdminsMobile
+
+$isMobileAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsMobile);
+if (!$isMobileAdmin) {
+    header('Location: ' . (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/');
+    exit;
+}
 
 // DELETE CONTACT (apenas admin - regra atual)
 if (isset($_GET['delete']) && $isAdmin) {

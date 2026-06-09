@@ -252,6 +252,16 @@ $sth_aguarda->execute();
 $pedidosAguarda      = $sth_aguarda->fetchAll(PDO::FETCH_ASSOC);
 $pedidosAguardaCount = count($pedidosAguarda);
 
+// Registos "Novo" com acessos mas SEM nenhum pedido de validação
+$qSemPedido = $pdo->query(
+    "SELECT COUNT(DISTINCT r.autoid)
+     FROM infodeqb_rds_registo r
+     WHERE r.status = 'Novo' AND r.deleted = 0
+       AND EXISTS (SELECT 1 FROM infodeqb_rds_registo_acessos ra WHERE ra.registo_id = r.autoid)
+       AND NOT EXISTS (SELECT 1 FROM infodeqb_rds_validacao v WHERE v.registo_id = r.autoid)"
+);
+$semPedidoCount = (int)$qSemPedido->fetchColumn();
+
 // Carregar validações existentes para todos os pedidos Pendentes
 $valDetails = array();
 if (!empty($pedidos)) {
@@ -770,6 +780,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 								<?php if ($newrecords > 0): ?>
 								<span class="badge badge-light ms-1"><?= $newrecords ?></span>
 								<?php endif; ?>
+								<?php if ($semPedidoCount > 0): ?>
+								<span class="badge badge-warning ms-1"
+								      title="Registos com acessos sem pedido de validação">
+								  <i class="fas fa-exclamation-triangle fa-xs"></i> <?= $semPedidoCount ?>
+								</span>
+								<?php endif; ?>
 							</a></li>
 							<li class="nav-item btn-dark"><a class="nav-link text-white"
 								id="pills-pendent-tab" data-bs-toggle="pill" href="#pills-pendent"
@@ -851,6 +867,17 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $novoValStatus[(int)$vr['registo_id']] = 'pending';
             }
         }
+        // Registos com acessos mas SEM nenhuma validação pedida → 'missing'
+        $qMissing = $pdo->query(
+            "SELECT DISTINCT r.autoid
+             FROM infodeqb_rds_registo r
+             JOIN infodeqb_rds_registo_acessos ra ON ra.registo_id = r.autoid
+             WHERE r.status = 'Novo' AND r.deleted = 0
+               AND NOT EXISTS (SELECT 1 FROM infodeqb_rds_validacao v WHERE v.registo_id = r.autoid)"
+        );
+        foreach ($qMissing->fetchAll(PDO::FETCH_COLUMN) as $_mid) {
+            $novoValStatus[(int)$_mid] = 'missing';
+        }
 
         $row = array();
         if ($sth->execute([
@@ -865,6 +892,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                     $valBadge = ' <span class="badge badge-danger" title="Validação rejeitada" style="font-size:.7rem">✗ val.</span>';
                 } elseif ($vs === 'pending') {
                     $valBadge = ' <span class="badge badge-warning" title="Validações pendentes" style="font-size:.7rem">⏳ val.</span>';
+                } elseif ($vs === 'missing') {
+                    $valBadge = ' <span class="badge badge-warning" title="Tem acessos sem pedido de validação" style="font-size:.7rem">⚠ val.</span>';
                 }
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
                 echo '<td class="text-start"><input name="selector[' .

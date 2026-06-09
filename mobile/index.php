@@ -5,6 +5,11 @@ require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 
 $isMobileAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsMobile);
 
+if (!$isMobileAdmin) {
+    header('Location: ' . (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/');
+    exit;
+}
+
 $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 

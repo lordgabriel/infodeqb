@@ -297,6 +297,33 @@ $validacoesPendentes = $pdo->prepare(
 $validacoesPendentes->execute([$id1]);
 $validacoes = $validacoesPendentes->fetchAll(PDO::FETCH_ASSOC);
 
+// ── Acessos sem pedido de validação (agrupados por responsável) ──
+// Responsáveis que já têm pelo menos uma validação (qualquer estado)
+$respComVal = array_unique(array_column($validacoes, 'resp_codigo'));
+
+$labsIsentos = _labsIsentos();
+$fAcessosAtual = getRegistoAcessos($pdo, (int)$id1);
+$semPedido = array(); // resp_codigo => ['resp_nome'=>..., 'labs'=>[...]]
+
+foreach ($fAcessosAtual as $deqid) {
+    if (in_array(trim($deqid), $labsIsentos)) continue;
+    $qGabSP = $pdo->prepare(
+        "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
+         FROM infodeqb_rds_gabinetes g
+         LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+         WHERE g.deqid = ? LIMIT 1"
+    );
+    $qGabSP->execute([$deqid]);
+    $gabSP = $qGabSP->fetch(PDO::FETCH_ASSOC);
+    if (!$gabSP || empty($gabSP['resp_codigo'])) continue;
+    $rc = (string)$gabSP['resp_codigo'];
+    if (in_array($rc, $respComVal)) continue; // já tem pedido
+    if (!isset($semPedido[$rc])) {
+        $semPedido[$rc] = array('resp_nome' => $gabSP['resp_nome'], 'labs' => array());
+    }
+    $semPedido[$rc]['labs'][] = $gabSP['nomegab'];
+}
+
 // Checkboxlist de labs
 $fAcessos = !empty($_POST) && isset($_POST['acessos'])
     ? (array)$_POST['acessos']
@@ -326,6 +353,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 
 <?php if ($erroduplicado): echo $erroduplicado; endif; ?>
+<?php if (!empty($_SESSION['val_info'])): ?>
+<div class="alert alert-info alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem">
+  <i class="fas fa-info-circle me-1"></i><?= htmlspecialchars($_SESSION['val_info']) ?>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
+</div>
+<?php unset($_SESSION['val_info']); endif; ?>
 
 <form action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
       method="post" class="iq-form-2col-wrap">
@@ -542,13 +575,32 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 </form>
 
-<?php if (!empty($validacoes)): ?>
+<?php if (!empty($validacoes) || !empty($semPedido)): ?>
 <!-- ── Validações de acesso ───────────────────────────────────── -->
 <div class="card mt-4">
-  <div class="card-header py-2 d-flex align-items-center">
+  <div class="card-header py-2 d-flex align-items-center flex-wrap" style="gap:6px">
     <i class="fas fa-clipboard-check fa-sm me-2 text-muted"></i>
-    <strong>Validações de acesso a espaços</strong>
-    <span class="badge badge-secondary ms-2"><?= count($validacoes) ?></span>
+    <strong class="me-auto">Validações de acesso a espaços</strong>
+    <?php if (!empty($semPedido)): ?>
+    <span class="badge badge-warning" title="Acessos sem pedido de validação">
+      <i class="fas fa-exclamation-triangle fa-xs me-1"></i><?= count($semPedido) ?> sem pedido
+    </span>
+    <?php endif; ?>
+    <?php if (!empty($validacoes)): ?>
+    <span class="badge badge-secondary"><?= count($validacoes) ?> registo(s)</span>
+    <?php endif; ?>
+    <!-- Botão global: solicitar todas as validações em falta -->
+    <?php if (!empty($semPedido)): ?>
+    <form method="post" action="validacao-action.php" class="d-inline">
+      <input type="hidden" name="val_acao"   value="solicitar_registo">
+      <input type="hidden" name="registo_id" value="<?= (int)$id1 ?>">
+      <input type="hidden" name="redirect"   value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
+      <button type="submit" class="btn btn-sm btn-warning"
+              title="Solicitar validação para todos os responsáveis em falta">
+        <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar validações em falta
+      </button>
+    </form>
+    <?php endif; ?>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
@@ -558,12 +610,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <th>Responsável</th>
           <th class="text-center" style="width:9em">Estado</th>
           <th style="width:10em">Respondido em</th>
-          <th style="width:6em"></th>
+          <th style="width:10em" class="text-center">Ações</th>
         </tr>
       </thead>
       <tbody>
       <?php foreach ($validacoes as $val):
-        $vBadge  = ['Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger'][$val['status']] ?? 'badge-secondary';
+        $vBadge  = array('Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger');
+        $vBadge  = isset($vBadge[$val['status']]) ? $vBadge[$val['status']] : 'badge-secondary';
         $isPend  = $val['status'] === 'Pendente';
       ?>
         <tr class="<?= $isPend ? '' : 'text-muted' ?>">
@@ -583,6 +636,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             <?= $val['respondido_em'] ? htmlspecialchars(substr($val['respondido_em'],0,16)) : '—' ?>
           </td>
           <td class="align-middle text-center">
+            <div class="d-flex justify-content-center" style="gap:4px">
             <?php if ($isPend): ?>
             <form method="post"
                   action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
@@ -591,10 +645,50 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <input type="hidden" name="val_id" value="<?= (int)$val['id'] ?>">
               <button type="submit" class="btn btn-xs btn-outline-warning"
                       title="Forçar validação — ignora o responsável do espaço">
-                <i class="fas fa-bolt fa-xs me-1"></i>Forçar
+                <i class="fas fa-bolt fa-xs"></i>
               </button>
             </form>
             <?php endif; ?>
+            <!-- Re-enviar email ao responsável -->
+            <form method="post" action="validacao-action.php">
+              <input type="hidden" name="val_acao" value="reabrir">
+              <input type="hidden" name="val_id"   value="<?= (int)$val['id'] ?>">
+              <input type="hidden" name="redirect" value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
+              <button type="submit" class="btn btn-xs btn-outline-secondary"
+                      title="Reenviar email ao responsável">
+                <i class="fas fa-redo fa-xs"></i>
+              </button>
+            </form>
+            </div>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+
+      <?php foreach ($semPedido as $spRespCod => $spData): ?>
+        <!-- Linha de acesso SEM pedido de validação -->
+        <tr style="background:#fffbeb">
+          <td class="align-middle text-muted" style="font-style:italic">
+            <?= htmlspecialchars(implode(', ', $spData['labs'])) ?>
+          </td>
+          <td class="align-middle"><?= htmlspecialchars($spData['resp_nome'] ?? '—') ?></td>
+          <td class="align-middle text-center">
+            <span class="badge badge-secondary" style="font-size:.65rem">
+              <i class="fas fa-minus-circle fa-xs me-1"></i>Sem pedido
+            </span>
+          </td>
+          <td class="align-middle text-muted">—</td>
+          <td class="align-middle text-center">
+            <!-- Solicitar validação individualmente para este responsável -->
+            <form method="post" action="validacao-action.php">
+              <input type="hidden" name="val_acao"    value="solicitar_resp">
+              <input type="hidden" name="registo_id"  value="<?= (int)$id1 ?>">
+              <input type="hidden" name="resp_codigo" value="<?= htmlspecialchars($spRespCod) ?>">
+              <input type="hidden" name="redirect"    value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
+              <button type="submit" class="btn btn-xs btn-outline-primary"
+                      title="Enviar pedido de validação a este responsável">
+                <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar
+              </button>
+            </form>
           </td>
         </tr>
       <?php endforeach; ?>

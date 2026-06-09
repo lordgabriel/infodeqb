@@ -327,7 +327,7 @@ function _labsIsentos() {
     );
 }
 
-function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim) {
+function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim, $colab_codigo = '') {
 
     $labsIsentos = _labsIsentos();
 
@@ -418,7 +418,7 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
 
         $labs     = $respData['labs'];
         $firstId  = $labs[0]['deq_id'];
-        $labNames = implode(', ', array_column($labs, 'gab_nome'));
+        $labNames = substr(implode(', ', array_column($labs, 'gab_nome')), 0, 490);
         $labsJson = json_encode($labs, JSON_UNESCAPED_UNICODE);
         $token    = bin2hex(random_bytes(32));
         $expira   = date('Y-m-d H:i:s', strtotime('+30 days'));
@@ -436,7 +436,7 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
 
         _enviarEmailValidacao(
             array('nomegab' => $labNames, 'resp_codigo' => $respCodigo, 'resp_nome' => $respData['resp_nome']),
-            $token, $colab_nome, $datainicio, $datafim
+            $token, $colab_nome, $datainicio, $datafim, $colab_codigo
         );
         $enviados++;
     }
@@ -447,13 +447,29 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
  * Envia email de validação ao responsável do espaço.
  * $gab deve ter: nomegab (ou gab_nome), resp_codigo, resp_nome
  */
-function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim) {
+function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim, $colab_codigo = '') {
     $baseUrl = (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/hr/validar-acesso.php';
     $link    = $baseUrl . '?token=' . $token;
+
+    // Construir link SIGARRA para o colaborador
+    $codigo = preg_replace('/\D/', '', (string)$colab_codigo);
+    if (strlen($codigo) === 9) {
+        $sigarraUrl = 'https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=' . $codigo;
+    } elseif (strlen($codigo) === 6) {
+        $sigarraUrl = 'https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=' . $codigo;
+    } else {
+        $sigarraUrl = '';
+    }
+    $linkColab = $sigarraUrl
+        ? '<a href="' . $sigarraUrl . '" style="color:#2475ba;text-decoration:none;" target="_blank">'
+          . htmlspecialchars($colab_nome) . '</a>'
+        : htmlspecialchars($colab_nome);
+
     $info = array(
-        'nome_resp'  => $gab['resp_nome']  ?? ($gab['resp_nome'] ?? '—'),
+        'nome_resp'  => isset($gab['resp_nome']) ? $gab['resp_nome'] : '—',
         'nome_colab' => $colab_nome,
-        'espaco'     => $gab['nomegab']    ?? ($gab['gab_nome'] ?? '—'),
+        'link_colab' => $linkColab,
+        'espaco'     => isset($gab['nomegab']) ? $gab['nomegab'] : (isset($gab['gab_nome']) ? $gab['gab_nome'] : '—'),
         'datainicio' => $datainicio,
         'datafim'    => $datafim,
         'link'       => $link,
@@ -480,6 +496,7 @@ function _reabrirValidacao($pdo, $valId) {
     $q = $pdo->prepare(
         "SELECT v.*,
                 COALESCE(c1.nome, c2.nome)         AS colab_nome,
+                COALESCE(c1.codigo, c2.codigo)     AS colab_codigo,
                 COALESCE(r1.datainicio, r2.datainicio) AS datainicio,
                 COALESCE(r1.datafim,    r2.datafim)    AS datafim
          FROM infodeqb_rds_validacao v
@@ -511,7 +528,8 @@ function _reabrirValidacao($pdo, $valId) {
         $newToken,
         $val['colab_nome'] ?? '—',
         $val['datainicio'] ?? '',
-        $val['datafim']    ?? ''
+        $val['datafim']    ?? '',
+        $val['colab_codigo'] ?? ''
     );
 }
 
