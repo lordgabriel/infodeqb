@@ -38,15 +38,15 @@ $grupoCatMap = getGrupoCategoriasMap($pdo);
 $resps   = $pdo->query('SELECT * FROM infodeqb_rds_responsaveis WHERE Codigo != 0 ORDER BY respespaco')->fetchAll(PDO::FETCH_ASSOC);
 $gabRows = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
-// mapa deqid → nomegab para diff
+// mapa deqid → gabid para diff (deduplicado por gabid)
 $gabMap = array();
-foreach ($gabRows as $rg) $gabMap[$rg['deqid']] = $rg['nomegab'];
+foreach ($gabRows as $rg) $gabMap[$rg['deqid']] = $rg['gabid'];
 
 // ── Helpers ───────────────────────────────────────────────────────
 function loadRegisto($pdo, $codigo) {
     $s = $pdo->prepare(
         'SELECT r.*, c.nome, c.email, c.emailalt, c.telefone,
-                g.grupo_pro, rsp.respespaco
+                g.grupo_pro, IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS respespaco
          FROM infodeqb_rds_registo r
          JOIN infodeqb_rds_colaborador c     ON c.codigo  = r.codigo
          JOIN infodeqb_rds_grupo g           ON g.grupoid = r.grupo
@@ -117,9 +117,8 @@ if (!empty($_POST) && $codigoNum && ($_POST['_acao'] ?? '') === 'dados_pessoais'
         $tfNum  = preg_replace('/[^0-9]/', '', trim($_POST['telefone_numero'] ?? $_POST['telefone'] ?? ''));
         $tfInd  = trim($_POST['telefone_indicativo'] ?? '+351');
         $tfFull = $tfNum ? $tfInd . ' ' . $tfNum : '';
-        $pdo->prepare('UPDATE infodeqb_rds_colaborador SET nome=?, emailalt=?, telefone=? WHERE codigo=?')
+        $pdo->prepare('UPDATE infodeqb_rds_colaborador SET emailalt=?, telefone=? WHERE codigo=?')
             ->execute(array(
-                trim($_POST['nome']     ?? ''),
                 trim($_POST['emailalt'] ?? ''),
                 $tfFull,
                 $codigoNum,
@@ -141,7 +140,7 @@ if (!empty($_POST) && $codigoNum && ($_POST['_acao'] ?? '') === 'dados_pessoais'
 if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 'dados_pessoais') {
 
     $d = array(
-        'nome'             => trim($_POST['nome']             ?? ''),
+        'nome'             => ($colaborador && !empty($colaborador['nome'])) ? (string)$colaborador['nome'] : (isset($_SESSION['CommonName']) ? $_SESSION['CommonName'] : ''),
         'emailalt'         => trim($_POST['emailalt']         ?? ''),
         'telefone'         => (function() {
             $n = preg_replace('/[^0-9]/', '', trim($_POST['telefone_numero'] ?? $_POST['telefone'] ?? ''));
@@ -177,14 +176,14 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
 
         // ── 1. Dados pessoais → aplicar imediatamente ─────────────
         if ($colaborador) {
+            // nome e email vêm sempre do Shibboleth — apenas emailalt e telefone são editáveis
             $pessoalMudou =
-                $d['nome']     !== (string)($colaborador['nome']     ?? '') ||
                 $d['emailalt'] !== (string)($colaborador['emailalt'] ?? '') ||
                 $d['telefone'] !== (string)($colaborador['telefone'] ?? '');
             if ($pessoalMudou) {
                 $pdo->prepare(
-                    'UPDATE infodeqb_rds_colaborador SET nome=?, emailalt=?, telefone=? WHERE codigo=?'
-                )->execute(array($d['nome'], $d['emailalt'], $d['telefone'], $codigoNum));
+                    'UPDATE infodeqb_rds_colaborador SET emailalt=?, telefone=? WHERE codigo=?'
+                )->execute(array($d['emailalt'], $d['telefone'], $codigoNum));
                 $msgs[] = 'Dados pessoais atualizados.';
             }
         }
@@ -289,10 +288,35 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
             if ($labsMudaram) {
                 $adicionados = array_values(array_diff($newDeqids, $oldDeqids));
                 $removidos   = array_values(array_diff($oldDeqids, $newDeqids));
-                $newNomes = array(); foreach ($newDeqids  as $did) $newNomes[] = isset($gabMap[$did]) ? $gabMap[$did] : $did;
-                $oldNomes = array(); foreach ($oldDeqids  as $did) $oldNomes[] = isset($gabMap[$did]) ? $gabMap[$did] : $did;
-                $addNomes = array(); foreach ($adicionados as $did) $addNomes[] = isset($gabMap[$did]) ? $gabMap[$did] : $did;
-                $remNomes = array(); foreach ($removidos   as $did) $remNomes[] = isset($gabMap[$did]) ? $gabMap[$did] : $did;
+                // Usar gabid (deduplicado) em vez de nomegab
+                $_toGabidsU = function($deqids) use ($gabMap) {
+                    $gabids = array();
+                    foreach ($deqids as $did) {
+                        $gid = isset($gabMap[$did]) ? $gabMap[$did] : $did;
+                        if (!in_array($gid, $gabids, true)) $gabids[] = $gid;
+                    }
+                    return $gabids;
+                };
+                $newNomes = $_toGabidsU($newDeqids);
+                $oldNomes = $_toGabidsU($oldDeqids);
+                $addNomes = $_toGabidsU($adicionados);
+                $remNomes = $_toGabidsU($removidos);
+                // Porta Norte: Acesso DEQB como gabid regular
+                $oldDeqAc = (int)$registoAtivo['acessodeq'];
+                $newDeqAc = (int)$d['acessodeq'];
+                if ($oldDeqAc !== $newDeqAc) {
+                    if ($newDeqAc === 1 && !in_array('Porta Norte', $addNomes, true)) {
+                        array_unshift($addNomes, 'Porta Norte');
+                    } elseif ($newDeqAc === 0 && !in_array('Porta Norte', $remNomes, true)) {
+                        array_unshift($remNomes, 'Porta Norte');
+                    }
+                }
+                if ($newDeqAc === 1 && !in_array('Porta Norte', $newNomes, true)) {
+                    array_unshift($newNomes, 'Porta Norte');
+                }
+                if ($oldDeqAc === 1 && !in_array('Porta Norte', $oldNomes, true)) {
+                    array_unshift($oldNomes, 'Porta Norte');
+                }
                 $dadosSig['acessodeq']               = $d['acessodeq'];
                 $dadosSig['acessos']                 = $newDeqids;
                 $dadosSig['acessos_nomes']           = $newNomes;
@@ -300,7 +324,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                 $dadosSig['labs_adicionados_nomes']       = $addNomes;
                 $dadosSig['labs_removidos']               = $removidos;
                 $dadosSig['labs_removidos_nomes']         = $remNomes;
-                $dadosAnt['acessodeq']     = (int)$registoAtivo['acessodeq'];
+                $dadosAnt['acessodeq']     = $oldDeqAc;
                 $dadosAnt['acessos']       = $oldDeqids;
                 $dadosAnt['acessos_nomes'] = $oldNomes;
             }
@@ -644,45 +668,21 @@ $tipoLabelsU = array(
             </div>
             <div class="form-group">
               <label>Nome</label>
-              <input type="text" name="nome" class="form-control"
-                     value="<?= htmlspecialchars($registoAtivo['nome'] ?? $colaborador['nome'] ?? '') ?>">
+              <input type="text" class="form-control" readonly
+                     value="<?= htmlspecialchars($registoAtivo['nome'] ?: ($colaborador['nome'] ?: (isset($_SESSION['CommonName']) ? $_SESSION['CommonName'] : ''))) ?>"
+                     style="background:#f8f9fa;cursor:not-allowed;"
+                     title="O nome não pode ser alterado aqui. Contacte o secretariado.">
+              <small class="form-text text-muted">Para alterar nome, email ou código UP, contacte o secretariado.</small>
             </div>
             <div class="row">
-              <div class="col-md-7 form-group">
+              <div class="col-md-5 form-group">
                 <label>Email alternativo</label>
                 <input type="email" name="emailalt" class="form-control"
                        value="<?= htmlspecialchars($colaborador['emailalt'] ?? '') ?>">
               </div>
-              <div class="col-md-5 form-group">
+              <div class="col-md-7 form-group">
                 <label>Telefone</label>
-                <?php
-                $tfStored = $colaborador['telefone'] ?? '';
-                $tfInd2 = '+351'; $tfNum2 = '';
-                if (preg_match('/^(\+\d{1,4})\s+(.+)$/', trim($tfStored), $tfM2)) {
-                    $tfInd2 = $tfM2[1]; $tfNum2 = $tfM2[2];
-                } elseif ($tfStored) { $tfNum2 = preg_replace('/\D/', '', $tfStored); }
-                $indsOpts = ['+351'=>'🇵🇹 +351','+34'=>'🇪🇸 +34','+33'=>'🇫🇷 +33',
-                  '+49'=>'🇩🇪 +49','+39'=>'🇮🇹 +39','+44'=>'🇬🇧 +44',
-                  '+31'=>'🇳🇱 +31','+32'=>'🇧🇪 +32','+41'=>'🇨🇭 +41',
-                  '+43'=>'🇦🇹 +43','+46'=>'🇸🇪 +46','+47'=>'🇳🇴 +47',
-                  '+45'=>'🇩🇰 +45','+48'=>'🇵🇱 +48','+420'=>'🇨🇿 +420',
-                  '+55'=>'🇧🇷 +55','+244'=>'🇦🇴 +244','+258'=>'🇲🇿 +258',
-                  '+238'=>'🇨🇻 +238','+1'=>'🇺🇸 +1'];
-                ?>
-                <div class="input-group input-group-sm">
-                  <div class="input-group-prepend">
-                    <select name="telefone_indicativo" class="custom-select custom-select-sm"
-                            style="border-radius:.25rem 0 0 .25rem;min-width:95px">
-                      <?php foreach ($indsOpts as $code => $lbl):
-                        $sel = ($tfInd2 === $code) ? 'selected' : ''; ?>
-                      <option value="<?= htmlspecialchars($code) ?>" <?= $sel ?>><?= $lbl ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
-                  <input type="tel" name="telefone_numero" class="form-control form-control-sm"
-                         placeholder="912 345 678"
-                         value="<?= htmlspecialchars($tfNum2) ?>">
-                </div>
+                <?php renderPhoneInput($colaborador['telefone'] ?? '', 'sm', true); ?>
               </div>
             </div>
           </div>
@@ -705,10 +705,10 @@ $tipoLabelsU = array(
               </div>
               <div class="col-md-4 form-group">
                 <label>Unidade I&D</label>
-                <select name="unidade" class="form-control">
-                  <option value="">—</option>
+                <select name="unidade" class="form-control" required>
+                  <option value="" selected disabled>— Selecionar —</option>
                   <?php foreach (array('CEFT','LEPABE','LSRE-LCM','REQUIMTE','Outro') as $u): ?>
-                  <option <?= ($registoAtivo['unidade'] ?? '') === $u ? 'selected' : '' ?>><?= $u ?></option>
+                  <option><?= $u ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -716,7 +716,7 @@ $tipoLabelsU = array(
             <div class="row">
               <div class="col-md-7 form-group">
                 <label>Posto de trabalho</label>
-                <input type="text" name="workplace" class="form-control"
+                <input type="text" name="workplace" class="form-control" required
                        value="<?= htmlspecialchars($registoAtivo['local_trabalho'] ?? '') ?>">
               </div>
               <div class="col-md-4 form-group">
@@ -745,9 +745,9 @@ $tipoLabelsU = array(
               <div class="col-md-6 form-group">
                 <label>Grupo Profissional</label>
                 <select name="grupo" id="grupo_ped" class="form-control" required>
+                  <option value="" selected disabled>— Selecionar —</option>
                   <?php foreach ($grupos as $g): ?>
-                  <option value="<?= (int)$g['grupoid'] ?>"
-                    <?= ((int)($registoAtivo['grupo'] ?? 0) === (int)$g['grupoid']) ? 'selected' : '' ?>>
+                  <option value="<?= (int)$g['grupoid'] ?>">
                     <?= htmlspecialchars($g['grupo_pro']) ?>
                   </option>
                   <?php endforeach; ?>
@@ -756,9 +756,9 @@ $tipoLabelsU = array(
               <div class="col-md-6 form-group" id="cat-col-wrap-ped">
                 <label>Categoria</label>
                 <select name="categoria" id="categoria_ped" class="form-control" required>
+                  <option value="" selected disabled>— Selecionar —</option>
                   <?php foreach ($cats as $c): ?>
-                  <option value="<?= (int)$c['categoriaid'] ?>"
-                    <?= ((int)($registoAtivo['categoria'] ?? 0) === (int)$c['categoriaid']) ? 'selected' : '' ?>>
+                  <option value="<?= (int)$c['categoriaid'] ?>">
                     <?= htmlspecialchars(trim($c['categoria'])) ?>
                   </option>
                   <?php endforeach; ?>
@@ -768,22 +768,21 @@ $tipoLabelsU = array(
             <div class="row">
               <div class="col-md-8 form-group">
                 <label>Responsável</label>
-                <select name="responsavel" id="responsavel_ped" class="form-control">
+                <select name="responsavel" id="responsavel_ped" class="form-control" required>
+                  <option value="" selected disabled>— Selecionar —</option>
                   <?php foreach ($resps as $r): ?>
-                  <option value="<?= (int)$r['Codigo'] ?>"
-                    <?= ((int)($registoAtivo['responsavel'] ?? 0) === (int)$r['Codigo']) ? 'selected' : '' ?>>
+                  <option value="<?= (int)$r['Codigo'] ?>">
                     <?= htmlspecialchars($r['respespaco']) ?>
                   </option>
                   <?php endforeach; ?>
-                  <option value="0" <?= ((int)($registoAtivo['responsavel'] ?? -1) === 0) ? 'selected' : '' ?>>Outro…</option>
+                  <option value="0">Outro…</option>
                 </select>
               </div>
             </div>
-            <div id="outroresp_ped" <?= ((int)($registoAtivo['responsavel'] ?? 1) !== 0) ? 'style="display:none"' : '' ?>>
+            <div id="outroresp_ped" style="display:none">
               <div class="form-group">
                 <label>Responsável (outro)</label>
-                <input type="text" name="outroresponsavel" class="form-control"
-                       value="<?= htmlspecialchars($registoAtivo['outroresponsavel'] ?? '') ?>">
+                <input type="text" name="outroresponsavel" class="form-control" value="">
               </div>
             </div>
           </div>
@@ -793,13 +792,16 @@ $tipoLabelsU = array(
               Acessos
          
             </div>
-            <div class="iq-form-inline mb-2">
-              <label>Acesso DEQ?</label>
-              <select name="acessodeq" id="acessodeq_ped" class="form-control"
-                      style="max-width:100px" onchange="verificarLabs()">
-                <option value="1" <?= ($registoAtivo && $registoAtivo['acessodeq']) ? 'selected' : '' ?>>Sim</option>
-                <option value="0" <?= ($registoAtivo && !$registoAtivo['acessodeq']) ? 'selected' : '' ?>>Não</option>
-              </select>
+            <div class="iq-form-inline mb-2" style="gap:1rem;align-items:center;">
+              <label style="margin-bottom:0;font-weight:500;">Acesso DEQB (porta norte)</label>
+              <div class="d-flex gap-3" style="gap:.75rem;display:flex;">
+                <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
+                  <input type="radio" name="acessodeq" id="acessodeq_sim" value="1" required onchange="verificarLabs()"> Sim
+                </label>
+                <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
+                  <input type="radio" name="acessodeq" id="acessodeq_nao" value="0" required onchange="verificarLabs()"> Não
+                </label>
+              </div>
             </div>
             <div class="form-group iq-fill">
               <label>Laboratórios / gabinetes</label>
@@ -885,6 +887,14 @@ function abrirForm(novoReg) {
     el.style.display = '';
     document.getElementById('_novo_registo').value = novoReg ? '1' : '0';
 
+    // Novo registo: limpar grupo e categoria para forçar escolha explícita
+    if (novoReg) {
+        var selG = document.getElementById('grupo_ped');
+        var selC = document.getElementById('categoria_ped');
+        if (selG) selG.selectedIndex = -1;
+        if (selC) selC.selectedIndex = -1;
+    }
+
     var avisoG = document.getElementById('avisoGrupo');
     var avisoN = document.getElementById('avisoNovoReg');
     var title  = document.getElementById('formTitle');
@@ -904,8 +914,7 @@ function abrirForm(novoReg) {
         if (selG) { selG.selectedIndex = 0; filtrarCategoriasPed(parseInt(selG.value), false); }
         if (selC) selC.selectedIndex = 0;
         // Limpar Acessos
-        var selDeq = document.getElementById('acessodeq_ped');
-        if (selDeq) selDeq.value = '0';
+        document.querySelectorAll('input[name="acessodeq"]').forEach(function(r) { r.checked = false; });
         document.querySelectorAll('#acessos_ped input[type=checkbox]').forEach(function(c) { c.checked = false; });
         atualizarPreviewLabs('acessos_ped', 'labs-preview-ped');
     } else if (isInativo) {
@@ -934,8 +943,9 @@ function verificarLabs() {
     if (novoReg || grupoMudou) {
         document.getElementById('avisoLabs').style.display = 'none'; return;
     }
-    var selDeq   = document.getElementById('acessodeq_ped');
-    var deqMudou = selDeq && parseInt(selDeq.value) !== acessodeqOriginal;
+    var deqChecked = document.querySelector('input[name="acessodeq"]:checked');
+    var deqVal     = deqChecked ? parseInt(deqChecked.value) : -1;
+    var deqMudou   = deqVal !== acessodeqOriginal;
     var checks   = document.querySelectorAll('#acessos_ped input[type=checkbox]');
     var novos    = [];
     checks.forEach(function(c) { if (c.checked) novos.push(c.value); });
@@ -984,13 +994,37 @@ document.addEventListener('DOMContentLoaded', function () {
     var selR = document.getElementById('responsavel_ped');
     if (selR) {
         selR.addEventListener('change', function () {
-            document.getElementById('outroresp_ped').style.display =
-                this.value === '0' ? '' : 'none';
+            var isOutro = this.value === '0';
+            var div = document.getElementById('outroresp_ped');
+            var inp = div ? div.querySelector('input[name="outroresponsavel"]') : null;
+            div.style.display = isOutro ? '' : 'none';
+            if (inp) {
+                if (isOutro) { inp.setAttribute('required', 'required'); }
+                else         { inp.removeAttribute('required'); inp.value = ''; }
+            }
         });
     }
     <?php if ($isInativo): ?>
     abrirForm(false);
     <?php endif; ?>
+
+    // ── Validação data fim >= data início ─────────────────────────
+    (function () {
+        var ini = document.getElementById('datainicio_ped');
+        var fim = document.getElementById('datafim_ped');
+        if (!ini || !fim) return;
+        function validarDatas() {
+            if (ini.value && fim.value && fim.value < ini.value) {
+                fim.setCustomValidity('A data de fim não pode ser anterior à data de início.');
+            } else {
+                fim.setCustomValidity('');
+            }
+            fim.min = ini.value || '';
+        }
+        ini.addEventListener('change', validarDatas);
+        fim.addEventListener('change', validarDatas);
+        validarDatas();
+    })();
 });
 </script>
 

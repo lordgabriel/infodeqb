@@ -160,9 +160,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												<div
 													class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
 													<input type="text" name="nome"
-														class="form-control has-feedback-left" id="name" required
-														placeholder="<?php echo $lang['NAME']; ?>"
-														value="<?php print_r($data['nome'])?>"> <span
+														class="form-control has-feedback-left" id="name" required readonly
+														style="background:#f8f9fa;cursor:not-allowed;"
+														value="<?php echo htmlspecialchars($data['nome'])?>"> <span
 														class="fa fa-user form-control-feedback left"
 														aria-hidden="true"></span>
 												</div>
@@ -170,10 +170,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 												<div
 													class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
 													<input type="email" name="email"
-														pattern="(^.+@.?(fe\.up\.pt)$)|(^.+@.?(edu\.fe\.up\.pt)$)"
-														class="form-control has-feedback-left" required id="email"
-														placeholder="<?php echo $lang['EMAIL']; ?>"
-														value="<?php print_r($data['email'])?>"> <span
+														class="form-control has-feedback-left" required id="email" readonly
+														style="background:#f8f9fa;cursor:not-allowed;"
+														value="<?php echo htmlspecialchars($data['email'])?>"> <span
 														class="fa fa-envelope form-control-feedback left"
 														aria-hidden="true"></span>
 												</div>

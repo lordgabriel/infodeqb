@@ -30,6 +30,8 @@ $resp = null;
 $erroduplicado = null;
 $grupo = null;
 $categoria = null;
+$responsavel = null;
+$outroresponsavel = null;
 $respespaco = null;
 $validar = true;
 $status = 'Novo';
@@ -50,6 +52,7 @@ $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $grupoCatMap = getGrupoCategoriasMap($pdo);
 
+
 /* Insert new record — token de submissão única (evita double-submit) */
 if (!empty($_POST)) {
     $submitToken = trim($_POST['_submit_token'] ?? '');
@@ -66,9 +69,10 @@ if (!empty($_POST)) {
 }
 
 if (! empty($_POST)) {
-    $codigo = $_POST['codigo'];
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
+    // codigo, nome e email vêm sempre da sessão Shibboleth — nunca do POST
+    $codigo = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
+    $nome   = $_SESSION['CommonName'] ?? '';
+    $email  = $_SESSION['user'] ?? '';
     $emailalt = $_POST['emailalt'];
     $telefoneNum = preg_replace('/[^0-9]/', '', trim($_POST['telefone_numero'] ?? ''));
     $telefone    = $telefoneNum ? trim($_POST['telefone_indicativo'] ?? '+351') . ' ' . $telefoneNum : '';
@@ -79,7 +83,7 @@ if (! empty($_POST)) {
     $outroresponsavel = $_POST['outroresponsavel'];
     $acessodeq = (isset($_POST['acessodeq']) ? $_POST['acessodeq'] : 0);
     $grupo = $_POST['grupo'];
-    $categoria = $_POST['categoria'];
+    $categoria = isset($_POST['categoria']) && $_POST['categoria'] !== '' ? $_POST['categoria'] : 0;
     $posto = $_POST['workplace'];
     $unidade = $_POST['unidade'];
     $curso = $_POST['curso'];
@@ -154,10 +158,10 @@ if (! empty($_POST)) {
         $_SESSION['registo'] = $_POST;
         $_SESSION['acessodeq'] = $acessodeq;
     }
-    // echo responsável espaço;
-    if ($respespaco != 0) {
-        $resptrabalho = '';
-    } elseif (empty($resptrabalho)) {
+    // Validar responsável pelo trabalho
+    if ($responsavel != 0) {
+        $outroresponsavel = '';
+    } elseif (empty($outroresponsavel)) {
         $WorkrespError = $lang['ERR_WORK_RESP'];
         $validar = false;
     }
@@ -165,13 +169,17 @@ if (! empty($_POST)) {
     // ── 1. Gravar registo na BD (transaction) ──────────────────────
     $pdo->beginTransaction();
     try {
-        $stmt = $pdo->prepare('SELECT * FROM infodeqb_rds_grupo WHERE grupoid = ?');
-        $stmt->execute([$categoria]);
-        $cat = $stmt->fetchcolumn(1);
+        $stmt = $pdo->prepare('SELECT grupo_pro FROM infodeqb_rds_grupo WHERE grupoid = ?');
+        $stmt->execute([$grupo]);
+        $cat = $stmt->fetchColumn() ?: '';
 
-        $stmt1 = $pdo->prepare('SELECT * FROM infodeqb_rds_responsaveis WHERE codigo = ?');
+        $stmtCat = $pdo->prepare('SELECT categoria FROM infodeqb_rds_categoria WHERE categoriaid = ?');
+        $stmtCat->execute([$categoria]);
+        $catNome = $stmtCat->fetchColumn() ?: '';
+
+        $stmt1 = $pdo->prepare('SELECT respespaco FROM infodeqb_rds_responsaveis WHERE Codigo = ?');
         $stmt1->execute([$responsavel]);
-        $resp = ($responsavel != 0) ? $stmt1->fetchcolumn(1) : $outroresponsavel;
+        $resp = ($responsavel != 0) ? ($stmt1->fetchColumn() ?: $outroresponsavel) : $outroresponsavel;
 
         $acessodeq == 1 ? $x = "Sim" : $x = "Não";
         ($categoria == 4 || $categoria == 5) ? $mailcurso = $curso : $mailcurso = "N.A.";
@@ -225,6 +233,7 @@ if (! empty($_POST)) {
             'altmail'   => $emailalt,
             'telefone'  => $telefone,
             'grupo'     => $cat,
+            'categoria' => $catNome,
             'inicio'    => $datainicio,
             'fim'       => $datafim,
             'responsavel' => $resp,
@@ -310,7 +319,7 @@ foreach ($pdo->query($sqlgrupo, PDO::FETCH_ASSOC) as $rowgrupo) {
 // Preenche Select box categoria
 foreach ($pdo->query($sqlcategoria, PDO::FETCH_ASSOC) as $rowcat) {
     if (! empty($_POST)) {
-        if ($_POST['categoria'] == $rowcat["categoriaid"]) {
+        if (isset($_POST['categoria']) && $_POST['categoria'] == $rowcat["categoriaid"]) {
             $option_cat .= '<option value="' . $rowcat["categoriaid"] . '" selected >' . $rowcat["categoria"] . '</option>';
         } else {
             $option_cat .= '<option value="' . $rowcat["categoriaid"] . '"  >' . $rowcat["categoria"] . '</option>';
@@ -377,24 +386,23 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       <div class="col-md-4 form-group">
         <label><?php echo $lang['FEUP_CODE']; ?></label>
         <input name="codigo" type="text" required maxlength="9" pattern="^(\d{6}|\d{9})$"
-               class="form-control" id="code"
-               placeholder="ex: 356946"
-               value="<?php echo htmlspecialchars(isset($_POST['codigo']) ? $_POST['codigo'] : $_sessionCodeNum); ?>">
+               class="form-control" id="code" readonly
+               style="background:#f8f9fa;cursor:not-allowed;"
+               value="<?php echo htmlspecialchars($_sessionCodeNum); ?>">
       </div>
     </div>
     <div class="form-group">
       <label><?php echo $lang['NAME']; ?></label>
-      <input type="text" name="nome" class="form-control" id="name" required
-             placeholder="<?php echo $lang['NAME']; ?>"
-             value="<?php echo htmlspecialchars(isset($_POST['nome']) ? $_POST['nome'] : $_SESSION['CommonName']); ?>">
+      <input type="text" name="nome" class="form-control" id="name" required readonly
+             style="background:#f8f9fa;cursor:not-allowed;"
+             value="<?php echo htmlspecialchars(!empty($_SESSION['CommonName']) ? $_SESSION['CommonName'] : (!empty($_SESSION['user']) ? $_SESSION['user'] : '')); ?>">
     </div>
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?php echo $lang['EMAIL']; ?></label>
-        <input type="email" name="email" class="form-control" required id="email"
-               pattern="^[^@]+@((fe\.up\.pt)|(edu\.fe\.up\.pt)|(up\.pt))$"
-               placeholder="utilizador@fe.up.pt"
-               value="<?php echo htmlspecialchars(isset($_POST['email']) ? $_POST['email'] : $_SESSION['user']); ?>">
+        <input type="email" name="email" class="form-control" required id="email" readonly
+               style="background:#f8f9fa;cursor:not-allowed;"
+               value="<?php echo htmlspecialchars($_SESSION['user']); ?>">
       </div>
       <div class="col-md-6 form-group">
         <label><?php echo $lang['ALT_EMAIL']; ?></label>
@@ -404,41 +412,16 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       </div>
     </div>
     <div class="row">
-      <div class="col-md-5 form-group">
+      <div class="col-md-7 form-group">
         <label><?php echo $lang['PHONE']; ?></label>
         <?php
-        // Parse valor existente "indicativo numero" → separar
-        $tfVal = isset($_POST['telefone']) ? $_POST['telefone'] : '';
-        $tfInd = '+351'; $tfNum = '';
-        if (preg_match('/^(\+\d{1,4})\s+(.+)$/', trim($tfVal), $tfM)) {
-            $tfInd = $tfM[1]; $tfNum = $tfM[2];
-        } elseif ($tfVal) { $tfNum = preg_replace('/\D/', '', $tfVal); }
+        // Re-display após erro de validação: combinar indicativo + número de volta
+        $tfReStored = combinePhone(
+            trim($_POST['telefone_indicativo'] ?? '+351'),
+            trim($_POST['telefone_numero'] ?? '')
+        );
+        renderPhoneInput($tfReStored, '', true);
         ?>
-        <div class="input-group">
-          <div class="input-group-prepend">
-            <select name="telefone_indicativo" class="custom-select"
-                    style="border-radius:.25rem 0 0 .25rem;min-width:105px">
-              <?php
-              $inds = [
-                '+351'=>'🇵🇹 +351','+34'=>'🇪🇸 +34','+33'=>'🇫🇷 +33',
-                '+49'=>'🇩🇪 +49','+39'=>'🇮🇹 +39','+44'=>'🇬🇧 +44',
-                '+31'=>'🇳🇱 +31','+32'=>'🇧🇪 +32','+41'=>'🇨🇭 +41',
-                '+43'=>'🇦🇹 +43','+46'=>'🇸🇪 +46','+47'=>'🇳🇴 +47',
-                '+45'=>'🇩🇰 +45','+48'=>'🇵🇱 +48','+420'=>'🇨🇿 +420',
-                '+55'=>'🇧🇷 +55','+244'=>'🇦🇴 +244','+258'=>'🇲🇿 +258',
-                '+238'=>'🇨🇻 +238','+1'=>'🇺🇸 +1',
-              ];
-              foreach ($inds as $code => $label):
-                $sel = ($tfInd === $code) ? 'selected' : '';
-              ?>
-              <option value="<?= htmlspecialchars($code) ?>" <?= $sel ?>><?= $label ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <input type="tel" name="telefone_numero" class="form-control" required
-                 placeholder="912 345 678"
-                 value="<?= htmlspecialchars($tfNum) ?>">
-        </div>
       </div>
     </div>
   </div>
@@ -478,7 +461,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       </div>
       <div class="col-md-4 form-group">
         <label><?php echo $lang['EXTENSION']; ?></label>
-        <input type="text" name="extension" class="form-control" required id="extension"
+        <input type="text" name="extension" class="form-control" id="extension"
                placeholder="<?php echo $lang['EXTENSION']; ?>"
                value="<?php echo htmlspecialchars(isset($_POST['extension']) ? $_POST['extension'] : ''); ?>">
       </div>
@@ -527,13 +510,14 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
         </select>
       </div>
     </div>
-    <div id="outroresp" <?php if ($respespaco!='0'){echo 'style="display:none"';} ?>>
+    <div id="outroresp" <?php if (empty($responsavel) || $responsavel != '0'){echo 'style="display:none"';} ?>>
       <div class="row">
         <div class="col-md-6 form-group">
           <label><?php echo $lang['WORK_RESP2']; ?></label>
           <input class="form-control" id="outroresponsavel" type="text" name="outroresponsavel"
                  placeholder="<?php echo $lang['WORK_RESP2']; ?>"
-                 value="<?php echo !empty($resptrabalho) ? $resptrabalho : ''; ?>">
+                 value="<?php echo !empty($outroresponsavel) ? htmlspecialchars($outroresponsavel) : ''; ?>"
+                 <?php echo ($responsavel == '0') ? 'required' : ''; ?>>
           <?php if (!empty($WorkrespError)): ?>
             <div class="text-danger small mt-1"><?php echo $WorkrespError; ?></div>
           <?php endif; ?>
@@ -546,13 +530,18 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
   <div class="iq-form-section iq-form-section-fill">
     <div class="iq-form-section-title">Acessos</div>
 
-    <div class="iq-form-inline">
-      <label><?php echo $lang['DEQ_ACCESS']; ?></label>
-      <select id="acessodeq" name="acessodeq" class="form-control" required>
-        <option value=""><?php echo $lang['OPTION']; ?></option>
-        <option <?php if (isset($acessodeq) && $acessodeq=="1") echo "selected"; ?> value="1"><?php echo $lang['OPT_YES']; ?></option>
-        <option <?php if (isset($acessodeq) && $acessodeq=="0") echo "selected"; ?> value="0"><?php echo $lang['OPT_NO']; ?></option>
-      </select>
+    <div class="iq-form-inline" style="gap:1rem;align-items:center;">
+      <label style="margin-bottom:0;font-weight:500;"><?php echo $lang['DEQ_ACCESS']; ?></label>
+      <div style="display:flex;gap:.75rem;">
+        <label style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;display:flex;align-items:center;">
+          <input type="radio" name="acessodeq" value="1" required
+                 <?php if (isset($acessodeq) && $acessodeq=="1") echo "checked"; ?>> <?php echo $lang['OPT_YES']; ?>
+        </label>
+        <label style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;display:flex;align-items:center;">
+          <input type="radio" name="acessodeq" value="0" required
+                 <?php if (isset($acessodeq) && $acessodeq=="0") echo "checked"; ?>> <?php echo $lang['OPT_NO']; ?>
+        </label>
+      </div>
     </div>
 
     <div class="form-group iq-fill">
@@ -589,9 +578,11 @@ function filtrarCategorias(grupoId) {
 
     if (gruposSemCategoria.indexOf(grupoId) !== -1) {
         if (wrap) wrap.style.display = 'none';
+        sel.required = false;
         return;
     }
     if (wrap) wrap.style.display = '';
+    sel.required = true;
     var permitidas = grupoCategorias[grupoId] || null;
     sel.innerHTML  = allCatOptions;
     if (!permitidas) return;
@@ -628,11 +619,14 @@ document.addEventListener('DOMContentLoaded', function () {
             filtrarCategorias(parseInt(this.value));
             var mostrarCurso = [2,3,7].indexOf(parseInt(this.value)) !== -1;
             document.getElementById('curso').style.display = mostrarCurso ? '' : 'none';
-            var selDeq = document.querySelector('select[name=acessodeq]');
+            var deqRadios = document.querySelectorAll('input[name="acessodeq"]');
             if (parseInt(this.value) === 3) {
-                selDeq.value = '0'; selDeq.disabled = true;
+                deqRadios.forEach(function(r) {
+                    r.disabled = true;
+                    if (r.value === '0') r.checked = true;
+                });
             } else {
-                selDeq.disabled = false;
+                deqRadios.forEach(function(r) { r.disabled = false; });
             }
         });
         if (selGrupo.value) filtrarCategorias(parseInt(selGrupo.value));
@@ -667,8 +661,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var selResp = document.querySelector('select[name=responsavel]');
     if (selResp) {
         selResp.addEventListener('change', function () {
-            document.getElementById('outroresp').style.display =
-                this.value === '0' ? '' : 'none';
+            var isOutro = this.value === '0';
+            document.getElementById('outroresp').style.display = isOutro ? '' : 'none';
+            var inp = document.getElementById('outroresponsavel');
+            if (inp) {
+                if (isOutro) { inp.setAttribute('required', 'required'); }
+                else         { inp.removeAttribute('required'); inp.value = ''; }
+            }
         });
     }
 
@@ -676,12 +675,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var inpInicio = document.getElementById('datainicio');
     var inpFim    = document.getElementById('datafim');
     if (inpInicio && inpFim) {
-        inpInicio.addEventListener('change', function () {
-            inpFim.min = this.value;
-        });
-        inpFim.addEventListener('change', function () {
-            inpInicio.max = this.value;
-        });
+        function validarDatasIdx() {
+            if (inpInicio.value && inpFim.value && inpFim.value < inpInicio.value) {
+                inpFim.setCustomValidity('A data de fim não pode ser anterior à data de início.');
+            } else {
+                inpFim.setCustomValidity('');
+            }
+            inpFim.min = inpInicio.value || '';
+        }
+        inpInicio.addEventListener('change', validarDatasIdx);
+        inpFim.addEventListener('change', validarDatasIdx);
     }
 
 });

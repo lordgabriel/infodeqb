@@ -35,7 +35,7 @@ if (!in_array($statusFiltro, $statusPermitidos)) {
 
 if ($statusFiltro) {
     $qRegs = $pdo->prepare(
-        'SELECT r.*, g.grupo_pro, resp.respespaco
+        'SELECT r.*, g.grupo_pro, IF(r.responsavel=0, r.outroresponsavel, resp.respespaco) AS respespaco
          FROM infodeqb_rds_registo r
          INNER JOIN infodeqb_rds_grupo g           ON r.grupo       = g.grupoid
          LEFT  JOIN infodeqb_rds_responsaveis resp ON r.responsavel = resp.codigo
@@ -45,7 +45,7 @@ if ($statusFiltro) {
     $qRegs->execute([$id, $statusFiltro]);
 } else {
     $qRegs = $pdo->prepare(
-        'SELECT r.*, g.grupo_pro, resp.respespaco
+        'SELECT r.*, g.grupo_pro, IF(r.responsavel=0, r.outroresponsavel, resp.respespaco) AS respespaco
          FROM infodeqb_rds_registo r
          INNER JOIN infodeqb_rds_grupo g           ON r.grupo       = g.grupoid
          LEFT  JOIN infodeqb_rds_responsaveis resp ON r.responsavel = resp.codigo
@@ -202,7 +202,41 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               $rTodosOk  = ($rNOk === $rNVal);
               $rBloqueado = ($rNPend > 0 || $rNRej > 0);
           }
-          $temLabs = count(getRegistoAcessos($pdo, (int)$row['autoid'])) > 0;
+          $fAcessosReg = getRegistoAcessos($pdo, (int)$row['autoid']);
+          $temLabs     = count($fAcessosReg) > 0;
+
+          // Acessos sem pedido de validação agrupados por responsável
+          $semPedido = array();
+          if ($temLabs) {
+              $labsIsentos = _labsIsentos();
+              $respComValD = array();
+              foreach ($rVals as $_v) {
+                  if ($_v['resp_nome'] !== 'Isento (auto-validado)') {
+                      $respComValD[] = (string)$_v['resp_codigo'];
+                  }
+              }
+              $respComValD = array_unique($respComValD);
+              foreach ($fAcessosReg as $_deqid) {
+                  if (in_array(trim($_deqid), $labsIsentos)) continue;
+                  $qGSP = $pdo->prepare(
+                      "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
+                       FROM infodeqb_rds_gabinetes g
+                       LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+                       WHERE g.deqid = ?"
+                  );
+                  $qGSP->execute([$_deqid]);
+                  foreach ($qGSP->fetchAll(PDO::FETCH_ASSOC) as $gSP) {
+                      if (empty($gSP['resp_codigo'])) continue;
+                      $_rc = (string)$gSP['resp_codigo'];
+                      if (in_array($_rc, $respComValD)) continue;
+                      if (!isset($semPedido[$_rc])) {
+                          $semPedido[$_rc] = array('resp_nome' => $gSP['resp_nome'], 'labs' => array());
+                      }
+                      $semPedido[$_rc]['labs'][] = $gSP['nomegab'] ?: $_deqid;
+                  }
+              }
+          }
+          $temSemPedido = !empty($semPedido);
         ?>
         <tr>
           <td class="text-muted small align-middle"><?= (int)$row['autoid'] ?></td>
@@ -226,13 +260,26 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             </button>
           </td>
         </tr>
-        <?php if ($row['status'] === 'Novo' && $temLabs): ?>
+        <?php if (!empty($row['notif_pendente'])): ?>
+        <tr>
+          <td colspan="8" style="padding:0 16px 8px 16px;border-top:none;background:#fffdf0;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff8d6;border-left:3px solid #f0a500;border-radius:0 4px 4px 0;font-size:.84rem;">
+              <span style="font-size:1rem;">⏳</span>
+              <span><strong>Alteração não comunicada ao SIGARRA.</strong>
+                Este registo foi modificado — valide os acessos (se necessário) e depois notifique o SIGARRA na secção abaixo.</span>
+            </div>
+          </td>
+        </tr>
+        <?php endif; ?>
+        <?php if (($row['status'] === 'Novo' || (!empty($row['notif_pendente']) && $row['status'] === 'Ativo')) && $temLabs): ?>
         <tr>
           <td colspan="8" style="background:#f8f9fa;padding:6px 16px 10px 16px;border-top:none;">
             <small class="d-block mb-1 text-muted font-weight-bold">
               <i class="fas fa-user-check me-1"></i>Validações de espaço
-              <?php if ($rTodosOk): ?>
+              <?php if ($rTodosOk && !$temSemPedido): ?>
                 <span class="badge badge-success ms-1">Todas validadas ✓</span>
+              <?php elseif ($temSemPedido): ?>
+                <span class="badge badge-warning ms-1">Validações em falta</span>
               <?php elseif ($rBloqueado): ?>
                 <span class="badge badge-warning ms-1">A aguardar / com rejeição</span>
               <?php else: ?>
@@ -240,7 +287,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <?php endif; ?>
             </small>
 
-            <?php if ($rNVal > 0): ?>
+            <?php if ($rNVal > 0 || $temSemPedido): ?>
             <table class="table table-xs table-bordered mb-1" style="font-size:.8rem;background:#fff;">
               <thead class="">
                 <tr><th>Espaço</th><th>Responsável</th><th>Estado</th><th>Nota</th><th style="width:1%">Ações</th></tr>
@@ -252,8 +299,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               foreach ($rVals as $vv):
               ?>
               <tr>
-                <td><?= htmlspecialchars($vv['gab_nome'] ?? $vv['deq_id']) ?></td>
-                <td><?= htmlspecialchars($vv['resp_nome'] ?? '') ?>
+                <td><?= htmlspecialchars(isset($vv['gab_nome']) ? $vv['gab_nome'] : $vv['deq_id']) ?></td>
+                <td><?= htmlspecialchars(isset($vv['resp_nome']) ? $vv['resp_nome'] : '') ?>
                     <small class="text-muted">(up<?= htmlspecialchars($vv['resp_codigo']) ?>)</small></td>
                 <td><span class="badge <?= isset($vBadgeMap[$vv['status']]) ? $vBadgeMap[$vv['status']] : 'badge-secondary' ?>">
                     <?= (isset($vIconMap[$vv['status']]) ? $vIconMap[$vv['status']] : '') . ' ' . $vv['status'] ?></span>
@@ -261,7 +308,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                       <br><small class="text-muted"><?= htmlspecialchars(substr($vv['respondido_em'],0,16)) ?></small>
                     <?php endif; ?>
                 </td>
-                <td><?= htmlspecialchars($vv['nota'] ?? '—') ?></td>
+                <td><?= htmlspecialchars(isset($vv['nota']) ? $vv['nota'] : '—') ?></td>
                 <td style="white-space:nowrap">
                   <?php if ($vv['status'] !== 'Validado'): ?>
                   <form method="post" action="validacao-action.php" style="display:inline">
@@ -288,22 +335,63 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 </td>
               </tr>
               <?php endforeach; ?>
+              <?php foreach ($semPedido as $_spCode => $_spData): ?>
+              <tr style="background:#fffbea;">
+                <td><?= htmlspecialchars(implode(', ', $_spData['labs'])) ?></td>
+                <td>
+                  <?= htmlspecialchars($_spData['resp_nome']) ?>
+                  <small class="text-muted">(up<?= htmlspecialchars($_spCode) ?>)</small>
+                </td>
+                <td>
+                  <span class="badge" style="background:#6f42c1;color:#fff;" title="Acesso adicionado mas sem pedido de validação enviado">
+                    ⚠ Sem pedido
+                  </span>
+                </td>
+                <td>—</td>
+                <td style="white-space:nowrap">
+                  <form method="post" action="validacao-action.php" style="display:inline">
+                    <input type="hidden" name="val_acao"    value="solicitar_resp">
+                    <input type="hidden" name="registo_id"  value="<?= (int)$row['autoid'] ?>">
+                    <input type="hidden" name="resp_codigo" value="<?= htmlspecialchars($_spCode) ?>">
+                    <input type="hidden" name="redirect"
+                           value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
+                    <button class="btn btn-xs btn-warning" title="Solicitar validação a este responsável"
+                            onclick="return confirm('Enviar pedido de validação a <?= htmlspecialchars(addslashes($_spData['resp_nome'])) ?>?')">
+                      <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <?php endforeach; ?>
               </tbody>
             </table>
             <?php endif; ?>
 
-            <!-- Botão principal: muda conforme estado das validações -->
-            <?php if ($rTodosOk): ?>
-            <form method="post" action="validacao-action.php">
-              <input type="hidden" name="val_acao"   value="solicitar_acessos">
-              <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
-              <input type="hidden" name="redirect"
-                     value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
-              <button class="btn btn-xs btn-success"
-                      onclick="return confirm('Enviar pedido de acessos ao SIGARRA?')">
-                <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar acessos ao SIGARRA
-              </button>
-            </form>
+            <!-- Botão principal: muda conforme estado das validações e tipo de registo -->
+            <?php if ($rTodosOk && !$temSemPedido): ?>
+              <?php if (!empty($row['notif_pendente']) && $row['status'] === 'Ativo'): ?>
+              <form method="post" action="validacao-action.php">
+                <input type="hidden" name="val_acao"   value="notif_sigarra">
+                <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                <input type="hidden" name="redirect"
+                       value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
+                <button class="btn btn-xs btn-warning"
+                        onclick="return confirm('Enviar notificação de alteração ao SIGARRA?')">
+                  <i class="fas fa-paper-plane fa-xs me-1"></i>Notificar SIGARRA
+                </button>
+              </form>
+              <?php else: ?>
+              <form method="post" action="validacao-action.php">
+                <input type="hidden" name="val_acao"   value="solicitar_acessos">
+                <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                <input type="hidden" name="redirect"
+                       value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
+                <button class="btn btn-xs btn-success"
+                        onclick="return confirm('Enviar pedido de acessos ao SIGARRA?')">
+                  <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar acessos ao SIGARRA
+                </button>
+              </form>
+              <?php endif; ?>
             <?php else: ?>
             <form method="post" action="validacao-action.php">
               <input type="hidden" name="val_acao"    value="solicitar_registo">
@@ -313,7 +401,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <button class="btn btn-xs btn-outline-warning"
                       onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
                 <i class="fas fa-user-check fa-xs me-1"></i>
-                <?= $rNVal === 0 ? 'Solicitar validações' : 'Solicitar validações em falta' ?>
+                <?= ($rNVal === 0 && !$temSemPedido) ? 'Solicitar validações' : 'Solicitar validações em falta' ?>
               </button>
             </form>
             <?php endif; ?>

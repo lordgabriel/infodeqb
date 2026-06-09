@@ -22,10 +22,12 @@ if ($acao === 'solicitar_pedido' && !empty($_POST['pedido_id'])) {
     $pid = (int)$_POST['pedido_id'];
 
     $qPed = $pdo->prepare(
-        "SELECT p.*, c.nome AS colab_nome, r.datainicio, r.datafim
+        "SELECT p.*, c.nome AS colab_nome, c.codigo AS colab_codigo, r.datainicio, r.datafim,
+                IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS resp_trabalho
          FROM infodeqb_rds_pedido p
-         LEFT JOIN infodeqb_rds_colaborador c ON c.codigo = p.codigo
-         LEFT JOIN infodeqb_rds_registo     r ON r.autoid  = p.registo_id
+         LEFT JOIN infodeqb_rds_colaborador  c   ON c.codigo  = p.codigo
+         LEFT JOIN infodeqb_rds_registo      r   ON r.autoid  = p.registo_id
+         LEFT JOIN infodeqb_rds_responsaveis rsp ON rsp.Codigo = r.responsavel
          WHERE p.id = ?"
     );
     $qPed->execute([$pid]);
@@ -42,11 +44,13 @@ if ($acao === 'solicitar_pedido' && !empty($_POST['pedido_id'])) {
         }
 
         // datafim pode estar em dados_json (novo registo) ou na FK do registo existente
-        $datafim    = $d['datafim']    ?? ($ped['datafim']    ?? '');
-        $datainicio = $d['datainicio'] ?? ($ped['datainicio'] ?? '');
-        $nomeColab  = $ped['colab_nome'] ?? ($d['nome'] ?? '—');
+        $datafim    = isset($d['datafim'])    ? $d['datafim']    : (isset($ped['datafim'])    ? $ped['datafim']    : '');
+        $datainicio = isset($d['datainicio']) ? $d['datainicio'] : (isset($ped['datainicio']) ? $ped['datainicio'] : '');
+        $nomeColab  = isset($ped['colab_nome']) ? $ped['colab_nome'] : (isset($d['nome']) ? $d['nome'] : '—');
+        $codColab    = isset($ped['colab_codigo'])  ? $ped['colab_codigo']  : '';
+        $respTrabalho = isset($ped['resp_trabalho']) ? $ped['resp_trabalho'] : '';
 
-        $n = _criarValidacoes($pdo, $pid, null, $deqids, $nomeColab, $datainicio, $datafim);
+        $n = _criarValidacoes($pdo, $pid, null, $deqids, $nomeColab, $datainicio, $datafim, $codColab, $respTrabalho);
 
         if ($n === 0) {
             // Nenhum espaço com responsável definido → armazenar aviso
@@ -62,9 +66,11 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
     $rid = (int)$_POST['registo_id'];
 
     $qReg = $pdo->prepare(
-        "SELECT r.datainicio, r.datafim, r.acessosid, c.nome AS colab_nome, c.codigo AS colab_codigo
+        "SELECT r.datainicio, r.datafim, r.acessosid, c.nome AS colab_nome, c.codigo AS colab_codigo,
+                IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS resp_trabalho
          FROM infodeqb_rds_registo r
-         JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+         JOIN infodeqb_rds_colaborador  c   ON c.codigo   = r.codigo
+         LEFT JOIN infodeqb_rds_responsaveis rsp ON rsp.Codigo = r.responsavel
          WHERE r.autoid = ?"
     );
     $qReg->execute([$rid]);
@@ -72,7 +78,7 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
 
     if ($reg) {
         $deqids = getRegistoAcessos($pdo, $rid);
-        $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo']);
+        $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
 
         if ($n === 0) {
             $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
@@ -88,9 +94,11 @@ elseif ($acao === 'solicitar_resp' && !empty($_POST['registo_id']) && !empty($_P
     $respFilter = trim($_POST['resp_codigo']);
 
     $qReg = $pdo->prepare(
-        "SELECT r.datainicio, r.datafim, c.nome AS colab_nome, c.codigo AS colab_codigo
+        "SELECT r.datainicio, r.datafim, c.nome AS colab_nome, c.codigo AS colab_codigo,
+                IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS resp_trabalho
          FROM infodeqb_rds_registo r
-         JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+         JOIN infodeqb_rds_colaborador  c   ON c.codigo   = r.codigo
+         LEFT JOIN infodeqb_rds_responsaveis rsp ON rsp.Codigo = r.responsavel
          WHERE r.autoid = ?"
     );
     $qReg->execute([$rid]);
@@ -105,12 +113,14 @@ elseif ($acao === 'solicitar_resp' && !empty($_POST['registo_id']) && !empty($_P
                 "SELECT r.Codigo
                  FROM infodeqb_rds_gabinetes g
                  LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
-                 WHERE g.deqid = ? LIMIT 1"
+                 WHERE g.deqid = ?"
             );
             $qG->execute([$deqid]);
-            $rc = $qG->fetchColumn();
-            if ((string)$rc === $respFilter) {
-                $labsResp[] = $deqid;
+            foreach ($qG->fetchAll(PDO::FETCH_COLUMN) as $rc) {
+                if ((string)$rc === $respFilter) {
+                    $labsResp[] = $deqid;
+                    break; // deqid já adicionado, não duplicar
+                }
             }
         }
         if (!empty($labsResp)) {
@@ -119,13 +129,88 @@ elseif ($acao === 'solicitar_resp' && !empty($_POST['registo_id']) && !empty($_P
                 "DELETE FROM infodeqb_rds_validacao
                  WHERE registo_id=? AND resp_codigo=? AND status='Pendente'"
             )->execute([$rid, $respFilter]);
-            $n = _criarValidacoes($pdo, null, $rid, $labsResp, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo']);
+            $n = _criarValidacoes($pdo, null, $rid, $labsResp, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
             $_SESSION['val_info'] = $n > 0
                 ? 'Pedido de validação enviado ao responsável.'
                 : 'Não foi possível enviar — sem espaços com responsável definido.';
         } else {
             $_SESSION['val_info'] = 'Nenhum espaço encontrado para este responsável.';
         }
+    }
+}
+
+// ── Notificar SIGARRA de alteração (pedido secretariado pendente) ─────
+elseif ($acao === 'notif_sigarra' && !empty($_POST['registo_id'])) {
+    $rid = (int)$_POST['registo_id'];
+
+    // Encontrar pedido secretariado Pendente mais recente para este registo
+    $qPed = $pdo->prepare(
+        "SELECT * FROM infodeqb_rds_pedido
+         WHERE registo_id=? AND origem='secretariado' AND tipo='alteracao_sigarra' AND status='Pendente'
+         ORDER BY criado_em DESC LIMIT 1"
+    );
+    $qPed->execute([$rid]);
+    $ped = $qPed->fetch(PDO::FETCH_ASSOC);
+
+    // Se não existe pedido (edição anterior ao novo código), criar um sintético a partir do registo actual
+    if (!$ped) {
+        $qReg2 = $pdo->prepare(
+            "SELECT r.*, c.nome, c.email, c.codigo AS colab_codigo
+             FROM infodeqb_rds_registo r
+             JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+             WHERE r.autoid = ?"
+        );
+        $qReg2->execute([$rid]);
+        $reg2 = $qReg2->fetch(PDO::FETCH_ASSOC);
+
+        if ($reg2) {
+            // Converter acessos actuais em gabids deduplicados
+            $deqids2 = getRegistoAcessos($pdo, $rid);
+            $qGabMap = $pdo->query("SELECT deqid, gabid FROM infodeqb_rds_gabinetes");
+            $deqToGabid2 = array_column($qGabMap->fetchAll(PDO::FETCH_ASSOC), 'gabid', 'deqid');
+            $gabidsCurrent = array();
+            foreach ($deqids2 as $_dq) {
+                $gid = isset($deqToGabid2[$_dq]) ? $deqToGabid2[$_dq] : $_dq;
+                if (!in_array($gid, $gabidsCurrent, true)) {
+                    $gabidsCurrent[] = $gid;
+                }
+            }
+
+            $dadosJson2 = json_encode(array(
+                'acessodeq'     => (int)$reg2['acessodeq'],
+                'acessos'       => $deqids2,
+                'acessos_nomes' => $gabidsCurrent,
+            ), JSON_UNESCAPED_UNICODE);
+
+            $pdo->prepare(
+                "INSERT INTO infodeqb_rds_pedido
+                 (tipo,origem,codigo,registo_id,dados_json,dados_anteriores,status)
+                 VALUES ('alteracao_sigarra','secretariado',?,?,?,'{}','Pendente')"
+            )->execute([$reg2['colab_codigo'], $rid, $dadosJson2]);
+            $pedId2 = $pdo->lastInsertId();
+
+            $qPed2 = $pdo->prepare("SELECT * FROM infodeqb_rds_pedido WHERE id=?");
+            $qPed2->execute([$pedId2]);
+            $ped = $qPed2->fetch(PDO::FETCH_ASSOC);
+        }
+    }
+
+    if ($ped) {
+        $d = json_decode($ped['dados_json'], true);
+        if (!is_array($d)) $d = array();
+
+        _emailSigarra($pdo, $ped, $d);
+
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_pedido SET status='Aguarda_SIGARRA' WHERE id=?"
+        )->execute([$ped['id']]);
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_registo SET notif_pendente=0 WHERE autoid=?"
+        )->execute([$rid]);
+
+        $_SESSION['val_info'] = 'SIGARRA notificado com sucesso.';
+    } else {
+        $_SESSION['val_info'] = 'Erro: não foi possível criar pedido de notificação.';
     }
 }
 
@@ -145,10 +230,41 @@ elseif ($acao === 'reabrir' && !empty($_POST['val_id'])) {
 elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
     $rid = (int)$_POST['registo_id'];
 
+    // 1. Bloquear se houver validações com status não-final (Pendente, Rejeitado)
+    $qValPend = $pdo->prepare(
+        "SELECT COUNT(*) FROM infodeqb_rds_validacao
+         WHERE registo_id=? AND status NOT IN ('Validado','Cancelado')"
+    );
+    $qValPend->execute([$rid]);
+    if ((int)$qValPend->fetchColumn() > 0) {
+        $_SESSION['val_info'] = 'Existem validações pendentes ou rejeitadas. Resolva-as antes de pedir acessos.';
+        header('Location: ' . $redirect);
+        exit;
+    }
+
+    // 2. Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
+    $qSemVal = $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM infodeqb_rds_registo_acessos ra
+         JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
+         WHERE ra.registo_id = ?
+           AND g.responsavel IS NOT NULL AND g.responsavel != 0
+           AND NOT EXISTS (
+               SELECT 1 FROM infodeqb_rds_validacao v
+               WHERE v.registo_id = ra.registo_id AND v.resp_codigo = g.responsavel
+           )"
+    );
+    $qSemVal->execute([$rid]);
+    if ((int)$qSemVal->fetchColumn() > 0) {
+        $_SESSION['val_info'] = 'Existem laboratórios sem validação solicitada. Solicite validações antes de pedir acessos.';
+        header('Location: ' . $redirect);
+        exit;
+    }
+
     // Carregar registo + colaborador
     $qReg = $pdo->prepare(
         "SELECT r.*, c.nome, c.email,
-                COALESCE(resp.respespaco, r.outroresponsavel) AS responsavel_nome
+                IF(r.responsavel=0, r.outroresponsavel, resp.respespaco) AS responsavel_nome
          FROM infodeqb_rds_registo r
          JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
          LEFT JOIN infodeqb_rds_responsaveis resp ON resp.codigo = r.responsavel
@@ -185,7 +301,7 @@ elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
         try {
             send_email($to, $body, $subject, $cc);
             $pdo->prepare(
-                "UPDATE infodeqb_rds_registo SET status='Pendente', datacica=NOW() WHERE autoid=?"
+                "UPDATE infodeqb_rds_registo SET status='Pendente', datacica=NOW(), notif_pendente=0 WHERE autoid=?"
             )->execute([$rid]);
             $_SESSION['val_info'] = 'Pedido enviado ao SIGARRA. Estado atualizado para Pendente.';
         } catch (Exception $e) {

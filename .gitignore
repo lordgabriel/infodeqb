@@ -8,6 +8,9 @@ tmp/
 *.tmp
 *.log
 
+# ── Emails de desenvolvimento (interceptados em localhost) ──
+hr/email_dev/*.html
+
 # ── Deploy local (contém credenciais reais) ───────────
 _deploy/
 

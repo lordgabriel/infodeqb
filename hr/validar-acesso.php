@@ -107,7 +107,7 @@ Database::disconnect();
 <div class="val-card">
   <div class="val-header">
     <h1>Validação de Acesso a Espaço</h1>
-    <p>Departamento de Engenharia Química — FEUP</p>
+    <p>Departamento de Engenharia Química e Biológica — FEUP</p>
   </div>
   <div class="val-body">
 
@@ -209,8 +209,8 @@ Database::disconnect();
 
   </div>
   <div class="val-footer">
-    Secretariado da Direção &nbsp;|&nbsp; Departamento de Engenharia Química &nbsp;|&nbsp;
-    deqdir@fe.up.pt &nbsp;|&nbsp; +351 225 084 520
+    Secretariado da Direção &nbsp;|&nbsp; Departamento de Engenharia Química e Biológica &nbsp;|&nbsp;
+    deqbdir@fe.up.pt &nbsp;|&nbsp; +351 225 084 520
   </div>
 </div>
 

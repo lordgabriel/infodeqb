@@ -21,7 +21,7 @@ $q = $pdo->prepare(
     'SELECT r.*, c.nome, c.email, c.emailalt, c.telefone,
             g.grupo_pro, g.grupo_pro AS grupo_nome,
             cat.categoria AS categoria_nome,
-            rsp.respespaco
+            IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS respespaco
      FROM infodeqb_rds_registo r
      JOIN infodeqb_rds_colaborador c       ON c.codigo   = r.codigo
      JOIN infodeqb_rds_grupo g             ON g.grupoid  = r.grupo

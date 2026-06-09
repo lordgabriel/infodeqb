@@ -1,30 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="x-apple-disable-message-reformatting">
-  <title></title>
-  <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
-  <style>table, td, div, h1, p {font-family: Arial, sans-serif;}</style>
-</head>
-<body style="margin:0;padding:0;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
-    <tr>
-      <td align="center" style="padding:0;">
-        <table role="presentation" style="width:620px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
-
-          <!-- Cabeçalho -->
-          <tr>
-            <td align="center" style="padding:20px 0 20px 0;background:#2475ba;">
-              <h2 style="margin:0;color:#ffffff;font-family:Arial,sans-serif;">Departamento de Engenharia Química</h2>
-              <h3 style="margin:8px 0 0 0;color:#cce0f5;font-family:Arial,sans-serif;font-weight:normal;">Pedido de Validação de Acesso</h3>
-            </td>
-          </tr>
-
-          <!-- Corpo -->
-          <tr>
-            <td style="padding:30px 30px 10px 30px;">
+<!-- EMAIL_SUBTITLE: Pedido de Validação de Acesso -->
+{{HEADER}}
               <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">
                 Caro(a) {valornome_resp},
               </p>
@@ -40,10 +15,14 @@
                     <td style="padding:8px 12px;border-bottom:1px solid #dde;">{valorlink_colab}</td>
                   </tr>
                   <tr>
+                    <td style="padding:8px 12px;border-bottom:1px solid #dde;font-weight:bold;color:#2475ba;">Responsável pelo trabalho</td>
+                    <td style="padding:8px 12px;border-bottom:1px solid #dde;">{valorresp_trabalho}</td>
+                  </tr>
+                  <tr style="background:#f3f8fe;">
                     <td style="padding:8px 12px;border-bottom:1px solid #dde;font-weight:bold;color:#2475ba;">Espaço solicitado</td>
                     <td style="padding:8px 12px;border-bottom:1px solid #dde;">{valorespaco}</td>
                   </tr>
-                  <tr style="background:#f3f8fe;">
+                  <tr>
                     <td style="padding:8px 12px;border-bottom:1px solid #dde;font-weight:bold;color:#2475ba;">Período de acesso</td>
                     <td style="padding:8px 12px;border-bottom:1px solid #dde;">{valordatainicio} — {valordatafim}</td>
                   </tr>
@@ -71,29 +50,4 @@
                 Se o botão não funcionar, copie e cole este endereço no seu browser:<br>
                 <span style="color:#2475ba;">{valorlink}</span>
               </p>
-            </td>
-          </tr>
-
-          <!-- Assinatura -->
-          <tr>
-            <td style="padding:10px 30px 30px 30px;">
-              <p style="margin:0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Cumprimentos,<br>Joana Feyo Gutierres</p>
-            </td>
-          </tr>
-
-          <!-- Rodapé -->
-          <tr>
-            <td style="padding:20px 30px;background:#18163a;">
-              <p style="margin:0;font-size:13px;line-height:18px;font-family:Arial,sans-serif;color:#ffffff;">
-                Secretariado da Direção &nbsp;|&nbsp; Departamento de Engenharia Química<br>
-                deqdir@fe.up.pt &nbsp;|&nbsp; +351 225 084 520
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+{{FOOTER}}

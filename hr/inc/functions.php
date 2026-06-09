@@ -115,21 +115,26 @@ function phoneFromPost(): string {
     return combinePhone($ind, $num);
 }
 
-/** Renderiza o input-group de telefone */
-function renderPhoneInput(string $stored = '', string $size = ''): void {
+/** Renderiza o campo de telefone moderno (indicativo + número num só campo visual) */
+function renderPhoneInput(string $stored = '', string $size = '', bool $required = false): void {
     list($ind, $num) = parsePhone($stored);
-    $sz  = $size ? ' input-group-' . $size : '';
-    $szS = $size ? ' custom-select-' . $size : '';
-    $szI = $size ? ' form-control-' . $size : '';
-    echo '<div class="input-group' . $sz . '">';
-    echo '<div class="input-group-prepend">';
-    echo '<select name="telefone_indicativo" class="custom-select' . $szS . '" style="border-radius:.25rem 0 0 .25rem;min-width:95px">';
+    $h = $size === 'sm' ? '31px' : '38px';
+    $fs = $size === 'sm' ? '13px' : '14px';
+    echo '<div style="display:flex;align-items:stretch;border:1px solid #ced4da;border-radius:.375rem;overflow:hidden;background:#fff;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;" '
+        . 'onfocusin="this.style.borderColor=\'#80bdff\';this.style.boxShadow=\'0 0 0 .2rem rgba(0,123,255,.25)\'" '
+        . 'onfocusout="this.style.borderColor=\'#ced4da\';this.style.boxShadow=\'none\'">';
+    echo '<select name="telefone_indicativo" '
+        . 'style="border:none;outline:none;background:transparent;padding:0 4px 0 8px;font-size:' . $fs . ';height:' . $h . ';line-height:' . $h . ';cursor:pointer;flex-shrink:0;min-width:90px;appearance:none;-webkit-appearance:none;" '
+        . 'title="Indicativo de país">';
     foreach (phoneIndicativos() as $code => $lbl) {
         $sel = ($ind === $code) ? ' selected' : '';
         echo '<option value="' . htmlspecialchars($code) . '"' . $sel . '>' . $lbl . '</option>';
     }
-    echo '</select></div>';
-    echo '<input type="tel" name="telefone_numero" class="form-control' . $szI . '" placeholder="912 345 678" value="' . htmlspecialchars($num) . '">';
+    echo '</select>';
+    echo '<span style="width:1px;background:#ced4da;flex-shrink:0;margin:6px 0;"></span>';
+    echo '<input type="tel" name="telefone_numero" placeholder="912 345 678" ' . ($required ? 'required ' : '')
+        . 'value="' . htmlspecialchars($num) . '" '
+        . 'style="border:none;outline:none;flex:1;padding:0 10px;font-size:' . $fs . ';height:' . $h . ';background:transparent;min-width:0;">';
     echo '</div>';
 }
 
@@ -168,17 +173,46 @@ function formatDate ($format, $dateStr)
 
 function format_email ($info, $format)
 {
-    // print_r ($info);
-    // grab the template content
     $template = file_get_contents(ROOT_DIR . '/infodeqb/hr/inc/' . $format);
-   
-    // replace all the tags
 
+    // ── Injectar parciais de cabeçalho/rodapé ─────────────────────────────────
+    // Os templates que usam {{HEADER}} e {{FOOTER}} declaram metadados em comentários:
+    //   <!-- EMAIL_SUBTITLE: Título do email -->
+    //   <!-- EMAIL_HEADER_COLOR: #c0392b -->      (opcional, default #2475ba)
+    //   <!-- EMAIL_SUBTITLE_COLOR: #fde -->        (opcional, default #cce0f5)
+    if (strpos($template, '{{HEADER}}') !== false) {
+        $hcor    = '#2475ba';
+        $hcorSub = '#cce0f5';
+        $subtitle = 'Acessos DEQ';
+
+        if (preg_match('/<!--\s*EMAIL_SUBTITLE:\s*(.+?)\s*-->/', $template, $m)) {
+            $subtitle = trim($m[1]);
+        }
+        if (preg_match('/<!--\s*EMAIL_HEADER_COLOR:\s*(.+?)\s*-->/', $template, $m)) {
+            $hcor = trim($m[1]);
+        }
+        if (preg_match('/<!--\s*EMAIL_SUBTITLE_COLOR:\s*(.+?)\s*-->/', $template, $m)) {
+            $hcorSub = trim($m[1]);
+        }
+
+        $header = file_get_contents(ROOT_DIR . '/infodeqb/hr/inc/mail__header.html');
+        $header = str_replace('__HCOR__',     $hcor,    $header);
+        $header = str_replace('__HCOR_SUB__', $hcorSub, $header);
+        $header = str_replace('__SUBTITLE__', htmlspecialchars($subtitle, ENT_QUOTES, 'UTF-8'), $header);
+        $template = str_replace('{{HEADER}}', $header, $template);
+    }
+
+    if (strpos($template, '{{FOOTER}}') !== false) {
+        $footer = file_get_contents(ROOT_DIR . '/infodeqb/hr/inc/mail__footer.html');
+        $template = str_replace('{{FOOTER}}', $footer, $template);
+    }
+
+    // ── Substituir placeholders {valorKEY} ────────────────────────────────────
     foreach ($info as $key => $value) {
-
         $substring = '>{valor' . $key . '}>';
         $template = preg_replace($substring, $info[$key], $template);
     }
+
     return $template;
 }
 
@@ -327,7 +361,7 @@ function _labsIsentos() {
     );
 }
 
-function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim, $colab_codigo = '') {
+function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim, $colab_codigo = '', $resp_trabalho = '') {
 
     $labsIsentos = _labsIsentos();
 
@@ -382,18 +416,18 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
             "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
              FROM infodeqb_rds_gabinetes g
              LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
-             WHERE g.deqid = ? LIMIT 1"
+             WHERE g.deqid = ?"
         );
         $qGab->execute([$deqid]);
-        $gab = $qGab->fetch(PDO::FETCH_ASSOC);
+        foreach ($qGab->fetchAll(PDO::FETCH_ASSOC) as $gab) {
+            if (empty($gab['resp_codigo'])) continue; // sem responsável: skip
 
-        if (!$gab || empty($gab['resp_codigo'])) continue; // sem responsável: skip
-
-        $rc = (string)$gab['resp_codigo'];
-        if (!isset($byResp[$rc])) {
-            $byResp[$rc] = array('resp_nome' => $gab['resp_nome'], 'labs' => array());
+            $rc = (string)$gab['resp_codigo'];
+            if (!isset($byResp[$rc])) {
+                $byResp[$rc] = array('resp_nome' => $gab['resp_nome'], 'labs' => array());
+            }
+            $byResp[$rc]['labs'][] = array('deq_id' => $deqid, 'gab_nome' => $gab['nomegab']);
         }
-        $byResp[$rc]['labs'][] = array('deq_id' => $deqid, 'gab_nome' => $gab['nomegab']);
     }
 
     // 2. Um registo + um email por responsável
@@ -436,7 +470,7 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
 
         _enviarEmailValidacao(
             array('nomegab' => $labNames, 'resp_codigo' => $respCodigo, 'resp_nome' => $respData['resp_nome']),
-            $token, $colab_nome, $datainicio, $datafim, $colab_codigo
+            $token, $colab_nome, $datainicio, $datafim, $colab_codigo, $resp_trabalho
         );
         $enviados++;
     }
@@ -447,7 +481,7 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
  * Envia email de validação ao responsável do espaço.
  * $gab deve ter: nomegab (ou gab_nome), resp_codigo, resp_nome
  */
-function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim, $colab_codigo = '') {
+function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim, $colab_codigo = '', $resp_trabalho = '') {
     $baseUrl = (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/hr/validar-acesso.php';
     $link    = $baseUrl . '?token=' . $token;
 
@@ -462,17 +496,19 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
     }
     $linkColab = $sigarraUrl
         ? '<a href="' . $sigarraUrl . '" style="color:#2475ba;text-decoration:none;" target="_blank">'
-          . htmlspecialchars($colab_nome) . '</a>'
+          . htmlspecialchars($colab_nome)
+          . ' <span style="font-size:.7em;vertical-align:super;opacity:.75;">&#8599;</span></a>'
         : htmlspecialchars($colab_nome);
 
     $info = array(
-        'nome_resp'  => isset($gab['resp_nome']) ? $gab['resp_nome'] : '—',
-        'nome_colab' => $colab_nome,
-        'link_colab' => $linkColab,
-        'espaco'     => isset($gab['nomegab']) ? $gab['nomegab'] : (isset($gab['gab_nome']) ? $gab['gab_nome'] : '—'),
-        'datainicio' => $datainicio,
-        'datafim'    => $datafim,
-        'link'       => $link,
+        'nome_resp'      => isset($gab['resp_nome']) ? $gab['resp_nome'] : '—',
+        'nome_colab'     => $colab_nome,
+        'link_colab'     => $linkColab,
+        'espaco'         => isset($gab['nomegab']) ? $gab['nomegab'] : (isset($gab['gab_nome']) ? $gab['gab_nome'] : '—'),
+        'datainicio'     => $datainicio,
+        'datafim'        => $datafim,
+        'resp_trabalho'  => $resp_trabalho ? htmlspecialchars($resp_trabalho) : '—',
+        'link'           => $link,
     );
     $body      = format_email($info, 'mail_validacao_espaco.html');
     $respEmail = 'up' . $gab['resp_codigo'] . '@up.pt';
@@ -495,16 +531,20 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
 function _reabrirValidacao($pdo, $valId) {
     $q = $pdo->prepare(
         "SELECT v.*,
-                COALESCE(c1.nome, c2.nome)         AS colab_nome,
-                COALESCE(c1.codigo, c2.codigo)     AS colab_codigo,
-                COALESCE(r1.datainicio, r2.datainicio) AS datainicio,
-                COALESCE(r1.datafim,    r2.datafim)    AS datafim
+                COALESCE(c1.nome, c2.nome)               AS colab_nome,
+                COALESCE(c1.codigo, c2.codigo)           AS colab_codigo,
+                COALESCE(r1.datainicio, r2.datainicio)   AS datainicio,
+                COALESCE(r1.datafim,    r2.datafim)      AS datafim,
+                COALESCE(IF(r1.responsavel=0,r1.outroresponsavel,rsp1.respespaco),
+                         IF(r2.responsavel=0,r2.outroresponsavel,rsp2.respespaco)) AS resp_trabalho
          FROM infodeqb_rds_validacao v
-         LEFT JOIN infodeqb_rds_registo     r1 ON r1.autoid = v.registo_id
-         LEFT JOIN infodeqb_rds_pedido      p  ON p.id       = v.pedido_id
-         LEFT JOIN infodeqb_rds_registo     r2 ON r2.autoid  = p.registo_id
-         LEFT JOIN infodeqb_rds_colaborador c1 ON c1.codigo  = r1.codigo
-         LEFT JOIN infodeqb_rds_colaborador c2 ON c2.codigo  = p.codigo
+         LEFT JOIN infodeqb_rds_registo        r1   ON r1.autoid  = v.registo_id
+         LEFT JOIN infodeqb_rds_pedido         p    ON p.id        = v.pedido_id
+         LEFT JOIN infodeqb_rds_registo        r2   ON r2.autoid   = p.registo_id
+         LEFT JOIN infodeqb_rds_colaborador    c1   ON c1.codigo   = r1.codigo
+         LEFT JOIN infodeqb_rds_colaborador    c2   ON c2.codigo   = p.codigo
+         LEFT JOIN infodeqb_rds_responsaveis   rsp1 ON rsp1.Codigo = r1.responsavel
+         LEFT JOIN infodeqb_rds_responsaveis   rsp2 ON rsp2.Codigo = r2.responsavel
          WHERE v.id = ?"
     );
     $q->execute([$valId]);
@@ -526,10 +566,11 @@ function _reabrirValidacao($pdo, $valId) {
             'resp_nome'  => $val['resp_nome'],
         ),
         $newToken,
-        $val['colab_nome'] ?? '—',
-        $val['datainicio'] ?? '',
-        $val['datafim']    ?? '',
-        $val['colab_codigo'] ?? ''
+        isset($val['colab_nome'])   ? $val['colab_nome']   : '—',
+        isset($val['datainicio'])   ? $val['datainicio']   : '',
+        isset($val['datafim'])      ? $val['datafim']      : '',
+        isset($val['colab_codigo']) ? $val['colab_codigo'] : '',
+        isset($val['resp_trabalho'])? $val['resp_trabalho']: ''
     );
 }
 
@@ -620,6 +661,114 @@ function _notificarRejeicaoValidacao($val, $colab_nome) {
         );
     } catch (Exception $e) {
         error_log('HR notif rejeição validação: ' . $e->getMessage());
+    }
+}
+
+// ── Enviar email de alteração ao SIGARRA (usado em index.php e validacao-action.php) ──
+function _emailSigarra($pdo, $ped, $d) {
+    $regRow = $pdo->prepare(
+        'SELECT r.*, c.nome, c.email, c.emailalt,
+                IF(r.responsavel=0, r.outroresponsavel, rsp.respespaco) AS resp_nome
+         FROM infodeqb_rds_registo r
+         JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+         LEFT JOIN infodeqb_rds_responsaveis rsp ON rsp.Codigo = r.responsavel
+         WHERE r.autoid = ?'
+    );
+    $regRow->execute([$ped['registo_id']]);
+    $reg = $regRow->fetch(PDO::FETCH_ASSOC);
+    if (!$reg) return;
+
+    // Determinar datafim a mostrar (nova se mudou, actual caso contrário)
+    $datafim = isset($d['datafim_novo']) ? $d['datafim_novo'] : $reg['datafim'];
+
+    // Construir bloco HTML dinâmico de alterações
+    $tdStyle = 'padding:8px;font-family:Arial,sans-serif;font-size:14px;';
+    $thStyle = 'padding:8px;font-family:Arial,sans-serif;font-size:14px;background:#2475ba;color:#fff;text-align:left;';
+    $alteracoes = '';
+
+    // ── Alteração de data de fim ──────────────────────────────────
+    if (isset($d['datafim_novo'])) {
+        $alteracoes .= '<h3 style="font-family:Arial,sans-serif;font-size:15px;margin:0 0 8px 0;color:#153643;">Alteração de Data de Fim</h3>';
+        $alteracoes .= '<table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:20px;">';
+        $alteracoes .= '<tr><th style="' . $thStyle . 'width:160px;">Data anterior</th><th style="' . $thStyle . '">Nova data</th></tr>';
+        $alteracoes .= '<tr>';
+        $alteracoes .= '<td style="' . $tdStyle . 'color:#999;text-decoration:line-through;">' . htmlspecialchars(isset($d['datafim_antigo']) ? $d['datafim_antigo'] : '—') . '</td>';
+        $alteracoes .= '<td style="' . $tdStyle . 'font-weight:bold;">'                        . htmlspecialchars(isset($d['datafim_novo'])   ? $d['datafim_novo']   : '—') . '</td>';
+        $alteracoes .= '</tr></table>';
+    }
+
+    // ── Alteração de acessos a labs + Acesso DEQB (Porta Norte) ─────
+    $addNomes = array_values(array_filter((array)(isset($d['labs_adicionados_nomes']) ? $d['labs_adicionados_nomes'] : (isset($d['labs_adicionados']) ? $d['labs_adicionados'] : array()))));
+    $remNomes = array_values(array_filter((array)(isset($d['labs_removidos_nomes'])   ? $d['labs_removidos_nomes']   : (isset($d['labs_removidos'])   ? $d['labs_removidos']   : array()))));
+    $dadosAnt = json_decode(isset($ped['dados_anteriores']) ? $ped['dados_anteriores'] : 'null', true);
+    if (!is_array($dadosAnt)) $dadosAnt = array();
+    $oldDeq = isset($dadosAnt['acessodeq']) ? (int)$dadosAnt['acessodeq'] : null;
+    $newDeq = isset($d['acessodeq'])        ? (int)$d['acessodeq']        : null;
+
+    // Tratar "Acesso DEQB" (Porta Norte) como gabid regular no diff
+    if ($oldDeq !== null && $newDeq !== null && $oldDeq !== $newDeq) {
+        if ($newDeq === 1 && !in_array('Porta Norte', $addNomes, true)) {
+            array_unshift($addNomes, 'Porta Norte');
+        } elseif ($newDeq === 0 && !in_array('Porta Norte', $remNomes, true)) {
+            array_unshift($remNomes, 'Porta Norte');
+        }
+    }
+
+    // Lista completa: include "Porta Norte" se acessodeq activo
+    $acessosNomesLista = isset($d['acessos_nomes']) ? (array)$d['acessos_nomes'] : array();
+    $acessodeqFinal = ($newDeq !== null) ? $newDeq : (int)$reg['acessodeq'];
+    if ($acessodeqFinal === 1 && !in_array('Porta Norte', $acessosNomesLista, true)) {
+        array_unshift($acessosNomesLista, 'Porta Norte');
+    }
+    if (empty($acessosNomesLista) && !empty($reg['acessos'])) {
+        $acessosNomesLista = array($reg['acessos']);
+    }
+
+    if (!empty($addNomes) || !empty($remNomes)) {
+        $alteracoes .= '<h3 style="font-family:Arial,sans-serif;font-size:15px;margin:0 0 8px 0;color:#153643;">Alteração de Acessos</h3>';
+        $alteracoes .= '<table border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin-bottom:20px;">';
+        $alteracoes .= '<tr><th style="' . $thStyle . 'width:50%;">Adicionar</th><th style="' . $thStyle . '">Remover</th></tr>';
+        $addCell = !empty($addNomes)
+            ? implode('', array_map(function($n) {
+                return '<span style="display:inline-block;background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:3px;padding:2px 8px;margin:2px;font-size:13px;">+ ' . htmlspecialchars($n) . '</span>';
+              }, $addNomes))
+            : '<span style="color:#999;">—</span>';
+        $remCell = !empty($remNomes)
+            ? implode('', array_map(function($n) {
+                return '<span style="display:inline-block;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:3px;padding:2px 8px;margin:2px;font-size:13px;">- ' . htmlspecialchars($n) . '</span>';
+              }, $remNomes))
+            : '<span style="color:#999;">—</span>';
+        $alteracoes .= '<tr><td style="' . $tdStyle . '">' . $addCell . '</td><td style="' . $tdStyle . '">' . $remCell . '</td></tr>';
+        if (!empty($acessosNomesLista)) {
+            $alteracoes .= '<tr><td colspan="2" style="' . $tdStyle . 'color:#555;font-size:13px;">'
+                         . '<strong>Lista completa após atualização:</strong> ' . htmlspecialchars(implode('; ', $acessosNomesLista)) . '</td></tr>';
+        }
+        $alteracoes .= '</table>';
+    } elseif (!empty($acessosNomesLista) && isset($d['datafim_novo'])) {
+        // Só datas mudaram — mostrar lista de acessos actuais para contexto
+        $alteracoes .= '<p style="font-family:Arial,sans-serif;font-size:13px;color:#555;margin:4px 0 16px 0;">'
+                     . '<strong>Acessos actuais:</strong> ' . htmlspecialchars(implode('; ', $acessosNomesLista)) . '</p>';
+    }
+
+    $info = array(
+        'codigo'      => $reg['codigo'],
+        'nome'        => $reg['nome'],
+        'fim'         => $datafim,
+        'responsavel' => isset($reg['resp_nome']) ? $reg['resp_nome'] : '—',
+        'alteracoes'  => $alteracoes ?: '<p style="color:#555;font-family:Arial,sans-serif;">Sem alterações de detalhe disponíveis.</p>',
+    );
+    $body    = format_email($info, 'mail_alteracao_sigarra.html');
+    $subject = 'Acessos DEQ: Atualização de acessos — ' . $reg['nome'];
+    try {
+        send_email(
+            array('sigarra@fe.up.pt'),
+            $body, $subject,
+            array('deqdir@fe.up.pt','fmartins@fe.up.pt')
+        );
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        error_log('HR email SIGARRA falhou registo_id=' . $ped['registo_id'] . ': ' . $e->getMessage());
+    } catch (Exception $e) {
+        error_log('HR email SIGARRA falhou registo_id=' . $ped['registo_id'] . ': ' . $e->getMessage());
     }
 }
 

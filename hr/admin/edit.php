@@ -66,70 +66,13 @@ if (!empty($_POST['_acao']) && $_POST['_acao'] === 'forcar_validacao') {
     exit;
 }
 
-// ── Notificar SIGARRA (ação separada, sem recarregar o form) ──────
-if (!empty($_POST['_acao']) && $_POST['_acao'] === 'notificar_sigarra') {
-    $nAutoid         = (int)($_POST['autoid']        ?? 0);
-    $nDatafimNovo    = trim($_POST['datafim_novo']   ?? '');
-    $nDatafimAntigo  = trim($_POST['datafim_antigo'] ?? '');
-    if ($nAutoid && $nDatafimNovo) {
-        // Criar infodeqb_rds_pedido origem='secretariado' + enviar email ao SIGARRA
-        $dadosJson = json_encode(array(
-            'datafim_novo'   => $nDatafimNovo,
-            'datafim_antigo' => $nDatafimAntigo,
-        ), JSON_UNESCAPED_UNICODE);
-        $dadosAnt  = json_encode(array('datafim' => $nDatafimAntigo), JSON_UNESCAPED_UNICODE);
-        $pdo->prepare(
-            "INSERT INTO infodeqb_rds_pedido
-             (tipo,origem,codigo,registo_id,dados_json,dados_anteriores,status)
-             VALUES ('alteracao_datafim','secretariado',?,?,?,?,'Aguarda_SIGARRA')"
-        )->execute([$id, $nAutoid, $dadosJson, $dadosAnt]);
-
-        // Email ao SIGARRA
-        $regS = $pdo->prepare(
-            'SELECT r.*, c.nome, c.email,
-                    COALESCE(rsp.respespaco, r.outroresponsavel) AS resp_nome
-             FROM infodeqb_rds_registo r
-             JOIN infodeqb_rds_colaborador c ON c.codigo=r.codigo
-             LEFT JOIN infodeqb_rds_responsaveis rsp ON rsp.Codigo=r.responsavel
-             WHERE r.autoid=?'
-        );
-        $regS->execute([$nAutoid]);
-        $regD = $regS->fetch(PDO::FETCH_ASSOC);
-        if ($regD) {
-            $acessos = ($regD['acessodeq'] == 1 ? 'Porta Norte; ' : '') . ($regD['acessos'] ?? '');
-            $infoS = array(
-                'codigo'      => $regD['codigo'],
-                'nome'        => $regD['nome'],
-                'fim'         => $nDatafimNovo,
-                'acessos'     => $acessos ?: '—',
-                'responsavel' => $regD['resp_nome'] ?? '—',
-                'detalhe'     => 'Renovação / nova data de fim: ' . $nDatafimAntigo . ' → ' . $nDatafimNovo,
-            );
-            $bodyS = format_email($infoS, 'mail_alteracao_sigarra.html');
-            try {
-                send_email(
-                    array('sigarra@fe.up.pt'),
-                    $bodyS,
-                    'Acessos DEQ: Renovação de acessos — ' . $regD['nome'],
-                    array('deqdir@fe.up.pt','fmartins@fe.up.pt')
-                );
-            } catch (\PHPMailer\PHPMailer\Exception $e) {
-                error_log('HR edit.php SIGARRA email falhou: ' . $e->getMessage());
-            } catch (Exception $e) {
-                error_log('HR edit.php SIGARRA email falhou: ' . $e->getMessage());
-            }
-        }
-    }
-    header('Location: detail.php?id=' . urlencode($id) . '&msg=sigarra_ok');
-    exit;
-}
+// (notificar_sigarra tratado via validacao-action.php)
 
 // ── Processar POST ───────────────────────────────────────────────
-$WorkrespError    = null;
-$erroduplicado    = null;
-$status           = $data['status'];  // default: mantém estado atual
-$sigarraNotifInfo = null;             // dados para mostrar botão "Notificar SIGARRA"
-$statusValidos    = ['Novo','Pendente','Ativo','Inativo'];
+$WorkrespError = null;
+$erroduplicado = null;
+$status        = $data['status'];  // default: mantém estado atual
+$statusValidos = ['Novo','Pendente','Ativo','Inativo'];
 
 if (!empty($_POST)) {
 
@@ -234,6 +177,17 @@ if (!empty($_POST)) {
                     $pdo->prepare("UPDATE infodeqb_rds_registo SET $tsCol=? WHERE autoid=?")
                         ->execute([$tsNow, $id1]);
                 }
+
+                // P10: activating — inactivate substitui_registo if exists
+                if ($status === 'Ativo' && $data['status'] !== 'Ativo') {
+                    $chkSubst2 = $pdo->prepare('SELECT substitui_registo FROM infodeqb_rds_registo WHERE autoid=?');
+                    $chkSubst2->execute([$id1]);
+                    $substRow2 = $chkSubst2->fetch(PDO::FETCH_ASSOC);
+                    if ($substRow2 && $substRow2['substitui_registo']) {
+                        $pdo->prepare('UPDATE infodeqb_rds_registo SET status="Inativo", datainativo=? WHERE autoid=?')
+                            ->execute([date('Y-m-d H:i:s'), (int)$substRow2['substitui_registo']]);
+                    }
+                }
             }
 
             // Actualizar tabela relacional de acessos
@@ -245,21 +199,106 @@ if (!empty($_POST)) {
                 setRegistoAcessos($pdo, (int)$id1, $labsPost, $gabMapAdmin);
             }
 
-            // Detetar renovação em registo Ativo → preparar botão "Notificar SIGARRA"
-            if ($data['status'] === 'Ativo' && $datafim !== $datafimAntigo) {
-                $sigarraNotifInfo = array(
-                    'autoid'          => (int)$id1,
-                    'datafim_novo'    => $datafim,
-                    'datafim_antigo'  => $datafimAntigo,
-                    'nome'            => $nome,
-                    'codigo'          => $codigo,
-                );
+            // Detetar alterações relevantes num registo Ativo
+            if ($data['status'] === 'Ativo' && $status === 'Ativo') {
+                // Normalizar labs para comparação (ordenar, sem espaços)
+                $_normLabs = function ($s) {
+                    $p = array_unique(array_filter(array_map('trim', preg_split('/[\s;,]+/', $s))));
+                    sort($p);
+                    return implode(';', $p);
+                };
+                $mudouDatas = ($datafim    !== $datafimAntigo)
+                           || ($datainicio !== $data['datainicio']);
+                $labsAntigos = array_filter(array_map('trim', preg_split('/[\s;,]+/', $data['acessosid'] ?? '')));
+                $labsNovos   = isset($_POST['acessos']) ? array_values(array_unique(array_filter(array_map('trim', (array)$_POST['acessos'])))) : $labsAntigos;
+                $mudouLabs   = $_normLabs(implode(';', $labsNovos)) !== $_normLabs(implode(';', $labsAntigos))
+                            || ((int)$acessodeq_post !== (int)$data['acessodeq']);
+
+                if ($mudouDatas || $mudouLabs) {
+                    // Calcular labs adicionados / removidos (por deqid)
+                    $labsAntigosSet = array_unique($labsAntigos);
+                    $labsNovosSet   = array_unique($labsNovos);
+                    $labsAdd        = array_values(array_diff($labsNovosSet, $labsAntigosSet));
+                    $labsRem        = array_values(array_diff($labsAntigosSet, $labsNovosSet));
+
+                    // Resolver gabid (código de sala) a partir de $gabRows — sem duplicados
+                    $deqToGabid = array();
+                    foreach ($gabRows as $_g) {
+                        $deqToGabid[$_g['deqid']] = $_g['gabid'];
+                    }
+                    $_toGabids = function($deqids) use ($deqToGabid) {
+                        $gabids = array();
+                        foreach ($deqids as $lid) {
+                            $gid = isset($deqToGabid[$lid]) ? $deqToGabid[$lid] : $lid;
+                            if (!in_array($gid, $gabids, true)) {
+                                $gabids[] = $gid;
+                            }
+                        }
+                        return $gabids;
+                    };
+                    $labsAddNomes      = $_toGabids($labsAdd);
+                    $labsRemNomes      = $_toGabids($labsRem);
+                    $acessosNovosNomes = $_toGabids($labsNovosSet);
+
+                    // Porta Norte: tratar Acesso DEQB como gabid regular
+                    $oldAcessodeq = (int)$data['acessodeq'];
+                    $newAcessodeq = (int)$acessodeq_post;
+                    if ($oldAcessodeq !== $newAcessodeq) {
+                        if ($newAcessodeq === 1 && !in_array('Porta Norte', $labsAddNomes, true)) {
+                            array_unshift($labsAddNomes, 'Porta Norte');
+                        } elseif ($newAcessodeq === 0 && !in_array('Porta Norte', $labsRemNomes, true)) {
+                            array_unshift($labsRemNomes, 'Porta Norte');
+                        }
+                    }
+                    if ($newAcessodeq === 1 && !in_array('Porta Norte', $acessosNovosNomes, true)) {
+                        array_unshift($acessosNovosNomes, 'Porta Norte');
+                    }
+
+                    // Apagar pedido secretariado anterior ainda Pendente (substituir pelo novo diff)
+                    $pdo->prepare(
+                        "DELETE FROM infodeqb_rds_pedido
+                         WHERE registo_id=? AND origem='secretariado' AND tipo='alteracao_sigarra' AND status='Pendente'"
+                    )->execute([$id1]);
+
+                    // Criar novo pedido com diff completo
+                    $dadosJson = json_encode(array(
+                        'datafim_novo'           => ($mudouDatas && $datafim !== $datafimAntigo) ? $datafim : null,
+                        'datafim_antigo'         => ($mudouDatas && $datafim !== $datafimAntigo) ? $datafimAntigo : null,
+                        'acessodeq'              => (int)$acessodeq_post,
+                        'acessos'                => $labsNovosSet,
+                        'acessos_nomes'          => $acessosNovosNomes,
+                        'labs_adicionados'       => $labsAdd,
+                        'labs_adicionados_nomes' => $labsAddNomes,
+                        'labs_removidos'         => $labsRem,
+                        'labs_removidos_nomes'   => $labsRemNomes,
+                    ), JSON_UNESCAPED_UNICODE);
+                    $dadosAnt = json_encode(array(
+                        'datafim'  => $datafimAntigo,
+                        'acessosid'=> $data['acessosid'] ?? '',
+                        'acessodeq'=> (int)$data['acessodeq'],
+                    ), JSON_UNESCAPED_UNICODE);
+
+                    $pdo->prepare(
+                        "INSERT INTO infodeqb_rds_pedido
+                         (tipo,origem,codigo,registo_id,dados_json,dados_anteriores,status)
+                         VALUES ('alteracao_sigarra','secretariado',?,?,?,?,'Pendente')"
+                    )->execute([$id, (int)$id1, $dadosJson, $dadosAnt]);
+
+                    $pdo->prepare("UPDATE infodeqb_rds_registo SET notif_pendente=1 WHERE autoid=?")
+                        ->execute([$id1]);
+                }
+            } elseif ($data['status'] === 'Ativo' && $status !== 'Ativo') {
+                // Registo saiu de Ativo → limpar flag e pedido pendente
+                $pdo->prepare("UPDATE infodeqb_rds_registo SET notif_pendente=0 WHERE autoid=?")
+                    ->execute([$id1]);
+                $pdo->prepare(
+                    "DELETE FROM infodeqb_rds_pedido
+                     WHERE registo_id=? AND origem='secretariado' AND tipo='alteracao_sigarra' AND status='Pendente'"
+                )->execute([$id1]);
             }
 
             echo "<div class='alert alert-success' role='alert'>Registo atualizado com sucesso.</div>";
-            if (!$sigarraNotifInfo) {
-                echo "<meta http-equiv='refresh' content='2;URL=detail.php?id=" . urlencode($id) . "'>";
-            }
+            echo "<meta http-equiv='refresh' content='2;URL=detail.php?id=" . urlencode($id) . "'>";
 
         } catch (PDOException $e) {
             if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
@@ -298,8 +337,15 @@ $validacoesPendentes->execute([$id1]);
 $validacoes = $validacoesPendentes->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Acessos sem pedido de validação (agrupados por responsável) ──
-// Responsáveis que já têm pelo menos uma validação (qualquer estado)
-$respComVal = array_unique(array_column($validacoes, 'resp_codigo'));
+// Responsáveis que têm validação REAL (exclui registos "Isento auto-validado"
+// que partilham resp_codigo com o responsável real mas não representam um pedido)
+$respComVal = array();
+foreach ($validacoes as $_v) {
+    if ($_v['resp_nome'] !== 'Isento (auto-validado)') {
+        $respComVal[] = (string)$_v['resp_codigo'];
+    }
+}
+$respComVal = array_unique($respComVal);
 
 $labsIsentos = _labsIsentos();
 $fAcessosAtual = getRegistoAcessos($pdo, (int)$id1);
@@ -311,17 +357,18 @@ foreach ($fAcessosAtual as $deqid) {
         "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
          FROM infodeqb_rds_gabinetes g
          LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
-         WHERE g.deqid = ? LIMIT 1"
+         WHERE g.deqid = ?"
     );
     $qGabSP->execute([$deqid]);
-    $gabSP = $qGabSP->fetch(PDO::FETCH_ASSOC);
-    if (!$gabSP || empty($gabSP['resp_codigo'])) continue;
-    $rc = (string)$gabSP['resp_codigo'];
-    if (in_array($rc, $respComVal)) continue; // já tem pedido
-    if (!isset($semPedido[$rc])) {
-        $semPedido[$rc] = array('resp_nome' => $gabSP['resp_nome'], 'labs' => array());
+    foreach ($qGabSP->fetchAll(PDO::FETCH_ASSOC) as $gabSP) {
+        if (empty($gabSP['resp_codigo'])) continue;
+        $rc = (string)$gabSP['resp_codigo'];
+        if (in_array($rc, $respComVal)) continue; // já tem pedido
+        if (!isset($semPedido[$rc])) {
+            $semPedido[$rc] = array('resp_nome' => $gabSP['resp_nome'], 'labs' => array());
+        }
+        $semPedido[$rc]['labs'][] = $gabSP['nomegab'];
     }
-    $semPedido[$rc]['labs'][] = $gabSP['nomegab'];
 }
 
 // Checkboxlist de labs
@@ -360,6 +407,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php unset($_SESSION['val_info']); endif; ?>
 
+<?php if ($data['status'] === 'Pendente'): ?>
+<div class="alert alert-warning" role="alert">
+  <i class="fas fa-exclamation-triangle me-1"></i>
+  <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido. Alterações agora podem criar inconsistências. Aguarde a conclusão antes de editar, ou prossiga com cautela.
+</div>
+<?php endif; ?>
+
 <form action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
       method="post" class="iq-form-2col-wrap">
   <input type="hidden" name="id1"   value="<?= htmlspecialchars($id1) ?>">
@@ -377,20 +431,22 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="col-md-4 form-group">
         <label><?= $lang['FEUP_CODE'] ?></label>
         <input name="codigo" type="text" required maxlength="9"
-               pattern="^(\d{6}|\d{9})$" class="form-control" id="code"
+               pattern="^(\d{6}|\d{9})$" class="form-control" id="code" readonly
+               style="background:#f8f9fa;cursor:not-allowed;"
                value="<?= htmlspecialchars($data['codigo']) ?>">
       </div>
     </div>
     <div class="form-group">
       <label><?= $lang['NAME'] ?></label>
-      <input type="text" name="nome" class="form-control" required
+      <input type="text" name="nome" class="form-control" required readonly
+             style="background:#f8f9fa;cursor:not-allowed;"
              value="<?= htmlspecialchars($fNome) ?>">
     </div>
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?= $lang['EMAIL'] ?></label>
-        <input type="email" name="email" class="form-control" required id="email"
-               pattern="^[^@]+@((fe\.up\.pt)|(edu\.fe\.up\.pt)|(up\.pt))$"
+        <input type="email" name="email" class="form-control" required id="email" readonly
+               style="background:#f8f9fa;cursor:not-allowed;"
                value="<?= htmlspecialchars($fEmail) ?>">
       </div>
       <div class="col-md-6 form-group">
@@ -672,8 +728,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </td>
           <td class="align-middle"><?= htmlspecialchars($spData['resp_nome'] ?? '—') ?></td>
           <td class="align-middle text-center">
-            <span class="badge badge-secondary" style="font-size:.65rem">
-              <i class="fas fa-minus-circle fa-xs me-1"></i>Sem pedido
+            <span class="badge" style="background:#6f42c1;color:#fff;font-size:.65rem">
+              ⚠ Sem pedido
             </span>
           </td>
           <td class="align-middle text-muted">—</td>
@@ -698,28 +754,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php endif; ?>
 
-<?php if ($sigarraNotifInfo): ?>
-<div class="alert alert-warning mt-3" role="alert">
-  <strong><i class="fas fa-exclamation-triangle me-1"></i>Data de fim alterada.</strong>
-  O registo está <strong>Ativo</strong> — o SIGARRA deve ser informado da nova data
-  (<strong><?= htmlspecialchars($sigarraNotifInfo['datafim_antigo']) ?></strong>
-  → <strong><?= htmlspecialchars($sigarraNotifInfo['datafim_novo']) ?></strong>).
-</div>
-<form method="post"
-      action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
-      onsubmit="return confirm('Enviar email ao SIGARRA com a nova data de fim?')">
-  <input type="hidden" name="_acao"          value="notificar_sigarra">
-  <input type="hidden" name="autoid"         value="<?= (int)$sigarraNotifInfo['autoid'] ?>">
-  <input type="hidden" name="datafim_novo"   value="<?= htmlspecialchars($sigarraNotifInfo['datafim_novo']) ?>">
-  <input type="hidden" name="datafim_antigo" value="<?= htmlspecialchars($sigarraNotifInfo['datafim_antigo']) ?>">
-  <button class="btn btn-warning">
-    <i class="fas fa-paper-plane me-1"></i> Notificar SIGARRA
-  </button>
-  <a href="detail.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-outline-secondary ms-2">
-    Ignorar por agora
-  </a>
-</form>
-<?php endif; ?>
 
 <script>
 // ── Mapeamento grupo → categorias (carregado da BD) ───────────────
@@ -795,9 +829,23 @@ document.addEventListener('DOMContentLoaded', function () {
     var selResp = document.querySelector('select[name=responsavel]');
     if (selResp) {
         selResp.addEventListener('change', function () {
-            document.getElementById('outroresp').style.display =
-                this.value === '0' ? '' : 'none';
+            var isOutro = this.value === '0';
+            document.getElementById('outroresp').style.display = isOutro ? '' : 'none';
+            var inp = document.querySelector('input[name=outroresponsavel]');
+            if (inp) {
+                if (isOutro) { inp.setAttribute('required', 'required'); }
+                else         { inp.removeAttribute('required'); }
+            }
         });
+        // Aplicar no carregamento
+        (function() {
+            var isOutro = selResp.value === '0';
+            var inp = document.querySelector('input[name=outroresponsavel]');
+            if (inp) {
+                if (isOutro) inp.setAttribute('required', 'required');
+                else         inp.removeAttribute('required');
+            }
+        })();
     }
 
     var inpCodigo = document.getElementById('code');

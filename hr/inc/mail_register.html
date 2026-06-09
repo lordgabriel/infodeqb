@@ -1,203 +1,32 @@
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="x-apple-disable-message-reformatting">
-  <title></title>
-  <!--[if mso]>
-  <noscript>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  </noscript>
-  <![endif]-->
-  <style>
-    table, td, div, h1, p {font-family: Arial, sans-serif;}
-  </style>
-</head>
-<body style="margin:0;padding:0;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
-    <tr>
-      <td align="center" style="padding:0;">
-        <table role="presentation" style="width:602px;border-collapse:collapse;border:0px solid #cccccc;border-spacing:0;text-align:left;">
-          <tr>
-            <td align="center" style="padding:0px 0 0px 0;background:#2475ba;">
-              <h3 style='color:#ffffff'>Departamento de Engenharia Química<br><br>Registo Efetuado com Sucesso!</h3>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:5px 0px 0px 0px;">
+<!-- EMAIL_SUBTITLE: Registo Efetuado com Sucesso -->
+{{HEADER}}
+              <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Caro(a) {valornome},</p>
+              <p style="margin:0 0 16px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">O seu registo foi submetido com sucesso. Pode consultar abaixo os dados registados.</p>
 
-              <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;;">
-                <tr>
-                  <td style="padding:0px 0 0px 0;color:#153643;">
-                    <div  style="color:#ffffff;font-size:16px;line-height:15px;background-color:#36a9e1;padding:10px">
-                      Por favor <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf">descarregue aqui</a></span> e leia cuidadosamente o desdobrável de segurança. <br><br><em>Please <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf">download here</a></span> and read carefully the safety booklet.</em>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:5px 0 0px 0;">
-                        <table border='0' cellpadding='3' cellspacing='0' style='cellpadding:10;cellspacing:0;color:#000000;font-family:Helvetica, Arial, sans-serif;font-size:16px;line-height:22px;table-layout:auto;width:100%;' width='100%'>
-                          <tbody>
-                            <tr align='left'>
-                              <th colspan="2" align='left' style='background-color: #2475ba; color: #ffffff;'>
-                                Dados pessoais:
-                              </th>
-                            </tr>
-                            <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Código FEUP:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valorcodigo}
-                              </td>
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                               Nome:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valornome}
-                              </td>
+              <div style="color:#ffffff;font-size:16px;line-height:20px;background-color:#36a9e1;padding:10px;margin-bottom:16px;">
+                Por favor <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf" style="color:yellow;">descarregue aqui</a></span> e leia cuidadosamente o desdobrável de segurança.<br><br>
+                <em>Please <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf" style="color:yellow;">download here</a></span> and read carefully the safety booklet.</em>
+              </div>
 
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                E-mail:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valormail}
-                              </td>
+              <table border="0" cellpadding="3" cellspacing="0" style="color:#000000;font-family:Arial,sans-serif;font-size:15px;line-height:22px;width:100%;margin-bottom:16px;">
+                <tbody>
+                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Dados pessoais</th></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;width:40%;">Código FEUP:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorcodigo}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Nome:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valornome}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">E-mail:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valormail}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">E-mail alternativo:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoraltemail}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Contacto telefónico:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valortelefone}</td></tr>
 
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                E-mail alternativo:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valoraltemail}
-                              </td>
+                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Registo</th></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Grupo profissional:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorgrupo}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Categoria:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorcategoria}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Data Início:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorinicio}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Data fim:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorfim}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Responsável do trabalho:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorresponsavel}</td></tr>
 
-                            </tr>
-                            <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Contacto telefónico:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valortelefone}
-                              </td>
-
-                            </tr>
-                          </tbody>
-
-                            <tr align='left'>
-                              <th colspan="2" align='left' style='background-color: #2475ba; color: #ffffff;'>
-                                Registo
-                              </th>
-                            </tr>
-                            <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Grupo profissional:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valorgrupo}
-                              </td>
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Data Início:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valorinicio}
-                              </td>
-
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                               Data fim:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valorfim}
-                              </td>
-
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Responsável do trabalho:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valorresponsavel}
-                              </td>
-
-                            </tr>
-
-                            <tr align='left'>
-                              <th colspan="2" align='left' style='background-color: #2475ba; color: #ffffff;'>
-                               Acessos
-                              </th>
-                            </tr>
-                            <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Acesso porta norte:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valoracessodeq}
-                              </td>
-                            </tr>
-                             <tr>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                Outros acessos:
-                              </td>
-                              <td style='background-color: #ffffff; color: #000000; text-align: left;'>
-                                {valoracessos}
-                              </td>
-
-                            </tr>
-                             
-                          </tbody>
-                        </table><hr>
-                  </td>
-                </tr>         
-                <tr>
-                  <td style="padding:10px 0 10px 0;color:#153643;">
-                    <p style="margin:0 0 0px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Cumprimentos,<br>Joana Feyo Gutierres</p>
-                  </td>
-                </tr>
+                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Acessos</th></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Acesso porta norte:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoracessodeq}</td></tr>
+                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Outros acessos:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoracessos}</td></tr>
+                </tbody>
               </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:30px;background:#18163a;">
-              <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;font-size:9px;font-family:Arial,sans-serif;">
-                <tr>
-                  <td style="padding:0;width:50%;" align="left">
-                    <p style="margin:0;font-size:14px;line-height:16px;font-family:Arial,sans-serif;color:#ffffff;">
-                      Secretariado da Direção<br>Departamento de Engenharia Química<br/>deqdir@fe.up.pt | + 351 225 084 520
-                    </p>
-                  </td>
-                  <td style="padding:0;width:50%;" align="right">
-                    <table role="presentation" style="border-collapse:collapse;border:0;border-spacing:0;">
-                      <tr>
-                        <td style="padding:0 0 0 10px;width:38px;">
-                          <!--<a href="https://www.facebook.com/deqfeup" style="color:#ffffff;"><img src="./images/image-4.png" alt="Twitter" width="38" style="height:auto;display:block;border:0;" /></a>-->
-                        </td>
-                        <td style="padding:0 0 0 10px;width:38px;">
-                          <!--<a href="https://deq.fe.up.pt" style="color:#ffffff;"><img src="./images/image-7.png" alt="Facebook" width="38" style="height:auto;display:block;border:0;" /></a>-->
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+{{FOOTER}}

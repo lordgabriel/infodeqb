@@ -1,36 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt" xmlns="http://www.w3.org/1999/xhtml">
-<head><meta charset="UTF-8"><title></title>
-<style>table,td,div,p{font-family:Arial,sans-serif;}</style>
-</head>
-<body style="margin:0;padding:0;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;background:#ffffff;">
-    <tr><td align="center" style="padding:0;">
-      <table role="presentation" style="width:602px;border-collapse:collapse;text-align:left;">
-        <tr>
-          <td align="center" style="padding:20px 0;background:#2475ba;">
-            <h3 style="color:#ffffff;margin:0;">Departamento de Engenharia Química<br><br>Pedido de Alteração Submetido</h3>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:20px;">
-            <p style="font-size:15px;color:#153643;margin:0 0 16px 0;">O seu pedido de alteração foi submetido com sucesso e aguarda aprovação pelo secretariado.</p>
-            <table style="width:100%;font-size:14px;border-collapse:collapse;">
-              <tr><th colspan="2" style="background:#2475ba;color:#fff;padding:8px;text-align:left;">Dados do Pedido</th></tr>
-              <tr><td style="padding:6px 8px;color:#555;width:40%;">Nome:</td><td style="padding:6px 8px;">{valornome}</td></tr>
-              <tr><td style="padding:6px 8px;color:#555;">Código FEUP:</td><td style="padding:6px 8px;">{valorcodigo}</td></tr>
-              <tr><td style="padding:6px 8px;color:#555;">Tipo de alteração:</td><td style="padding:6px 8px;">{valordetalhe}</td></tr>
-            </table>
-            <p style="font-size:13px;color:#666;margin-top:16px;">Será notificado por email quando o pedido for processado.</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:20px 30px;background:#18163a;">
-            <p style="margin:0;font-size:14px;line-height:20px;color:#ffffff;">Secretariado da Direção<br>Departamento de Engenharia Química<br>deqdir@fe.up.pt | +351 225 084 520</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>
+<!-- EMAIL_SUBTITLE: Pedido de Alteração Submetido -->
+{{HEADER}}
+              <p style="font-size:15px;color:#153643;margin:0 0 16px 0;">O seu pedido de alteração foi submetido com sucesso e aguarda aprovação pelo secretariado.</p>
+
+              <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:16px;">
+                <tr><th colspan="2" style="background:#2475ba;color:#fff;padding:8px;text-align:left;">Dados do Pedido</th></tr>
+                <tr><td style="padding:6px 8px;color:#555;width:40%;">Nome:</td><td style="padding:6px 8px;">{valornome}</td></tr>
+                <tr><td style="padding:6px 8px;color:#555;">Código FEUP:</td><td style="padding:6px 8px;">{valorcodigo}</td></tr>
+                <tr><td style="padding:6px 8px;color:#555;">Tipo de alteração:</td><td style="padding:6px 8px;">{valordetalhe}</td></tr>
+              </table>
+
+              <p style="font-size:13px;color:#666;margin:0;">Será notificado por email quando o pedido for processado.</p>
+{{FOOTER}}
