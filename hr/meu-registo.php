@@ -551,9 +551,9 @@ $tipoLabelsU = array(
 <?php endif; ?>
 <?php if ($temPendenteReg && !$pedidosPendentes): ?>
 <div class="card mb-3 border-info">
-  <div class="card-header py-2 d-flex align-items-center" style="background:#e8f4f8">
+  <div class="card-header py-2 d-flex align-items-center" style="background:#eff6ff">
     <i class="fas fa-hourglass-half text-info me-2"></i>
-    <strong style="color:#0c5460" class="mr-auto">Registo em processamento</strong>
+    <strong style="color:#1e40af" class="mr-auto">Registo em processamento</strong>
   </div>
   <div class="card-body py-2" style="font-size:.85rem">
     Existe um registo no estado <strong><?= htmlspecialchars($blkReg['status']) ?></strong> a aguardar processamento pelo secretariado.
