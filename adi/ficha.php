@@ -168,12 +168,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .adi-tabs .nav-link[href="#tab-ges"].active  { background:#e8f0fe; color:#1a56db; }
 .adi-tabs .nav-link[href="#tab-proj"].active { background:#e8f0fe; color:#1a56db;}
 
-/* ── Cabeçalhos de tabela coloridos por secção ─────────────── */
-#tab-pub  thead.table-dark th { background:#343a40!important; color:#fff!important; }
-#tab-form thead.table-dark th { background:#4a90d9!important; color:#fff!important;  }
-#tab-trf  thead.table-dark th { background:#4a90d9!important; color:#fff!important;  }
-#tab-ges  thead.table-dark th { background:#4a90d9!important; color:#fff!important;  }
-#tab-proj thead.table-dark th { background:#4a90d9!important; color:#fff!important;  }
+/* ── Cabeçalhos de tabela — mesma cor em todas as secções ──── */
+#tab-pub  thead.table-dark th,
+#tab-form thead.table-dark th,
+#tab-trf  thead.table-dark th,
+#tab-ges  thead.table-dark th,
+#tab-proj thead.table-dark th { background:var(--iq-nav-bg)!important; color:#fff!important; }
 
 /* ── Sub-headings de secção ────────────────────────────────── */
 #tab-pub  h6.font-weight-bold { color:#1a56db; }
