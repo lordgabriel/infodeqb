@@ -168,27 +168,30 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <style>
+/* Grelha de introdução de dados (inputs por célula + totais em JS) —
+   propositadamente não é .table/DataTables: precisa de grelha
+   completa e não faz sentido paginar/pesquisar uma matriz fixa. */
 #tblAreas { font-size: .82rem; border-collapse: collapse; width: 100%; }
 #tblAreas th, #tblAreas td {
-    border: 1px solid #dee2e6; padding: 5px 8px; text-align: center; white-space: nowrap;
+    border: 1px solid var(--iq-border2); padding: 5px 8px; text-align: center; white-space: nowrap;
 }
-#tblAreas th { background: #f8f9fa; font-weight: 600; }
+#tblAreas th { background: var(--iq-gray-50); font-weight: 600; }
 #tblAreas td:first-child { text-align: left; white-space: normal; min-width: 160px; }
-#tblAreas tr.total-row td { background: #e9ecef; font-weight: 700; }
+#tblAreas tr.total-row td { background: var(--iq-gray-200); font-weight: 700; }
 #tblAreas input[type=number] {
     width: 56px; text-align: center; padding: 3px 4px;
-    border: 1px solid #ced4da; border-radius: 4px; font-size: .8rem;
+    border: 1px solid var(--iq-border2); border-radius: 4px; font-size: .8rem;
 }
 #tblAreas input[type=number]:focus {
-    outline: none; border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.15);
+    outline: none; border-color: var(--iq-blue); box-shadow: 0 0 0 2px rgba(26,86,219,.15);
 }
-/* heatmap */
+/* heatmap — escala de intensidade por ETI */
 .hm-cell { font-size: .78rem; font-weight: 600; }
-.hm-0  { background: #f8f9fa; color: #adb5bd; }
-.hm-low  { background: #dbeafe; color: #1e40af; }
+.hm-0  { background: var(--iq-gray-50); color: var(--iq-subtle); }
+.hm-low  { background: var(--iq-blue-light); color: #1e40af; }
 .hm-mid  { background: #93c5fd; color: #1e3a8a; }
 .hm-high { background: #3b82f6; color: #fff; }
-.hm-top  { background: #1d4ed8; color: #fff; }
+.hm-top  { background: var(--iq-blue-dark); color: #fff; }
 </style>
 
 <div class="iq-page-header d-flex align-items-center">
@@ -393,14 +396,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <small class="text-muted ms-1">(cada pessoa = 1 ETI distribuído proporcionalmente pelo %)</small>
   </div>
   <div class="card-body p-0" style="overflow-x:auto">
-    <table class="table table-sm mb-0" style="font-size:.8rem;border-collapse:collapse">
+    <table class="table table-sm mb-0 iq-heatmap" style="font-size:.8rem">
       <thead class="">
         <tr>
           <th style="min-width:160px">Subárea</th>
           <?php foreach ($areas as $a): ?>
           <th class="text-center" style="min-width:65px"><?= htmlspecialchars($a['nome']) ?></th>
           <?php endforeach; ?>
-          <th class="text-center" style="min-width:60px;background:#e9ecef;font-weight:700">Total</th>
+          <th class="text-center iq-heatmap-total font-weight-700" style="min-width:60px">Total</th>
         </tr>
       </thead>
       <tbody>
@@ -412,25 +415,25 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             $pct = $v / $heatMax;
             $cls = $v == 0 ? 'hm-0' : ($pct < .2 ? 'hm-low' : ($pct < .45 ? 'hm-mid' : ($pct < .7 ? 'hm-high' : 'hm-top')));
           ?>
-          <td class="text-center hm-cell <?= $cls ?>" style="border:1px solid #dee2e6">
+          <td class="text-center hm-cell <?= $cls ?>">
             <?= $v > 0 ? number_format($v, 2) : '—' ?>
           </td>
           <?php endforeach; ?>
-          <td class="text-center font-weight-bold" style="border:1px solid #dee2e6;background:#f1f3f5">
+          <td class="text-center font-weight-bold iq-heatmap-total">
             <?= number_format($heatRowTotals[$sub['id']] ?? 0, 2) ?>
           </td>
         </tr>
       <?php endforeach; ?>
       </tbody>
       <tfoot>
-        <tr style="background:#e9ecef;font-weight:700">
+        <tr class="iq-heatmap-total font-weight-700">
           <td>Total</td>
           <?php foreach ($areas as $a): ?>
-          <td class="text-center" style="border:1px solid #dee2e6">
+          <td class="text-center">
             <?= number_format($heatColTotals[$a['id']] ?? 0, 2) ?>
           </td>
           <?php endforeach; ?>
-          <td class="text-center" style="border:1px solid #dee2e6">
+          <td class="text-center">
             <?= number_format($heatGrandTotal, 2) ?>
           </td>
         </tr>

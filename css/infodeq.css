@@ -371,6 +371,11 @@ tr.group, tr.group:hover {
 .table-secondary td { background: var(--iq-gray-100) !important; }
 .table-light td     { background: var(--iq-gray-50) !important; }
 
+/* Grelha com contorno completo (heatmaps, matrizes) — usar com .table */
+.iq-heatmap { border-collapse: collapse; }
+.iq-heatmap th, .iq-heatmap td { border: 1px solid var(--iq-border) !important; }
+.iq-heatmap-total { background: var(--iq-gray-200) !important; }
+
 /* ─────────────────────────────────────────
    FORMULÁRIOS  (Bootstrap override)
    ───────────────────────────────────────── */
