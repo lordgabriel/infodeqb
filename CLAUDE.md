@@ -6,7 +6,7 @@ Aplicação PHP + MySQL para gerir múltiplos módulos do DEQB. Corre em XAMPP (
 ## Stack
 - **Backend:** PHP 8.2 (XAMPP localhost), PHP 7 em produção — evitar `fn()`, `match()`, `?->`, named arguments, union types
 - **BD:** MySQL/MariaDB — base `deqfeuppt` (localhost e produção)
-- **Frontend:** Bootstrap 4.1.3 (local vendor), FontAwesome 5.11.2 (CDN), jQuery 2.1.0 (CDN Google), DataTables 1.10.18 (CDN)
+- **Frontend:** Bootstrap 5.3.3 (CDN jsdelivr, ver `inc/header.php`), FontAwesome 5.11.2 + v4-shims (CDN), jQuery 3.7.1 (CDN), DataTables 1.13.8 tema bootstrap5 (CDN), Alpine.js 3.14.3 (CDN), Google Fonts Inter — grande parte da marcação ainda usa convenções BS4/BS3 mantidas via shims em `css/infodeq.css` (ver aviso #6)
 - **Servidor local:** XAMPP `C:\xampp\htdocs\infodeqb`
 - **Produção:** `deq.fe.up.pt` — pasta a definir (ver migração)
 
@@ -63,7 +63,7 @@ infodeqb/
 │   ├── lang.pt.php         ← ~350 chaves PT
 │   └── lang.en.php         ← ~350 chaves EN
 ├── css/infodeq.css         ← design system (Bootstrap override)
-├── vendor/                 ← Bootstrap 4.1.3, mPDF, PHPMailer, etc.
+├── vendor/                 ← mPDF, PHPMailer, etc. (Bootstrap/jQuery/DataTables/FontAwesome locais aqui já não são usados pelo core — tudo carregado via CDN, ver inc/header.php)
 ├── hr/                     ← Gestão de Colaboradores
 ├── water/                  ← Qualidade da Água + Consumos
 ├── equipments/             ← Catálogo de Equipamentos
@@ -145,7 +145,7 @@ infodeqb/
 
 ## Módulo ADI
 - **`adi/index.php`** — tabela com cores por nível (dark/azul/cinzento); admins locais: códigos numéricos `['356946','246398']`
-- **`adi/ficha.php`** — tabs verticais com publicações, formação, transferência, gestão, projetos; scores coloridos; Bootstrap 4 (não Bootstrap 5)
+- **`adi/ficha.php`** — tabs verticais com publicações, formação, transferência, gestão, projetos; scores coloridos; marcação em convenção Bootstrap 4 (funciona porque o framework carregado é BS5 + shims em `infodeq.css`, ver aviso #6)
 - **Acesso especial:** `$special_access` em `adi/ficha.php` para pares de utilizadores
 
 ## Módulo Mobilidade
@@ -189,7 +189,7 @@ Módulos condicionais no menu/dashboard:
 3. **`$_SESSION['user']` vs `$_SESSION['Code']`** — em produção `$_SESSION['user']` é eppn (`@fe.up.pt`); SEMPRE usar `$_SESSION['Code']` para controlo de acesso
 4. **`text-align:left` em alerts** — não funciona porque `infodeq.css` tem `.alert { display:flex }` → usar `style="justify-content:flex-start"` ou `style="display:block"`
 5. **DataTables com tfoot fora do form** — usar `formMap` no `script_js.js` (HR admin)
-6. **Bootstrap 4 vs Bootstrap 5** — todo o projecto usa Bootstrap 4 (`data-toggle`, `text-left`, `font-weight-bold`, etc.)
+6. **Bootstrap 5 carregado, mas marcação maioritariamente em convenção BS4/BS3** — o site carrega Bootstrap 5.3.3 via CDN (`inc/header.php`), mas a maior parte do HTML ainda usa nomes de classe/atributos ao estilo BS4 (`data-toggle`, `text-left`, `font-weight-bold`, `.form-group`, `.close`) em vez dos equivalentes BS5 (`data-bs-toggle`, `text-start`, `fw-bold`, `.btn-close`). Isto funciona porque `css/infodeq.css` tem uma secção de shims dedicada ("BOOTSTRAP 5 — compatibilidade") que mantém as classes antigas a funcionar. Componentes mais recentes (navbar, dropdown do user) já usam os atributos `data-bs-*` nativos — em HTML novo preferir a convenção BS5, mas ao editar páginas existentes seguir o estilo já presente no ficheiro.
 7. **DSD usa BD separada** — `dsd_deqb` via `dsd_app/includes/config.php`; em produção migrar para `deqfeuppt`
 8. **Códigos numéricos vs formato @up.pt** — módulos legacy (ADI, equipamentos labs) usam código numérico; controlo de acesso principal usa `up356946@up.pt`
 
