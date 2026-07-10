@@ -29,7 +29,7 @@ if ($modo_atualizacao && !$isAdmin && !in_array($currentNum, $admin_users)) {
 <html lang="pt"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Em atualização — InfoDEQB</title>
-<link href="<?php echo $base; ?>/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="<?php echo $base; ?>/css/infodeq.css" rel="stylesheet">
 </head><body style="background:var(--iq-bg);display:flex;align-items:center;justify-content:center;min-height:100vh;">
 <div class="card text-center" style="max-width:500px;width:100%;">
