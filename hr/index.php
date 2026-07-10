@@ -430,7 +430,6 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
         <label><?php echo $lang['FEUP_CODE']; ?></label>
         <input name="codigo" type="text" required maxlength="9" pattern="^(\d{6}|\d{9})$"
                class="form-control" id="code" <?php echo $adminMode ? '' : 'readonly'; ?>
-               style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
                value="<?php echo htmlspecialchars($dispCodigo); ?>">
       </div>
     </div>
@@ -444,14 +443,12 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
     <div class="form-group">
       <label><?php echo $lang['NAME']; ?></label>
       <input type="text" name="nome" class="form-control" id="name" required <?php echo $adminMode ? '' : 'readonly'; ?>
-             style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
              value="<?php echo htmlspecialchars($dispNome); ?>">
     </div>
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?php echo $lang['EMAIL']; ?></label>
         <input type="email" name="email" class="form-control" required id="email" <?php echo $adminMode ? '' : 'readonly'; ?>
-               style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
                value="<?php echo htmlspecialchars($dispEmail); ?>">
       </div>
       <div class="col-md-6 form-group">

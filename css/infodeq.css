@@ -392,7 +392,7 @@ tr.group, tr.group:hover {
   outline: none !important;
 }
 .form-control[readonly],
-.form-control[disabled] { background: var(--iq-gray-50) !important; color: var(--iq-muted) !important; }
+.form-control[disabled] { background: var(--iq-gray-50) !important; color: var(--iq-muted) !important; cursor: not-allowed !important; }
 textarea.form-control { height: auto !important; resize: vertical; }
 select.form-control { appearance: auto; }
 

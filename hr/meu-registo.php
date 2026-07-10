@@ -683,7 +683,6 @@ $tipoLabelsU = array(
               <label>Nome</label>
               <input type="text" class="form-control" readonly
                      value="<?= htmlspecialchars($registoAtivo['nome'] ?: ($colaborador['nome'] ?: (isset($_SESSION['CommonName']) ? $_SESSION['CommonName'] : ''))) ?>"
-                     style="background:#f8f9fa;cursor:not-allowed;"
                      title="O nome não pode ser alterado aqui. Contacte o secretariado.">
               <small class="form-text text-muted">Para alterar nome, email ou código UP, contacte o secretariado.</small>
             </div>
