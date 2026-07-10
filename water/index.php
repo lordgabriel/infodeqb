@@ -130,28 +130,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 // formata número com 2 casas decimais e separador de milhares
 function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 ?>
-<style>
-.wq-filter-bar { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:10px 14px; margin-bottom:16px; }
-.wq-pill {
-    padding:.28rem .75rem; border-radius:20px; border:1px solid #dee2e6;
-    background:#fff; font-size:.78rem; color:#495057;
-    cursor:pointer; transition:all .12s; white-space:nowrap; line-height:1.4; outline:none;
-}
-.wq-pill:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
-.wq-pill.active { background:#0d6efd; border-color:#0d6efd; color:#fff; }
-.wq-nav { display:flex; align-items:center; gap:10px; margin-top:10px; }
-.wq-nav-btn {
-    width:30px; height:30px; border-radius:50%; border:1px solid #dee2e6;
-    background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    font-size:.8rem; color:#495057; transition:all .12s; outline:none; flex-shrink:0;
-}
-.wq-nav-btn:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
-.wq-nav-btn:disabled { opacity:.35; cursor:default; }
-.wq-period-label { font-size:.88rem; font-weight:600; color:#212529; }
-.wq-range-inputs { display:none; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.wq-range-inputs.open { display:flex; }
-</style>
-
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <h1 class="mr-auto mb-0">
     <i class="fas fa-water fa-sm me-2 text-muted"></i>

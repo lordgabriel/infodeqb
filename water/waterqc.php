@@ -432,29 +432,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php endif; ?>
 
-<style>
-.wq-filter-bar { background:#f8f9fa; border:1px solid #e3e6ea; border-radius:8px; padding:12px 16px; margin-bottom:1.2rem; }
-.wq-pill {
-    background:#fff; border:1px solid #dee2e6; border-radius:20px;
-    padding:5px 14px; font-size:.82rem; font-weight:500; color:#495057;
-    cursor:pointer; transition:all .12s; white-space:nowrap; line-height:1.4; outline:none;
-}
-.wq-pill:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
-.wq-pill.active { background:#0d6efd; border-color:#0d6efd; color:#fff; }
-.wq-nav { display:flex; align-items:center; gap:10px; margin-top:10px; }
-.wq-nav-btn {
-    width:30px; height:30px; border-radius:50%; border:1px solid #dee2e6;
-    background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    font-size:.8rem; color:#495057; transition:all .12s; outline:none; flex-shrink:0;
-}
-.wq-nav-btn:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
-.wq-nav-btn:disabled { opacity:.35; cursor:default; }
-.wq-period-label { font-size:.88rem; font-weight:600; color:#212529; min-width:0; }
-.wq-period-sub  { font-size:.75rem; color:#6c757d; margin-left:4px; }
-.wq-range-inputs { display:none; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.wq-range-inputs.open { display:flex; }
-</style>
-
 <div class="row">
 <div class="col-lg-9">
 
