@@ -557,6 +557,59 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
 #pills-tab .nav-link .tab-badge-yellow { background: #ffc107; color: #1a1a2e; }
 #pills-tab .nav-link .tab-badge-purple { background: #6f42c1; color: #fff; }
 
+/* Painel de filtro por laboratório (HR admin) — dropdown custom com
+   checkboxes agrupados por piso. Reaproveita o mesmo estilo de
+   dropdown que .iq-tn-menu e a tipografia de .iq-checkgroup-label. */
+#labPanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1060;
+  width: 320px;
+  background: var(--iq-surface);
+  border: 1px solid var(--iq-border2);
+  border-radius: var(--iq-r);
+  box-shadow: var(--iq-sh-lg);
+}
+#labPanel .lab-panel-search { padding: 8px 10px; border-bottom: 1px solid var(--iq-border); }
+#labPanel .lab-panel-footer {
+  padding: 7px 10px;
+  border-top: 1px solid var(--iq-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#labCheckList { max-height: 250px; overflow-y: auto; padding: 8px 10px; }
+#labCheckList .lab-group-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--iq-muted);
+  border-bottom: 1px solid var(--iq-border);
+  padding-bottom: 2px;
+  margin: 6px 0 3px;
+}
+#labCheckList .lab-group:first-child .lab-group-label { margin-top: 0; }
+#labCheckList .lab-item { padding: 2px 0; }
+#labCheckList .lab-item label {
+  margin: 0;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .83rem;
+  color: var(--iq-text);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background .1s;
+}
+#labCheckList .lab-item label:hover { background: var(--iq-gray-50); }
+#labCheckList .lab-item span { flex: 1; }
+#labCheckList .lab-item small { color: var(--iq-subtle); font-size: .7rem; flex-shrink: 0; }
+#labCheckList .lab-chk { accent-color: var(--iq-blue); cursor: pointer; }
+
 /* ─────────────────────────────────────────
    MODAL  (Bootstrap override)
    ───────────────────────────────────────── */

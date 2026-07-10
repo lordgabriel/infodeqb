@@ -89,15 +89,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 <div class="lab-group mb-4" data-lab="<?= htmlspecialchars($labNome) ?>">
   <div class="d-flex align-items-center mb-0 px-3 py-2 rounded-top"
-       style="background:#e8f0fe">
-    <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:#1a56db">
+       style="background:var(--iq-blue-light)">
+    <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:var(--iq-blue)">
       <i class="fas fa-flask fa-xs me-1"></i><?= htmlspecialchars($labNome) ?>
     </h6>
-    <span class="badge" style="background:#1a56db;color:#fff"><?= count($eqs) ?></span>
+    <span class="badge" style="background:var(--iq-blue);color:#fff"><?= count($eqs) ?></span>
     <?php if ($podeAdicionarAqui): ?>
     <a href="edit_equipment.php?lab=<?= urlencode($labId) ?>"
        title="Adicionar equipamento a este laboratório"
-       class="ml-2" style="color:#1a56db">
+       class="ml-2" style="color:var(--iq-blue)">
       <i class="fas fa-plus-square fa-xs"></i>
     </a>
     <?php endif; ?>

@@ -709,32 +709,25 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
       </button>
 
       <!-- Painel custom — fica aberto até o utilizador clicar Aplicar/Fechar/fora -->
-      <div id="labPanel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
-           z-index:1060;background:#fff;border:1px solid #ced4da;border-radius:6px;
-           width:320px;box-shadow:0 6px 16px rgba(0,0,0,.15)">
+      <div id="labPanel" style="display:none">
 
         <!-- Pesquisa -->
-        <div style="padding:8px 10px;border-bottom:1px solid #dee2e6">
+        <div class="lab-panel-search">
           <input type="text" id="labSearchInput" class="form-control form-control-sm"
                  placeholder="Pesquisar laboratório...">
         </div>
 
         <!-- Checkboxes agrupados por piso -->
-        <div id="labCheckList" style="max-height:250px;overflow-y:auto;padding:8px 10px">
+        <div id="labCheckList">
 <?php foreach ($gabFilterByPiso as $fkey => $fgabs): ?>
           <div class="lab-group">
-            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;
-                        color:#6c757d;letter-spacing:.04em;
-                        border-bottom:1px solid #dee2e6;padding-bottom:2px;margin-bottom:3px;margin-top:6px">
-              <?= htmlspecialchars($fgabs[0]['piso']) ?>
-            </div>
+            <div class="lab-group-label"><?= htmlspecialchars($fgabs[0]['piso']) ?></div>
 <?php foreach ($fgabs as $fg): ?>
-            <div class="lab-item" style="padding:2px 0">
-              <label style="margin:0;font-weight:normal;cursor:pointer;
-                            display:flex;align-items:center;gap:6px;font-size:.83rem">
+            <div class="lab-item">
+              <label>
                 <input type="checkbox" class="lab-chk" value="<?= htmlspecialchars($fg['deqid']) ?>">
-                <span style="flex:1"><?= htmlspecialchars($fg['nomegab']) ?></span>
-                <small style="color:#adb5bd;font-size:.7rem;flex-shrink:0"><?= htmlspecialchars($fg['deqid']) ?></small>
+                <span><?= htmlspecialchars($fg['nomegab']) ?></span>
+                <small><?= htmlspecialchars($fg['deqid']) ?></small>
               </label>
             </div>
 <?php endforeach; ?>
@@ -743,8 +736,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         </div>
 
         <!-- Rodapé: links rápidos + botões Cancelar / Aplicar -->
-        <div style="padding:7px 10px;border-top:1px solid #dee2e6;
-                    display:flex;align-items:center;gap:8px">
+        <div class="lab-panel-footer">
           <a href="#" id="labSelectAll"  style="font-size:.78rem">Todos</a>
           <span style="color:#adb5bd;font-size:.78rem">·</span>
           <a href="#" id="labSelectNone" style="font-size:.78rem">Nenhum</a>
