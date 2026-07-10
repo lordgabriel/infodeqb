@@ -43,7 +43,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <!-- Gráfico -->
 <div class="card shadow-sm mb-4" style="border-radius:var(--iq-r2);">
-  <div class="card-header bg-transparent d-flex align-items-center justify-content-between">
+  <div class="card-header card-header-transparent d-flex align-items-center justify-content-between">
     <div>
       <span class="badge bg-<?php echo $gasAtual['cor_bs']; ?> me-2" style="font-family:monospace;"<?php echo gas_badge_style($gasAtual['cor_bs']); ?>><?php echo htmlspecialchars($gasAtual['symbol']); ?></span>
       <strong><?php echo htmlspecialchars($gasAtual['name']); ?></strong>
@@ -68,7 +68,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <!-- Tabela -->
 <div class="card shadow-sm" style="border-radius:var(--iq-r2);">
-  <div class="card-header bg-transparent">
+  <div class="card-header card-header-transparent">
     <strong>Registos</strong>
     <span id="log-count" class="badge bg-secondary ms-2">—</span>
   </div>

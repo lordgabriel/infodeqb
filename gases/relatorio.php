@@ -113,7 +113,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <!-- Resumo tabela -->
 <div class="card shadow-sm" style="border-radius:var(--iq-r2);">
-  <div class="card-header bg-transparent"><strong>Resumo por gás (no período)</strong></div>
+  <div class="card-header card-header-transparent"><strong>Resumo por gás (no período)</strong></div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
