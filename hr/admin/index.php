@@ -792,64 +792,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   </div>
 </div>
 
-<style>
-/* ── Separadores hr/admin ───────────────────────────────────────────────── */
-#pills-tab {
-  border-bottom: 2px solid #e5e9f0;
-  gap: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-#pills-tab::-webkit-scrollbar { display: none; }
-
-#pills-tab .nav-item { flex-shrink: 0; }
-
-#pills-tab .nav-link {
-  border: none;
-  border-bottom: 3px solid transparent;
-  border-radius: 0;
-  margin-bottom: -2px;
-  padding: 10px 18px;
-  font-size: .875rem;
-  font-weight: 500;
-  color: #6c757d;
-  background: transparent;
-  white-space: nowrap;
-  transition: color .15s, border-color .15s;
-}
-#pills-tab .nav-link:hover {
-  color: #1a3a5c;
-  border-bottom-color: #b8cfe8;
-  background: transparent;
-}
-#pills-tab .nav-link.active {
-  color: #1a3a5c;
-  font-weight: 700;
-  border-bottom-color: #2475ba;
-  background: transparent;
-}
-
-/* badges dentro dos tabs */
-#pills-tab .nav-link .tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 10px;
-  font-size: .7rem;
-  font-weight: 700;
-  line-height: 1;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-#pills-tab .nav-link .tab-badge-blue   { background: #2475ba; color: #fff; }
-#pills-tab .nav-link .tab-badge-yellow { background: #ffc107; color: #1a1a2e; }
-#pills-tab .nav-link .tab-badge-purple { background: #6f42c1; color: #fff; }
-</style>
-
 <ul class="nav mb-3" id="pills-tab" role="tablist">
   <li class="nav-item">
     <a class="nav-link active" id="pills-new-tab"
