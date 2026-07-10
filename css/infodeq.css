@@ -1283,6 +1283,24 @@ i.fas.fa-eraser { color: #e02424 !important; }
   color: rgba(255,255,255,.6) !important;
 }
 
+/* Score cards (ADI — ficha individual). Reaproveita a mesma paleta
+   de cores dos módulos do dashboard (.iq-mod-*) em vez de inventar
+   tons novos por página. */
+.adi-score-card { border-radius: var(--iq-r); padding: 12px 16px; font-size: .83rem; }
+.adi-score-val  { font-size: 1.1rem; font-weight: 700; }
+.adi-score-card.sc-blue    { background: var(--iq-blue-light); }
+.adi-score-card.sc-blue    .adi-score-val { color: var(--iq-blue); }
+.adi-score-card.sc-purple  { background: #f5f3ff; }
+.adi-score-card.sc-purple  .adi-score-val { color: #8b5cf6; }
+.adi-score-card.sc-teal    { background: #f0f9ff; }
+.adi-score-card.sc-teal    .adi-score-val { color: #0ea5e9; }
+.adi-score-card.sc-green   { background: #f0fdf4; }
+.adi-score-card.sc-green   .adi-score-val { color: #10b981; }
+.adi-score-card.sc-amber   { background: #fffbeb; }
+.adi-score-card.sc-amber   .adi-score-val { color: #f59e0b; }
+.adi-score-card.sc-slate   { background: var(--iq-gray-100); }
+.adi-score-card.sc-slate   .adi-score-val { color: var(--iq-gray-600); }
+
 /* ServDoc — cabeçalho da tabela por-uc */
 #tblUcs thead th,
 #tblUcs thead tr:first-child th {

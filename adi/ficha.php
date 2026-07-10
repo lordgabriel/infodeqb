@@ -153,22 +153,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <style>
-/* ── Score cards ───────────────────────────────────────────── */
-.adi-score-card { border-radius:8px; padding:12px 16px; font-size:.83rem; }
-.adi-score-val  { font-size:1.1rem; font-weight:700; }
-.sc-blue   { background:#e8f0fe; }  /* produção científica */
-.sc-blue .adi-score-val   { color:#1a56db; }
-.sc-purple { background:#f3e8fd; }  /* gestão */
-.sc-purple .adi-score-val { color:#6f42c1; }
-.sc-teal   { background:#e2f6f5; }  /* projetos */
-.sc-teal .adi-score-val   { color:#0e7490; }
-.sc-green  { background:#e6f4ea; }  /* área actual */
-.sc-green .adi-score-val  { color:#1e7e34; }
-.sc-amber  { background:#fff3cd; }  /* área prevista */
-.sc-amber .adi-score-val  { color:#856404; }
-.sc-slate  { background:#eef2f7; }  /* Pa individual / total */
-.sc-slate .adi-score-val  { color:#374151; }
-
 /* ── Nav pills lateral ─────────────────────────────────────── */
 .adi-tabs .nav-link {
     font-size:.83rem; padding:.45rem .8rem;
