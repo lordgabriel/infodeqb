@@ -38,7 +38,6 @@ $base = HTTP_DIR . '/infodeqb';
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="<?php echo $base; ?>/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
