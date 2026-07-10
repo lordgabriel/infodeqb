@@ -145,10 +145,17 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
         <li><a href="<?php echo $_base; ?>/reagentes/"><?php echo t('NAV_REAGENTS'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/booking" target="_blank"><?php echo t('NAV_BOOKING'); ?> <i class="fa fa-external-link fa-xs ms-1"></i></a></li>
         <li><a href="<?php echo $_base; ?>/water/waterqc.php"><?php echo t('NAV_WATER_QUALITY'); ?></a></li>
-        <?php if ($_iqNavWaterAdmin): ?>
+        <?php
+        $_iqNavGasesAdmin = $isAdmin || in_array($_iqCurrentUser ?? '', $_SESSION['_iq_section_admins']['gases'] ?? []);
+        if ($_iqNavWaterAdmin || $_iqNavGasesAdmin): ?>
         <li class="iq-tn-sep"></li>
         <span class="iq-tn-grp"><?php echo t('NAV_ADMIN'); ?></span>
+        <?php if ($_iqNavWaterAdmin): ?>
         <li><a href="<?php echo $_base; ?>/water/index.php"><?php echo t('NAV_WATER_ADMIN'); ?></a></li>
+        <?php endif; ?>
+        <?php if ($_iqNavGasesAdmin): ?>
+        <li><a href="<?php echo $_base; ?>/gases/">Gases Especiais</a></li>
+        <?php endif; ?>
         <?php endif; ?>
       </ul>
     </li>

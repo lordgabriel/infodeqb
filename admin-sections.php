@@ -16,6 +16,7 @@ $modules = [
     'exam'   => ['label' => t('SEC_MODULE_EXAM'),   'icon' => 'fa-archive',              'color' => '#b45309'],
     'mobile' => ['label' => t('SEC_MODULE_MOBILE'), 'icon' => 'fa-plane-arrival',        'color' => '#1a56db'],
     'dsd'    => ['label' => 'Distribuição Serviço Docente', 'icon' => 'fa-chalkboard-teacher', 'color' => '#0e7a55'],
+    'gases'  => ['label' => 'Gases Especiais',             'icon' => 'fa-wind',               'color' => '#0891b2'],
 ];
 
 $flashMsg = ''; $flashType = 'success';
