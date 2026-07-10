@@ -1,7 +1,7 @@
 <?php
 /**
  * Endpoint AJAX: devolver nome/email de um colaborador por código UP.
- * Usado pelo modal "Novo Registo (Admin)" em index.php.
+ * Usado pelo formulário "Novo Registo (Admin)" (hr/index.php?admin=1).
  */
 require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/infodeqb/session.php';

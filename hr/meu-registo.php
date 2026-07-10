@@ -42,6 +42,12 @@ $gabRows = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes WHERE visible != 0 
 $gabMap = array();
 foreach ($gabRows as $rg) $gabMap[$rg['deqid']] = $rg['gabid'];
 
+// mapa deqid → nomegab para todos os gabinetes (incluindo não visíveis, ex: acessos isentos)
+$gabNomesAll = array();
+foreach ($pdo->query('SELECT deqid, nomegab FROM infodeqb_rds_gabinetes')->fetchAll(PDO::FETCH_ASSOC) as $rg) {
+    $gabNomesAll[$rg['deqid']] = $rg['nomegab'];
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 function loadRegisto($pdo, $codigo) {
     $s = $pdo->prepare(
@@ -271,7 +277,12 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
 
             // ── Pedido unificado para SIGARRA (datafim e/ou labs) ────────
             // Requer SIGARRA quando: datafim muda num registo Ativo, ou labs mudam
-            $oldDeqids = getRegistoAcessos($pdo, (int)$registoAtivo['autoid']);
+            $oldDeqidsAll = getRegistoAcessos($pdo, (int)$registoAtivo['autoid']);
+            // Acessos "isentos" (auto-validados, atribuídos via código e não editáveis no formulário)
+            // não devem entrar na comparação nem ser removidos do registo.
+            $labsIsentosIds = _labsIsentos();
+            $isentoDeqids   = array_values(array_intersect($oldDeqidsAll, $labsIsentosIds));
+            $oldDeqids = array_values(array_diff($oldDeqidsAll, $labsIsentosIds));
             $newDeqids = $d['acessos'];
             $oldSorted = $oldDeqids; sort($oldSorted);
             $newSorted = $newDeqids; sort($newSorted);
@@ -288,6 +299,8 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
             if ($labsMudaram) {
                 $adicionados = array_values(array_diff($newDeqids, $oldDeqids));
                 $removidos   = array_values(array_diff($oldDeqids, $newDeqids));
+                // Preservar acessos isentos: mantê-los no conjunto final de acessos do registo
+                $newDeqids = array_values(array_unique(array_merge($newDeqids, $isentoDeqids)));
                 // Usar gabid (deduplicado) em vez de nomegab
                 $_toGabidsU = function($deqids) use ($gabMap) {
                     $gabids = array();
@@ -357,7 +370,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
                         'email'   => $colaborador['email'] ?? '',
                         'codigo'  => $codigoNum,
-                        'detalhe' => 'Atualização de data e/ou acessos a laboratórios',
+                        'detalhe' => 'Alteração de data e/ou acessos',
                     );
                 } else {
                     $pdo->prepare(
@@ -376,7 +389,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
                         'email'   => $colaborador['email'] ?? '',
                         'codigo'  => $codigoNum,
-                        'detalhe' => 'Alteração de data de fim e/ou acessos a laboratórios',
+                        'detalhe' => 'Alteração de data e/ou acessos',
                     );
                 }
             }
@@ -706,9 +719,9 @@ $tipoLabelsU = array(
               <div class="col-md-4 form-group">
                 <label>Unidade I&D</label>
                 <select name="unidade" class="form-control" required>
-                  <option value="" selected disabled>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['unidade']) ? ' selected' : '' ?>>— Selecionar —</option>
                   <?php foreach (array('CEFT','LEPABE','LSRE-LCM','REQUIMTE','Outro') as $u): ?>
-                  <option><?= $u ?></option>
+                  <option<?= (($registoAtivo['unidade'] ?? '') === $u) ? ' selected' : '' ?>><?= $u ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -745,9 +758,9 @@ $tipoLabelsU = array(
               <div class="col-md-6 form-group">
                 <label>Grupo Profissional</label>
                 <select name="grupo" id="grupo_ped" class="form-control" required>
-                  <option value="" selected disabled>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['grupo']) ? ' selected' : '' ?>>— Selecionar —</option>
                   <?php foreach ($grupos as $g): ?>
-                  <option value="<?= (int)$g['grupoid'] ?>">
+                  <option value="<?= (int)$g['grupoid'] ?>"<?= (!empty($registoAtivo['grupo']) && (int)$registoAtivo['grupo'] === (int)$g['grupoid']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars($g['grupo_pro']) ?>
                   </option>
                   <?php endforeach; ?>
@@ -756,9 +769,9 @@ $tipoLabelsU = array(
               <div class="col-md-6 form-group" id="cat-col-wrap-ped">
                 <label>Categoria</label>
                 <select name="categoria" id="categoria_ped" class="form-control" required>
-                  <option value="" selected disabled>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['categoria']) ? ' selected' : '' ?>>— Selecionar —</option>
                   <?php foreach ($cats as $c): ?>
-                  <option value="<?= (int)$c['categoriaid'] ?>">
+                  <option value="<?= (int)$c['categoriaid'] ?>"<?= (!empty($registoAtivo['categoria']) && (int)$registoAtivo['categoria'] === (int)$c['categoriaid']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars(trim($c['categoria'])) ?>
                   </option>
                   <?php endforeach; ?>
@@ -769,20 +782,21 @@ $tipoLabelsU = array(
               <div class="col-md-8 form-group">
                 <label>Responsável</label>
                 <select name="responsavel" id="responsavel_ped" class="form-control" required>
-                  <option value="" selected disabled>— Selecionar —</option>
+                  <option value="" disabled<?= ($registoAtivo === null || $registoAtivo['responsavel'] === null) ? ' selected' : '' ?>>— Selecionar —</option>
                   <?php foreach ($resps as $r): ?>
-                  <option value="<?= (int)$r['Codigo'] ?>">
+                  <option value="<?= (int)$r['Codigo'] ?>"<?= ($registoAtivo && $registoAtivo['responsavel'] !== null && (int)$registoAtivo['responsavel'] === (int)$r['Codigo']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars($r['respespaco']) ?>
                   </option>
                   <?php endforeach; ?>
-                  <option value="0">Outro…</option>
+                  <option value="0"<?= ($registoAtivo && (int)($registoAtivo['responsavel'] ?? -1) === 0) ? ' selected' : '' ?>>Outro…</option>
                 </select>
               </div>
             </div>
-            <div id="outroresp_ped" style="display:none">
+            <div id="outroresp_ped" style="<?= ($registoAtivo && (int)($registoAtivo['responsavel'] ?? -1) === 0) ? '' : 'display:none' ?>">
               <div class="form-group">
                 <label>Responsável (outro)</label>
-                <input type="text" name="outroresponsavel" class="form-control" value="">
+                <input type="text" name="outroresponsavel" class="form-control"
+                       value="<?= htmlspecialchars($registoAtivo['outroresponsavel'] ?? '') ?>">
               </div>
             </div>
           </div>
@@ -796,10 +810,10 @@ $tipoLabelsU = array(
               <label style="margin-bottom:0;font-weight:500;">Acesso DEQB (porta norte)</label>
               <div class="d-flex gap-3" style="gap:.75rem;display:flex;">
                 <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
-                  <input type="radio" name="acessodeq" id="acessodeq_sim" value="1" required onchange="verificarLabs()"> Sim
+                  <input type="radio" name="acessodeq" id="acessodeq_sim" value="1" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 1) ? ' checked' : '' ?>> Sim
                 </label>
                 <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
-                  <input type="radio" name="acessodeq" id="acessodeq_nao" value="0" required onchange="verificarLabs()"> Não
+                  <input type="radio" name="acessodeq" id="acessodeq_nao" value="0" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 0) ? ' checked' : '' ?>> Não
                 </label>
               </div>
             </div>
@@ -808,13 +822,17 @@ $tipoLabelsU = array(
               <div class="iq-checkboxlist" id="acessos_ped" onchange="atualizarPreviewLabs('acessos_ped','labs-preview-ped')">
               <?php
               $selDeqids = $registoAtivo ? getRegistoAcessos($pdo, (int)$registoAtivo['autoid']) : array();
-              $prevPiso  = null; $openGrp = false;
+              $prevPiso = null; $prevEdificio = null; $openGrp = false;
               foreach ($gabRows as $rg):
-                if ($rg['piso'] !== $prevPiso):
+                if ($rg['piso'] !== $prevPiso || $rg['edificio'] !== $prevEdificio):
                   if ($openGrp) echo '</div>';
-                  echo '<div class="iq-checkgroup"><span class="iq-checkgroup-label">'
-                     . htmlspecialchars($rg['piso']) . '</span>';
-                  $prevPiso = $rg['piso']; $openGrp = true;
+                  $label = '';
+                  if ($rg['edificio'] !== $prevEdificio && stripos($rg['piso'], 'Edifício') === false) {
+                    $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rg['edificio']) . '</span>';
+                  }
+                  $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rg['piso']) . '</span>';
+                  echo '<div class="iq-checkgroup">' . $label;
+                  $prevPiso = $rg['piso']; $prevEdificio = $rg['edificio']; $openGrp = true;
                 endif;
               ?>
               <label>
@@ -827,6 +845,19 @@ $tipoLabelsU = array(
               <?php endforeach; if ($openGrp) echo '</div>'; ?>
               </div>
               <div class="labs-preview mt-2" id="labs-preview-ped"></div>
+              <?php
+              $isentoSelDeqids = array_values(array_intersect($selDeqids, _labsIsentos()));
+              if ($isentoSelDeqids):
+              ?>
+              <div class="mt-2">
+                <small class="text-muted d-block mb-1">Outros acessos (atribuídos automaticamente):</small>
+                <?php foreach ($isentoSelDeqids as $did): ?>
+                  <span class="badge badge-light border me-1 mb-1" style="font-size:.8rem;font-weight:normal">
+                    <?= htmlspecialchars(isset($gabNomesAll[$did]) ? $gabNomesAll[$did] : $did) ?>
+                  </span>
+                <?php endforeach; ?>
+              </div>
+              <?php endif; ?>
             </div>
           </div>
         </div><!-- /col direita -->

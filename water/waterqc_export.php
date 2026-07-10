@@ -28,9 +28,9 @@ $stmtPC = $pdo->prepare(
 );
 $stmtPC->execute([$de, $ate]);
 
-// ── TOC / TC / IC ────────────────────────────────────────────────
+// ── TOC ─────────────────────────────────────────────────────────
 $stmtTC = $pdo->prepare(
-    'SELECT DATE_FORMAT(dia, "%Y-%m-%d") AS data, water_type, TOC, TC, IC
+    'SELECT DATE_FORMAT(dia, "%Y-%m-%d") AS data, water_type, TOC
      FROM infodeqb_waterqc_toc
      WHERE dia >= ? AND dia <= ?
      ORDER BY dia ASC, water_type ASC'
@@ -59,12 +59,8 @@ foreach ($stmtTC->fetchAll(PDO::FETCH_ASSOC) as $r) {
     if (!isset($rows[$d])) $rows[$d] = [];
     if ($r['water_type'] == 2) {
         $rows[$d]['toc_dest'] = $r['TOC'];
-        $rows[$d]['tc_dest']  = $r['TC'];
-        $rows[$d]['ic_dest']  = $r['IC'];
     } else {
         $rows[$d]['toc_pur']  = $r['TOC'];
-        $rows[$d]['tc_pur']   = $r['TC'];
-        $rows[$d]['ic_pur']   = $r['IC'];
     }
 }
 
@@ -100,11 +96,7 @@ fputcsv($out, [
     'Cond. Purificada (µS/cm)',
     'pH Purificada',
     'TOC Destilada',
-    'TC Destilada',
-    'IC Destilada',
     'TOC Purificada',
-    'TC Purificada',
-    'IC Purificada',
 ], ';');
 
 foreach ($rows as $date => $r) {
@@ -115,11 +107,7 @@ foreach ($rows as $date => $r) {
         fmtNum($r['cond_pur']  ?? ''),
         fmtNum($r['ph_pur']    ?? ''),
         fmtNum($r['toc_dest']  ?? ''),
-        fmtNum($r['tc_dest']   ?? ''),
-        fmtNum($r['ic_dest']   ?? ''),
         fmtNum($r['toc_pur']   ?? ''),
-        fmtNum($r['tc_pur']    ?? ''),
-        fmtNum($r['ic_pur']    ?? ''),
     ], ';');
 }
 

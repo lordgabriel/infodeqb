@@ -116,14 +116,15 @@ function phoneFromPost(): string {
 }
 
 /** Renderiza o campo de telefone moderno (indicativo + número num só campo visual) */
-function renderPhoneInput(string $stored = '', string $size = '', bool $required = false): void {
+function renderPhoneInput(string $stored = '', string $size = '', bool $required = false, bool $disabled = false): void {
     list($ind, $num) = parsePhone($stored);
     $h = $size === 'sm' ? '31px' : '38px';
     $fs = $size === 'sm' ? '13px' : '14px';
+    $dis = $disabled ? 'disabled ' : '';
     echo '<div style="display:flex;align-items:stretch;border:1px solid #ced4da;border-radius:.375rem;overflow:hidden;background:#fff;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;" '
         . 'onfocusin="this.style.borderColor=\'#80bdff\';this.style.boxShadow=\'0 0 0 .2rem rgba(0,123,255,.25)\'" '
         . 'onfocusout="this.style.borderColor=\'#ced4da\';this.style.boxShadow=\'none\'">';
-    echo '<select name="telefone_indicativo" '
+    echo '<select name="telefone_indicativo" ' . $dis
         . 'style="border:none;outline:none;background:transparent;padding:0 4px 0 8px;font-size:' . $fs . ';height:' . $h . ';line-height:' . $h . ';cursor:pointer;flex-shrink:0;min-width:90px;appearance:none;-webkit-appearance:none;" '
         . 'title="Indicativo de país">';
     foreach (phoneIndicativos() as $code => $lbl) {
@@ -132,7 +133,7 @@ function renderPhoneInput(string $stored = '', string $size = '', bool $required
     }
     echo '</select>';
     echo '<span style="width:1px;background:#ced4da;flex-shrink:0;margin:6px 0;"></span>';
-    echo '<input type="tel" name="telefone_numero" placeholder="912 345 678" ' . ($required ? 'required ' : '')
+    echo '<input type="tel" name="telefone_numero" placeholder="912 345 678" ' . ($required ? 'required ' : '') . $dis
         . 'value="' . htmlspecialchars($num) . '" '
         . 'style="border:none;outline:none;flex:1;padding:0 10px;font-size:' . $fs . ';height:' . $h . ';background:transparent;min-width:0;">';
     echo '</div>';
@@ -183,7 +184,7 @@ function format_email ($info, $format)
     if (strpos($template, '{{HEADER}}') !== false) {
         $hcor    = '#2475ba';
         $hcorSub = '#cce0f5';
-        $subtitle = 'Acessos DEQ';
+        $subtitle = 'Acessos DEQB';
 
         if (preg_match('/<!--\s*EMAIL_SUBTITLE:\s*(.+?)\s*-->/', $template, $m)) {
             $subtitle = trim($m[1]);
@@ -361,6 +362,60 @@ function _labsIsentos() {
     );
 }
 
+/**
+ * Indica se um registo já tem TODAS as validações concluídas ("Validado")
+ * e não tem nenhum acesso com responsável definido sem pedido de validação.
+ * Usado para bloquear novos pedidos de validação redundantes (mass action
+ * em admin/index.php e botão "Solicitar validações" em detail.php/admin).
+ */
+function _registoTotalmenteValidado($pdo, $registo_id) {
+    $qChk = $pdo->prepare(
+        "SELECT id, deq_id, labs_json, status FROM infodeqb_rds_validacao WHERE registo_id=?"
+    );
+    $qChk->execute([$registo_id]);
+    $vals = $qChk->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!$vals) return false;
+
+    // Todas as validações deste registo têm de estar 'Validado'
+    foreach ($vals as $_v) {
+        if ($_v['status'] !== 'Validado') return false;
+    }
+
+    // Conjunto de deqids já cobertos por algum pedido de validação
+    // (cada validação pode cobrir vários espaços via labs_json)
+    $deqidsComPedido = array();
+    foreach ($vals as $_v) {
+        if (!empty($_v['labs_json'])) {
+            $_labs = json_decode($_v['labs_json'], true);
+            if (is_array($_labs)) {
+                foreach ($_labs as $_l) {
+                    if (!empty($_l['deq_id'])) $deqidsComPedido[] = trim((string)$_l['deq_id']);
+                }
+                continue;
+            }
+        }
+        if (!empty($_v['deq_id'])) $deqidsComPedido[] = trim((string)$_v['deq_id']);
+    }
+    $deqidsComPedido = array_unique($deqidsComPedido);
+
+    // Acessos actuais do registo com responsável definido e ainda sem pedido
+    $qAcessos = $pdo->prepare(
+        "SELECT ra.lab_id, g.responsavel
+         FROM infodeqb_rds_registo_acessos ra
+         JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
+         WHERE ra.registo_id = ?
+           AND g.responsavel IS NOT NULL AND g.responsavel != 0
+           AND g.responsavel != 246398"
+    );
+    $qAcessos->execute([$registo_id]);
+    foreach ($qAcessos->fetchAll(PDO::FETCH_ASSOC) as $_a) {
+        if (!in_array(trim((string)$_a['lab_id']), $deqidsComPedido)) return false;
+    }
+
+    return true;
+}
+
 function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim, $colab_codigo = '', $resp_trabalho = '') {
 
     $labsIsentos = _labsIsentos();
@@ -516,7 +571,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
         send_email(
             array($respEmail),
             $body,
-            'Acessos DEQ: Pedido de validação de acesso — ' . $colab_nome,
+            'Acessos DEQB: Pedido de validação de acesso — ' . $colab_nome,
             array('deqdir@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -607,7 +662,7 @@ function _emailNovoRegisto($nome, $email, $codigo, $datainicio, $datafim, $tipo 
         send_email(
             array($email),
             $body,
-            'Acessos DEQ: Pedido de registo submetido',
+            'Acessos DEQB: Pedido de registo submetido',
             array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')
         );
     } catch (\PHPMailer\PHPMailer\Exception $e) {
@@ -631,7 +686,7 @@ function _emailPedidoAlteracao($nome, $email, $codigo, $detalhe) {
         send_email(
             array($email),
             $body,
-            'Acessos DEQ: Pedido de alteração submetido',
+            'Acessos DEQB: Pedido de alteração submetido',
             array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')
         );
     } catch (\PHPMailer\PHPMailer\Exception $e) {
@@ -656,7 +711,7 @@ function _notificarRejeicaoValidacao($val, $colab_nome) {
         send_email(
             array('deqdir@fe.up.pt'),
             $body,
-            'Acessos DEQ: Validação rejeitada — ' . $colab_nome,
+            'Acessos DEQB: Validação rejeitada — ' . $colab_nome,
             array('fmartins@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -758,7 +813,7 @@ function _emailSigarra($pdo, $ped, $d) {
         'alteracoes'  => $alteracoes ?: '<p style="color:#555;font-family:Arial,sans-serif;">Sem alterações de detalhe disponíveis.</p>',
     );
     $body    = format_email($info, 'mail_alteracao_sigarra.html');
-    $subject = 'Acessos DEQ: Atualização de acessos — ' . $reg['nome'];
+    $subject = 'Acessos DEQB: Atualização de acessos — ' . $reg['nome'];
     try {
         send_email(
             array('sigarra@fe.up.pt'),

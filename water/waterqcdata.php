@@ -35,7 +35,7 @@ if (isset($_GET['de'], $_GET['ate'])) {
 
     $stmtTC = $pdo->prepare(
         'SELECT DATE_FORMAT(dia,"%Y-%m-%d") AS dia, water_type AS tipo,
-                TOC, TC, IC
+                TOC
          FROM infodeqb_waterqc_toc
          WHERE dia >= ? AND dia <= ? ORDER BY dia ASC'
     );
@@ -57,7 +57,7 @@ if (isset($_GET['de'], $_GET['ate'])) {
         $stmtPC->execute([$ano]);
         $stmtTC = $pdo->prepare(
             'SELECT DATE_FORMAT(dia,"%Y-%m-%d") AS dia, water_type AS tipo,
-                    TOC, TC, IC
+                    TOC
              FROM infodeqb_waterqc_toc WHERE YEAR(dia)=? ORDER BY dia ASC'
         );
         $stmtTC->execute([$ano]);
@@ -71,7 +71,7 @@ if (isset($_GET['de'], $_GET['ate'])) {
         $stmtPC->execute([$ano, $mes]);
         $stmtTC = $pdo->prepare(
             'SELECT DATE_FORMAT(dia,"%Y-%m-%d") AS dia, water_type AS tipo,
-                    TOC, TC, IC
+                    TOC
              FROM infodeqb_waterqc_toc
              WHERE YEAR(dia)=? AND MONTH(dia)=? ORDER BY dia ASC'
         );

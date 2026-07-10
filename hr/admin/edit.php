@@ -48,33 +48,42 @@ $rowsCat   = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categori
 $grupoCatMap = getGrupoCategoriasMap($pdo);
 $gabRows   = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Forçar validação (ação separada) ─────────────────────────────
-if (!empty($_POST['_acao']) && $_POST['_acao'] === 'forcar_validacao') {
-    $valId = (int)($_POST['val_id'] ?? 0);
-    if ($valId) {
-        $pdo = Database::connect();
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->prepare(
-            "UPDATE infodeqb_rds_validacao
-             SET status='Validado', respondido_em=NOW(),
-                 nota='Aprovação forçada pelo administrador'
-             WHERE id=?"
-        )->execute([$valId]);
-        Database::disconnect();
-    }
-    header('Location: edit.php?id=' . urlencode($id) . '&id1=' . urlencode($id1 ?? '') . '&msg=val_forcada');
-    exit;
-}
-
-// (notificar_sigarra tratado via validacao-action.php)
-
 // ── Processar POST ───────────────────────────────────────────────
 $WorkrespError = null;
 $erroduplicado = null;
 $status        = $data['status'];  // default: mantém estado atual
 $statusValidos = ['Novo','Pendente','Ativo','Inativo'];
 
-if (!empty($_POST)) {
+// Registo Pendente: o SIGARRA já foi contactado — só permitir ao admin
+// alterar o estado, para evitar incongruências com o pedido em curso.
+$lockEdit = ($data['status'] === 'Pendente');
+
+if (!empty($_POST) && $lockEdit) {
+
+    // ── Registo Pendente: única alteração permitida é o estado ────────
+    $novoStatus = isset($_POST['status']) ? $_POST['status'] : $data['status'];
+    if (in_array($novoStatus, $statusValidos) && $novoStatus !== $data['status']) {
+        $status = $novoStatus;
+        $tsCol  = null;
+        if ($status === 'Ativo')   $tsCol = 'dataativo';
+        if ($status === 'Inativo') $tsCol = 'datainativo';
+
+        $tsNow = date('Y-m-d H:i:s');
+        if ($tsCol) {
+            $pdo->prepare("UPDATE infodeqb_rds_registo SET status=?, $tsCol=?, notif_pendente=0 WHERE autoid=?")
+                ->execute([$status, $tsNow, $id1]);
+        } else {
+            $pdo->prepare("UPDATE infodeqb_rds_registo SET status=?, notif_pendente=0 WHERE autoid=?")
+                ->execute([$status, $id1]);
+        }
+        $data['status'] = $status;
+        $lockEdit = ($status === 'Pendente');
+
+        echo "<div class='alert alert-success' role='alert'>Estado atualizado com sucesso.</div>";
+        echo "<meta http-equiv='refresh' content='2;URL=detail.php?id=" . urlencode($id) . "'>";
+    }
+
+} elseif (!empty($_POST)) {
 
     $codigo           = $_POST['codigo'];
     $nome             = $_POST['nome'];
@@ -328,65 +337,29 @@ $fResp      = isset($_POST['responsavel'])      ? $_POST['responsavel']     : $d
 $fOutroresp = !empty($_POST['outroresponsavel'])? $_POST['outroresponsavel']: ($data['outroresponsavel'] ?? '');
 $fAcessodeq = isset($_POST['acessodeq'])        ? $_POST['acessodeq']       : $data['acessodeq'];
 
-// ── Validações pendentes para este registo ───────────────────────
-$validacoesPendentes = $pdo->prepare(
-    "SELECT * FROM infodeqb_rds_validacao
-     WHERE registo_id=? ORDER BY criado_em ASC"
-);
-$validacoesPendentes->execute([$id1]);
-$validacoes = $validacoesPendentes->fetchAll(PDO::FETCH_ASSOC);
-
-// ── Acessos sem pedido de validação (agrupados por responsável) ──
-// Responsáveis que têm validação REAL (exclui registos "Isento auto-validado"
-// que partilham resp_codigo com o responsável real mas não representam um pedido)
-$respComVal = array();
-foreach ($validacoes as $_v) {
-    if ($_v['resp_nome'] !== 'Isento (auto-validado)') {
-        $respComVal[] = (string)$_v['resp_codigo'];
-    }
-}
-$respComVal = array_unique($respComVal);
-
-$labsIsentos = _labsIsentos();
-$fAcessosAtual = getRegistoAcessos($pdo, (int)$id1);
-$semPedido = array(); // resp_codigo => ['resp_nome'=>..., 'labs'=>[...]]
-
-foreach ($fAcessosAtual as $deqid) {
-    if (in_array(trim($deqid), $labsIsentos)) continue;
-    $qGabSP = $pdo->prepare(
-        "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
-         FROM infodeqb_rds_gabinetes g
-         LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
-         WHERE g.deqid = ?"
-    );
-    $qGabSP->execute([$deqid]);
-    foreach ($qGabSP->fetchAll(PDO::FETCH_ASSOC) as $gabSP) {
-        if (empty($gabSP['resp_codigo'])) continue;
-        $rc = (string)$gabSP['resp_codigo'];
-        if (in_array($rc, $respComVal)) continue; // já tem pedido
-        if (!isset($semPedido[$rc])) {
-            $semPedido[$rc] = array('resp_nome' => $gabSP['resp_nome'], 'labs' => array());
-        }
-        $semPedido[$rc]['labs'][] = $gabSP['nomegab'];
-    }
-}
-
 // Checkboxlist de labs
 $fAcessos = !empty($_POST) && isset($_POST['acessos'])
     ? (array)$_POST['acessos']
     : getRegistoAcessos($pdo, (int)$id1);
 $gab = '';
 $gabCurPiso = '';
+$gabCurEdificio = '';
 foreach ($gabRows as $rowgab) {
-    if ($rowgab['piso'] !== $gabCurPiso) {
+    if ($rowgab['piso'] !== $gabCurPiso || $rowgab['edificio'] !== $gabCurEdificio) {
         if ($gabCurPiso !== '') $gab .= '</div>';
-        $gab .= '<div class="iq-checkgroup"><span class="iq-checkgroup-label">'
-              . htmlspecialchars($rowgab['piso']) . '</span>';
+        $label = '';
+        if ($rowgab['edificio'] !== $gabCurEdificio && stripos($rowgab['piso'], 'Edifício') === false) {
+            $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rowgab['edificio']) . '</span>';
+        }
+        $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+        $gab .= '<div class="iq-checkgroup">' . $label;
         $gabCurPiso = $rowgab['piso'];
+        $gabCurEdificio = $rowgab['edificio'];
     }
     $checked = in_array($rowgab['deqid'], $fAcessos) ? ' checked' : '';
+    $disAttr = $lockEdit ? ' disabled' : '';
     $gab .= '<label><input type="checkbox" name="acessos[]" value="'
-          . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> '
+          . htmlspecialchars($rowgab['deqid']) . '"' . $checked . $disAttr . '> '
           . htmlspecialchars($rowgab['nomegab']) . '</label>';
 }
 if ($gabCurPiso !== '') $gab .= '</div>';
@@ -407,10 +380,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php unset($_SESSION['val_info']); endif; ?>
 
-<?php if ($data['status'] === 'Pendente'): ?>
+<?php if ($lockEdit): ?>
 <div class="alert alert-warning" role="alert">
   <i class="fas fa-exclamation-triangle me-1"></i>
-  <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido. Alterações agora podem criar inconsistências. Aguarde a conclusão antes de editar, ou prossiga com cautela.
+  <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido.
+  Para evitar inconsistências, os dados ficam bloqueados; a única alteração permitida é o <strong>Estado</strong>.
 </div>
 <?php endif; ?>
 
@@ -451,14 +425,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="col-md-6 form-group">
         <label><?= $lang['ALT_EMAIL'] ?></label>
-        <input type="email" name="emailalt" class="form-control"
+        <input type="email" name="emailalt" class="form-control" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fEmailalt) ?>">
       </div>
     </div>
     <div class="row">
       <div class="col-md-5 form-group">
         <label><?= $lang['PHONE'] ?></label>
-        <?php renderPhoneInput($fTelefone); ?>
+        <?php renderPhoneInput($fTelefone, '', false, $lockEdit); ?>
       </div>
     </div>
   </div>
@@ -469,17 +443,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="row">
       <div class="col-md-3 form-group">
         <label><?= $lang['BEGIN_DATE'] ?></label>
-        <input type="date" name="datainicio" class="form-control" required id="datainicio"
+        <input type="date" name="datainicio" class="form-control" required id="datainicio" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fDatainic) ?>">
       </div>
       <div class="col-md-3 form-group">
         <label><?= $lang['END_DATE'] ?></label>
-        <input type="date" name="datafim" class="form-control" required id="datafim"
+        <input type="date" name="datafim" class="form-control" required id="datafim" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fDatafim) ?>">
       </div>
       <div class="col-md-4 form-group">
         <label><?= $lang['UNIT'] ?></label>
-        <select name="unidade" class="form-control" id="unidade" required>
+        <select name="unidade" class="form-control" id="unidade" required <?= $lockEdit ? 'disabled' : '' ?>>
           <option disabled value="">Escolha uma opção</option>
           <?php foreach (['CEFT','LEPABE','LSRE-LCM','REQUIMTE','Outro'] as $u): ?>
           <option <?= ($fUnidade === $u) ? 'selected' : '' ?>><?= $u ?></option>
@@ -490,12 +464,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="row">
       <div class="col-md-7 form-group">
         <label><?= $lang['WORKPLACE'] ?></label>
-        <input type="text" name="workplace" class="form-control" id="workplace"
+        <input type="text" name="workplace" class="form-control" id="workplace" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fWorkplace) ?>">
       </div>
       <div class="col-md-4 form-group">
         <label><?= $lang['EXTENSION'] ?></label>
-        <input type="text" name="extension" class="form-control" id="extension"
+        <input type="text" name="extension" class="form-control" id="extension" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fExtensao) ?>">
       </div>
     </div>
@@ -512,7 +486,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="row">
       <div class="col-md-5 form-group">
         <label><?= $lang['PROGROUP'] ?></label>
-        <select id="grupo" name="grupo" class="form-control" required>
+        <select id="grupo" name="grupo" class="form-control" required <?= $lockEdit ? 'disabled' : '' ?>>
           <?php foreach ($rowsGrupo as $rg): ?>
           <option value="<?= (int)$rg['grupoid'] ?>" <?= ($fGrupo === (int)$rg['grupoid']) ? 'selected' : '' ?>>
             <?= htmlspecialchars($rg['grupo_pro']) ?>
@@ -522,7 +496,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="col-md-5 form-group" id="cat-col-wrap">
         <label><?= $lang['CATEGORY'] ?></label>
-        <select id="category" name="categoria" class="form-control" required>
+        <select id="category" name="categoria" class="form-control" required <?= $lockEdit ? 'disabled' : '' ?>>
           <?php foreach ($rowsCat as $rc): ?>
           <option value="<?= (int)$rc['categoriaid'] ?>" <?= ($fCategoria === (int)$rc['categoriaid']) ? 'selected' : '' ?>>
             <?= htmlspecialchars(trim($rc['categoria'])) ?>
@@ -536,7 +510,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="row">
         <div class="col-md-6 form-group">
           <label><?= $lang['COURSE'] ?></label>
-          <input class="form-control" type="text" name="curso"
+          <input class="form-control" type="text" name="curso" <?= $lockEdit ? 'disabled' : '' ?>
                  value="<?= htmlspecialchars($fCurso) ?>">
         </div>
       </div>
@@ -545,7 +519,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?= $lang['WORK_RESP'] ?></label>
-        <select id="responsavel" name="responsavel" class="form-control" required>
+        <select id="responsavel" name="responsavel" class="form-control" required <?= $lockEdit ? 'disabled' : '' ?>>
           <option disabled value=""><?= $lang['OPTION'] ?></option>
           <?php foreach ($rowsResp as $rr): ?>
           <option value="<?= (int)$rr['Codigo'] ?>" <?= ((string)$fResp === (string)$rr['Codigo']) ? 'selected' : '' ?>>
@@ -561,7 +535,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="row">
         <div class="col-md-6 form-group">
           <label><?= $lang['WORK_RESP2'] ?></label>
-          <input class="form-control" type="text" name="outroresponsavel"
+          <input class="form-control" type="text" name="outroresponsavel" <?= $lockEdit ? 'disabled' : '' ?>
                  value="<?= htmlspecialchars($fOutroresp) ?>">
           <?php if ($WorkrespError): ?>
             <div class="text-danger small mt-1"><?= $WorkrespError ?></div>
@@ -601,7 +575,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="iq-form-section-title">Acessos</div>
     <div class="iq-form-inline mb-2">
       <label><?= $lang['DEQ_ACCESS'] ?></label>
-      <select id="acessodeq" name="acessodeq" class="form-control" required>
+      <select id="acessodeq" name="acessodeq" class="form-control" required <?= $lockEdit ? 'disabled' : '' ?>>
         <option value="1" <?= ($fAcessodeq == '1') ? 'selected' : '' ?>><?= $lang['OPT_YES'] ?></option>
         <option value="0" <?= ($fAcessodeq == '0') ? 'selected' : '' ?>><?= $lang['OPT_NO'] ?></option>
       </select>
@@ -630,129 +604,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
 
 </form>
-
-<?php if (!empty($validacoes) || !empty($semPedido)): ?>
-<!-- ── Validações de acesso ───────────────────────────────────── -->
-<div class="card mt-4">
-  <div class="card-header py-2 d-flex align-items-center flex-wrap" style="gap:6px">
-    <i class="fas fa-clipboard-check fa-sm me-2 text-muted"></i>
-    <strong class="me-auto">Validações de acesso a espaços</strong>
-    <?php if (!empty($semPedido)): ?>
-    <span class="badge badge-warning" title="Acessos sem pedido de validação">
-      <i class="fas fa-exclamation-triangle fa-xs me-1"></i><?= count($semPedido) ?> sem pedido
-    </span>
-    <?php endif; ?>
-    <?php if (!empty($validacoes)): ?>
-    <span class="badge badge-secondary"><?= count($validacoes) ?> registo(s)</span>
-    <?php endif; ?>
-    <!-- Botão global: solicitar todas as validações em falta -->
-    <?php if (!empty($semPedido)): ?>
-    <form method="post" action="validacao-action.php" class="d-inline">
-      <input type="hidden" name="val_acao"   value="solicitar_registo">
-      <input type="hidden" name="registo_id" value="<?= (int)$id1 ?>">
-      <input type="hidden" name="redirect"   value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
-      <button type="submit" class="btn btn-sm btn-warning"
-              title="Solicitar validação para todos os responsáveis em falta">
-        <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar validações em falta
-      </button>
-    </form>
-    <?php endif; ?>
-  </div>
-  <div class="card-body p-0">
-    <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-      <thead>
-        <tr>
-          <th>Espaço / Gabinete</th>
-          <th>Responsável</th>
-          <th class="text-center" style="width:9em">Estado</th>
-          <th style="width:10em">Respondido em</th>
-          <th style="width:10em" class="text-center">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php foreach ($validacoes as $val):
-        $vBadge  = array('Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger');
-        $vBadge  = isset($vBadge[$val['status']]) ? $vBadge[$val['status']] : 'badge-secondary';
-        $isPend  = $val['status'] === 'Pendente';
-      ?>
-        <tr class="<?= $isPend ? '' : 'text-muted' ?>">
-          <td class="align-middle">
-            <span class="<?= $isPend ? 'font-weight-600' : '' ?>">
-              <?= htmlspecialchars($val['gab_nome'] ?: $val['deq_id']) ?>
-            </span>
-          </td>
-          <td class="align-middle"><?= htmlspecialchars($val['resp_nome'] ?? '—') ?></td>
-          <td class="align-middle text-center">
-            <span class="badge <?= $vBadge ?>"><?= htmlspecialchars($val['status']) ?></span>
-            <?php if (!empty($val['nota'])): ?>
-              <br><small class="text-muted" style="font-size:.7rem"><?= htmlspecialchars(mb_substr($val['nota'],0,40)) ?></small>
-            <?php endif; ?>
-          </td>
-          <td class="align-middle">
-            <?= $val['respondido_em'] ? htmlspecialchars(substr($val['respondido_em'],0,16)) : '—' ?>
-          </td>
-          <td class="align-middle text-center">
-            <div class="d-flex justify-content-center" style="gap:4px">
-            <?php if ($isPend): ?>
-            <form method="post"
-                  action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
-                  onsubmit="return confirm('Forçar aprovação desta validação sem resposta do responsável?')">
-              <input type="hidden" name="_acao"  value="forcar_validacao">
-              <input type="hidden" name="val_id" value="<?= (int)$val['id'] ?>">
-              <button type="submit" class="btn btn-xs btn-outline-warning"
-                      title="Forçar validação — ignora o responsável do espaço">
-                <i class="fas fa-bolt fa-xs"></i>
-              </button>
-            </form>
-            <?php endif; ?>
-            <!-- Re-enviar email ao responsável -->
-            <form method="post" action="validacao-action.php">
-              <input type="hidden" name="val_acao" value="reabrir">
-              <input type="hidden" name="val_id"   value="<?= (int)$val['id'] ?>">
-              <input type="hidden" name="redirect" value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
-              <button type="submit" class="btn btn-xs btn-outline-secondary"
-                      title="Reenviar email ao responsável">
-                <i class="fas fa-redo fa-xs"></i>
-              </button>
-            </form>
-            </div>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-
-      <?php foreach ($semPedido as $spRespCod => $spData): ?>
-        <!-- Linha de acesso SEM pedido de validação -->
-        <tr style="background:#fffbeb">
-          <td class="align-middle text-muted" style="font-style:italic">
-            <?= htmlspecialchars(implode(', ', $spData['labs'])) ?>
-          </td>
-          <td class="align-middle"><?= htmlspecialchars($spData['resp_nome'] ?? '—') ?></td>
-          <td class="align-middle text-center">
-            <span class="badge" style="background:#6f42c1;color:#fff;font-size:.65rem">
-              ⚠ Sem pedido
-            </span>
-          </td>
-          <td class="align-middle text-muted">—</td>
-          <td class="align-middle text-center">
-            <!-- Solicitar validação individualmente para este responsável -->
-            <form method="post" action="validacao-action.php">
-              <input type="hidden" name="val_acao"    value="solicitar_resp">
-              <input type="hidden" name="registo_id"  value="<?= (int)$id1 ?>">
-              <input type="hidden" name="resp_codigo" value="<?= htmlspecialchars($spRespCod) ?>">
-              <input type="hidden" name="redirect"    value="edit.php?id=<?= urlencode($id) ?>&id1=<?= urlencode($id1) ?>">
-              <button type="submit" class="btn btn-xs btn-outline-primary"
-                      title="Enviar pedido de validação a este responsável">
-                <i class="fas fa-paper-plane fa-xs me-1"></i>Solicitar
-              </button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-</div>
-<?php endif; ?>
 
 
 <script>

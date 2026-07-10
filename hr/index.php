@@ -36,6 +36,11 @@ $respespaco = null;
 $validar = true;
 $status = 'Novo';
 
+// ── Modo Admin: criar registo em nome de outro colaborador ──────────────
+require_once ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin, $_iqAdminsHr, $_iqCurrentUser
+$_isHrAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr);
+$adminMode  = $_isHrAdmin && isset($_GET['admin']) && $_GET['admin'] == '1';
+
 // SQL statements
 $sqlresp = 'SELECT * FROM infodeqb_rds_responsaveis where not Codigo=0 order by respespaco';
 $sqlgrupo = 'SELECT * FROM infodeqb_rds_grupo where grupoid BETWEEN 1 AND 7 order by orderid';
@@ -61,7 +66,7 @@ if (!empty($_POST)) {
     // Se o token foi já usado ou não corresponde → redirect para success
     // (cobre browser Back + resend e submissões duplicadas)
     if ($submitToken === '' || $submitToken !== $sessionToken) {
-        header('Location: success.php');
+        header('Location: ' . ($adminMode ? 'admin/index.php' : 'success.php'));
         exit;
     }
     // Invalidar imediatamente para impedir re-uso
@@ -69,10 +74,19 @@ if (!empty($_POST)) {
 }
 
 if (! empty($_POST)) {
-    // codigo, nome e email vêm sempre da sessão Shibboleth — nunca do POST
-    $codigo = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
-    $nome   = $_SESSION['CommonName'] ?? '';
-    $email  = $_SESSION['user'] ?? '';
+    if ($adminMode) {
+        // Modo admin: código, nome e email são indicados pelo administrador
+        $codigo    = preg_replace('/[^0-9]/', '', $_POST['codigo'] ?? '');
+        $nome      = trim($_POST['nome'] ?? '');
+        $email     = trim($_POST['email'] ?? '');
+        $nomeEmail = $nome; // sem sessão Shibboleth da pessoa em causa
+    } else {
+        // codigo, nome e email vêm sempre da sessão Shibboleth — nunca do POST
+        $codigo    = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
+        $nome      = $_SESSION['CommonName'] ?? '';
+        $email     = $_SESSION['user'] ?? '';
+        $nomeEmail = $_SESSION['DisplayName'] ?? $nome;
+    }
     $emailalt = $_POST['emailalt'];
     $telefoneNum = preg_replace('/[^0-9]/', '', trim($_POST['telefone_numero'] ?? ''));
     $telefone    = $telefoneNum ? trim($_POST['telefone_indicativo'] ?? '+351') . ' ' . $telefoneNum : '';
@@ -228,7 +242,7 @@ if (! empty($_POST)) {
     {
         $info = array(
             'codigo'    => $codigo,
-            'nome'      => $nome,
+            'nome'      => $nomeEmail,
             'mail'      => $email,
             'altmail'   => $emailalt,
             'telefone'  => $telefone,
@@ -281,7 +295,11 @@ if (! empty($_POST)) {
         }
     }
 
-    header("Location: success.php");
+    if ($adminMode) {
+        header("Location: admin/index.php?tab=pills-new&created=1");
+    } else {
+        header("Location: success.php");
+    }
     exit();
 
     skip_email:
@@ -333,13 +351,19 @@ foreach ($pdo->query($sqlcategoria, PDO::FETCH_ASSOC) as $rowcat) {
 $gabRows = $pdo->query($sqlgab)->fetchAll(PDO::FETCH_ASSOC);
 $gabChecks  = '';
 $gabCurPiso = '';
+$gabCurEdificio = '';
 $selectedAcessos = isset($_POST['acessos']) ? (array)$_POST['acessos'] : [];
 foreach ($gabRows as $rowgab) {
-    if ($rowgab['piso'] !== $gabCurPiso) {
+    if ($rowgab['piso'] !== $gabCurPiso || $rowgab['edificio'] !== $gabCurEdificio) {
         if ($gabCurPiso !== '') $gabChecks .= '</div>';
-        $gabChecks .= '<div class="iq-checkgroup">'
-            . '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+        $label = '';
+        if ($rowgab['edificio'] !== $gabCurEdificio && stripos($rowgab['piso'], 'Edifício') === false) {
+            $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rowgab['edificio']) . '</span>';
+        }
+        $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+        $gabChecks .= '<div class="iq-checkgroup">' . $label;
         $gabCurPiso = $rowgab['piso'];
+        $gabCurEdificio = $rowgab['edificio'];
     }
     $checked = in_array($rowgab['deqid'], $selectedAcessos) ? ' checked' : '';
     $gabChecks .= '<label><input type="checkbox" name="acessos[]" value="'
@@ -351,7 +375,18 @@ if ($gabCurPiso !== '') $gabChecks .= '</div>';
 // Código numérico do utilizador (para auto-preencher o campo 'codigo')
 $_sessionCodeNum = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
 
-$pageTitle = 'Registo de Colaborador';
+// Valores a apresentar nos campos Código/Nome/Email
+if ($adminMode) {
+    $dispCodigo = isset($_POST['codigo']) ? $_POST['codigo'] : trim($_GET['codigo'] ?? '');
+    $dispNome   = isset($_POST['nome'])   ? $_POST['nome']   : trim($_GET['nome']   ?? '');
+    $dispEmail  = isset($_POST['email'])  ? $_POST['email']  : trim($_GET['email']  ?? '');
+} else {
+    $dispCodigo = $_sessionCodeNum;
+    $dispNome   = !empty($_SESSION['CommonName']) ? $_SESSION['CommonName'] : (!empty($_SESSION['user']) ? $_SESSION['user'] : '');
+    $dispEmail  = $_SESSION['user'] ?? '';
+}
+
+$pageTitle = $adminMode ? 'Novo Registo (Admin)' : 'Registo de Colaborador';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
@@ -363,11 +398,19 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   <h1>Registo de colaborador</h1>
 </div>
 
+<?php if ($adminMode): ?>
+<div class="alert alert-info" role="alert">
+  <i class="fas fa-user-shield me-1"></i>
+  <strong>Modo Administrador</strong> — este registo vai ser criado em nome de outro colaborador.
+  Preencha o Código UP, Nome e Email da pessoa em causa.
+</div>
+<?php endif; ?>
+
 <?php
 // Gerar token de submissão único para esta sessão de formulário
 $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 ?>
-<form class="iq-form-2col-wrap" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+<form class="iq-form-2col-wrap" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . ($adminMode ? '?admin=1' : ''); ?>" method="post">
   <input type="hidden" name="_submit_token" value="<?= htmlspecialchars($_SESSION['_hr_submit_token']) ?>">
 
   <?php if (isset($erroduplicado)): ?>
@@ -383,26 +426,33 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
   <div class="iq-form-section">
     <div class="iq-form-section-title">Dados Pessoais</div>
     <div class="row">
-      <div class="col-md-4 form-group">
+      <div class="col-md-4 form-group<?php echo $adminMode ? ' mb-1' : ''; ?>">
         <label><?php echo $lang['FEUP_CODE']; ?></label>
         <input name="codigo" type="text" required maxlength="9" pattern="^(\d{6}|\d{9})$"
-               class="form-control" id="code" readonly
-               style="background:#f8f9fa;cursor:not-allowed;"
-               value="<?php echo htmlspecialchars($_sessionCodeNum); ?>">
+               class="form-control" id="code" <?php echo $adminMode ? '' : 'readonly'; ?>
+               style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
+               value="<?php echo htmlspecialchars($dispCodigo); ?>">
       </div>
     </div>
+    <?php if ($adminMode): ?>
+    <div class="row">
+      <div class="col-12">
+        <div class="form-text mt-0 mb-2" style="font-size:.78rem;">Código institucional da pessoa (up…). Ao sair do campo, o nome/email são preenchidos automaticamente se já existir.</div>
+      </div>
+    </div>
+    <?php endif; ?>
     <div class="form-group">
       <label><?php echo $lang['NAME']; ?></label>
-      <input type="text" name="nome" class="form-control" id="name" required readonly
-             style="background:#f8f9fa;cursor:not-allowed;"
-             value="<?php echo htmlspecialchars(!empty($_SESSION['CommonName']) ? $_SESSION['CommonName'] : (!empty($_SESSION['user']) ? $_SESSION['user'] : '')); ?>">
+      <input type="text" name="nome" class="form-control" id="name" required <?php echo $adminMode ? '' : 'readonly'; ?>
+             style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
+             value="<?php echo htmlspecialchars($dispNome); ?>">
     </div>
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?php echo $lang['EMAIL']; ?></label>
-        <input type="email" name="email" class="form-control" required id="email" readonly
-               style="background:#f8f9fa;cursor:not-allowed;"
-               value="<?php echo htmlspecialchars($_SESSION['user']); ?>">
+        <input type="email" name="email" class="form-control" required id="email" <?php echo $adminMode ? '' : 'readonly'; ?>
+               style="<?php echo $adminMode ? '' : 'background:#f8f9fa;cursor:not-allowed;'; ?>"
+               value="<?php echo htmlspecialchars($dispEmail); ?>">
       </div>
       <div class="col-md-6 form-group">
         <label><?php echo $lang['ALT_EMAIL']; ?></label>
@@ -686,6 +736,33 @@ document.addEventListener('DOMContentLoaded', function () {
         inpInicio.addEventListener('change', validarDatasIdx);
         inpFim.addEventListener('change', validarDatasIdx);
     }
+
+    <?php if ($adminMode): ?>
+    // ── Modo Admin: autocomplete nome/email a partir do código UP ────
+    (function () {
+        var inpCodigo = document.getElementById('code');
+        var inpNome   = document.getElementById('name');
+        var inpEmail  = document.getElementById('email');
+        if (!inpCodigo) return;
+        var _acTimer = null;
+        inpCodigo.addEventListener('input', function () {
+            clearTimeout(_acTimer);
+            var cod = this.value.trim();
+            if (!cod) return;
+            _acTimer = setTimeout(function () {
+                fetch('admin/ajax-colab.php?codigo=' + encodeURIComponent(cod))
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        if (data && data.nome) {
+                            if (inpNome  && !inpNome.value)  inpNome.value  = data.nome;
+                            if (inpEmail && !inpEmail.value) inpEmail.value = data.email || '';
+                        }
+                    })
+                    .catch(function () {});
+            }, 400);
+        });
+    }());
+    <?php endif; ?>
 
 });
 

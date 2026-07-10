@@ -82,13 +82,6 @@ if (isset($_SESSION['_water_flash'])) {
     unset($_SESSION['_water_flash']);
 }
 
-// ── Filtro de ano ─────────────────────────────────────────────────
-$anosDisp  = $pdo->query(
-    'SELECT DISTINCT YEAR(data) AS ano FROM infodeqb_water_ultrapure_record ORDER BY ano DESC'
-)->fetchAll(PDO::FETCH_COLUMN);
-if (empty($anosDisp)) $anosDisp = [(int)date('Y')];
-$anoFiltro = isset($_GET['ano']) ? (int)$_GET['ano'] : (int)date('Y');
-
 // ── Estatísticas ──────────────────────────────────────────────────
 $stAll = $pdo->query(
     'SELECT COUNT(*) AS n, COALESCE(SUM(quantity),0) AS total FROM infodeqb_water_ultrapure_record'
@@ -98,7 +91,7 @@ $stYear = $pdo->prepare(
     'SELECT COUNT(*) AS n, COALESCE(SUM(quantity),0) AS total
      FROM infodeqb_water_ultrapure_record WHERE YEAR(data)=?'
 );
-$stYear->execute([$anoFiltro]);
+$stYear->execute([(int)date('Y')]);
 $stYear = $stYear->fetch(PDO::FETCH_ASSOC);
 
 $stMes = $pdo->prepare(
@@ -108,19 +101,16 @@ $stMes = $pdo->prepare(
 $stMes->execute([(int)date('Y'), (int)date('m')]);
 $stMes = (float)$stMes->fetchColumn();
 
-// ── Registos do ano seleccionado ──────────────────────────────────
-$sthRec = $pdo->prepare(
+// ── Todos os registos (filtro feito client-side via DataTable) ────
+$records = $pdo->query(
     'SELECT rec.autoid, rec.data, rec.quantity,
             r.id AS resp_id,  r.nome  AS resp_nome,
             u.userid AS user_id, u.user AS user_nome
      FROM infodeqb_water_ultrapure_record rec
      JOIN infodeqb_water_resp r  ON r.id      = rec.resp
      JOIN infodeqb_water_users u ON u.userid  = rec.user
-     WHERE YEAR(rec.data) = ?
      ORDER BY rec.data DESC, rec.autoid DESC'
-);
-$sthRec->execute([$anoFiltro]);
-$records = $sthRec->fetchAll(PDO::FETCH_ASSOC);
+)->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Listas auxiliares (responsáveis e utilizadores) ───────────────
 $resps = $pdo->query('SELECT id, nome FROM infodeqb_water_resp ORDER BY nome')
@@ -140,6 +130,27 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 // formata número com 2 casas decimais e separador de milhares
 function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 ?>
+<style>
+.wq-filter-bar { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:10px 14px; margin-bottom:16px; }
+.wq-pill {
+    padding:.28rem .75rem; border-radius:20px; border:1px solid #dee2e6;
+    background:#fff; font-size:.78rem; color:#495057;
+    cursor:pointer; transition:all .12s; white-space:nowrap; line-height:1.4; outline:none;
+}
+.wq-pill:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
+.wq-pill.active { background:#0d6efd; border-color:#0d6efd; color:#fff; }
+.wq-nav { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.wq-nav-btn {
+    width:30px; height:30px; border-radius:50%; border:1px solid #dee2e6;
+    background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:.8rem; color:#495057; transition:all .12s; outline:none; flex-shrink:0;
+}
+.wq-nav-btn:hover:not(:disabled) { border-color:#0d6efd; color:#0d6efd; background:#e9f0ff; }
+.wq-nav-btn:disabled { opacity:.35; cursor:default; }
+.wq-period-label { font-size:.88rem; font-weight:600; color:#212529; }
+.wq-range-inputs { display:none; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.wq-range-inputs.open { display:flex; }
+</style>
 
 <div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:10px">
   <h1 class="mr-auto mb-0">
@@ -170,13 +181,14 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 <div class="d-flex flex-wrap mb-4" style="gap:12px">
   <div class="card flex-fill shadow-sm" style="min-width:150px">
     <div class="card-body py-3 text-center">
-      <div class="text-muted small mb-1"><?= t('WATER_THIS_MONTH') ?></div>
-      <div class="h5 mb-0 font-weight-bold text-primary"><?= fmtL($stMes) ?></div>
+      <div class="text-muted small mb-1" id="badgePeriodLabel">—</div>
+      <div class="h5 mb-0 font-weight-bold text-primary" id="badgePeriodTotal">— L</div>
+      <div class="text-muted" style="font-size:.75rem" id="badgePeriodN"></div>
     </div>
   </div>
   <div class="card flex-fill shadow-sm" style="min-width:150px">
     <div class="card-body py-3 text-center">
-      <div class="text-muted small mb-1"><?= $anoFiltro ?></div>
+      <div class="text-muted small mb-1"><?= date('Y') ?></div>
       <div class="h5 mb-0 font-weight-bold"><?= fmtL($stYear['total']) ?></div>
       <div class="text-muted" style="font-size:.75rem"><?= number_format((int)$stYear['n']) ?> registos</div>
     </div>
@@ -190,67 +202,80 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
   </div>
 </div>
 
-<?php /* ── Formulário de inserção ──────────────────────────────── */ ?>
-<div class="card mb-4 border-primary">
-  <div class="card-header py-2 d-flex align-items-center"
-       style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#formInserir">
-    <i class="fas fa-plus-circle text-primary me-2"></i>
-    <strong class="mr-auto text-primary"><?= t('WATER_NEW_RECORD') ?></strong>
-    <i class="fas fa-chevron-down fa-xs text-muted"></i>
+<?php /* ── Barra de filtro ─────────────────────────────────────── */ ?>
+<div class="wq-filter-bar">
+  <div class="d-flex flex-wrap align-items-center" style="gap:6px">
+    <button class="wq-pill" data-preset="semana">Esta semana</button>
+    <button class="wq-pill active" data-preset="mes">Este mês</button>
+    <button class="wq-pill" data-preset="ano">Este ano</button>
+    <button class="wq-pill" data-preset="7d">Últimos 7 dias</button>
+    <button class="wq-pill" data-preset="15d">Últimos 15 dias</button>
+    <button class="wq-pill" data-preset="30d">Últimos 30 dias</button>
+    <button class="wq-pill" data-preset="custom">
+      <i class="fas fa-calendar-alt fa-xs me-1"></i>Personalizado
+    </button>
   </div>
-  <div id="formInserir" class="collapse">
-    <div class="card-body">
-      <form method="post" id="formAdd">
-        <input type="hidden" name="_acao" value="inserir">
-        <div class="form-row align-items-end">
-          <div class="col-md-2 form-group mb-0">
-            <label class="small font-weight-bold">Data <span class="text-danger">*</span></label>
-            <input type="date" name="data" class="form-control form-control-sm"
-                   required value="<?= date('Y-m-d') ?>">
-          </div>
-          <div class="col-md-3 form-group mb-0">
-            <label class="small font-weight-bold">Responsável <span class="text-danger">*</span></label>
-            <select name="resp" id="addResp" class="form-control form-control-sm" required>
-              <option value="">— seleccione —</option>
-              <?= $optResp ?>
-            </select>
-          </div>
-          <div class="col-md-3 form-group mb-0">
-            <label class="small font-weight-bold">Utilizador <span class="text-danger">*</span></label>
-            <select name="userid" id="addUser" class="form-control form-control-sm" required>
-              <option value="">— seleccione primeiro o responsável —</option>
-            </select>
-          </div>
-          <div class="col-md-2 form-group mb-0">
-            <label class="small font-weight-bold">Quantidade (L) <span class="text-danger">*</span></label>
-            <input type="number" step="0.01" min="0" name="qtd"
-                   class="form-control form-control-sm" required placeholder="ex: 10.5">
-          </div>
-          <div class="col-md-2 form-group mb-0">
-            <button type="submit" class="btn btn-primary btn-sm btn-block">
-              <i class="fas fa-save me-1"></i> <?= t('SAVE') ?>
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+  <div class="wq-nav">
+    <button class="wq-nav-btn" id="wqPrev" title="Período anterior">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="wq-period-label" id="wqLabel">—</span>
+    <button class="wq-nav-btn" id="wqNext" title="Período seguinte" disabled>
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+  <div class="wq-range-inputs" id="wqCustomRange">
+    <label class="small font-weight-bold mb-0">De</label>
+    <input type="date" id="wqDe" class="form-control form-control-sm" style="width:auto">
+    <label class="small font-weight-bold mb-0">Até</label>
+    <input type="date" id="wqAte" class="form-control form-control-sm" style="width:auto">
+    <button class="btn btn-sm btn-primary" id="wqApply">Aplicar</button>
   </div>
 </div>
 
-<?php /* ── Tabela de registos ──────────────────────────────────── */ ?>
+<?php /* ── Tabela de registos + formulário de inserção ───────────── */ ?>
 <div class="card mb-4 shadow-sm">
-  <div class="card-header py-2 d-flex align-items-center">
-    <strong class="mr-auto">Registos</strong>
-    <!-- Filtro de ano -->
-    <form method="get" class="d-flex align-items-center" style="gap:6px">
-      <select name="ano" class="form-control form-control-sm" style="width:auto"
-              onchange="this.form.submit()">
-        <?php foreach ($anosDisp as $a): ?>
-        <option value="<?= $a ?>" <?= $anoFiltro==$a?'selected':'' ?>><?= $a ?></option>
-        <?php endforeach; ?>
-      </select>
-    </form>
+  <div class="card-header py-2">
+    <strong>Registos</strong>
   </div>
+
+  <!-- Barra de inserção horizontal -->
+  <form method="post" id="formAdd">
+    <input type="hidden" name="_acao" value="inserir">
+    <div class="d-flex align-items-center px-3 py-2 border-bottom"
+         style="background:#f0f7ff;gap:8px;flex-wrap:nowrap">
+      <div style="flex:0 0 130px">
+        <input type="date" name="data" class="form-control form-control-sm"
+               required value="<?= date('Y-m-d') ?>">
+      </div>
+      <div style="flex:2;min-width:120px">
+        <select name="resp" id="addResp" class="form-control form-control-sm" required>
+          <option value="">Responsável…</option>
+          <?= $optResp ?>
+        </select>
+      </div>
+      <div style="flex:2;min-width:120px">
+        <select name="userid" id="addUser" class="form-control form-control-sm" required>
+          <option value="">— seleccione responsável —</option>
+        </select>
+      </div>
+      <div style="flex:0 0 120px">
+        <div class="input-group input-group-sm">
+          <input type="number" step="0.01" min="0" name="qtd"
+                 class="form-control" required placeholder="Qtd.">
+          <div class="input-group-append">
+            <span class="input-group-text">L</span>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus me-1"></i><?= t('SAVE') ?>
+        </button>
+      </div>
+    </div>
+  </form>
+
   <div class="card-body p-0">
     <table class="table table-sm table-hover mb-0" id="tblConsumos">
       <thead class="">
@@ -421,10 +446,101 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 </div>
 
 <script>
+// ── Utilitários de datas ──────────────────────────────────────────
+var today = new Date();
+var mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function fmt(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function isoToDate(s) { var p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
+function fmtHuman(s) { var d = isoToDate(s); return d.getDate() + ' ' + mesesPT[d.getMonth()]; }
+
+// ── Estado da navegação ───────────────────────────────────────────
+var activePreset = 'mes', periodOffset = 0;
+var customDe = null, customAte = null, customDays = 0;
+var filterDe = null, filterAte = null;
+
+// ── Calcular range com offset ─────────────────────────────────────
+function getRangeWithOffset(preset, off) {
+    var de, ate, label;
+    if (preset === 'mes') {
+        var base = new Date(today.getFullYear(), today.getMonth() + off, 1);
+        de = fmt(base);
+        ate = (off === 0) ? fmt(today) : fmt(new Date(base.getFullYear(), base.getMonth()+1, 0));
+        label = mesesPT[base.getMonth()] + ' ' + base.getFullYear();
+    } else if (preset === 'semana') {
+        var dow = today.getDay();
+        var startCur = addDays(today, -(dow === 0 ? 6 : dow-1));
+        var start = addDays(startCur, off*7), end = addDays(start, 6);
+        if (off === 0 && end > today) end = new Date(today);
+        de = fmt(start); ate = fmt(end);
+        label = fmtHuman(de) + ' – ' + fmtHuman(ate);
+    } else if (preset === 'ano') {
+        var year = today.getFullYear() + off;
+        de = year + '-01-01';
+        ate = (off === 0) ? fmt(today) : year + '-12-31';
+        label = String(year);
+    } else if (preset === '7d') {
+        var end = addDays(today, off*7); if (end > today) end = new Date(today);
+        de = fmt(addDays(end,-6)); ate = fmt(end);
+        label = fmtHuman(de) + ' – ' + fmtHuman(ate);
+    } else if (preset === '15d') {
+        var end = addDays(today, off*15); if (end > today) end = new Date(today);
+        de = fmt(addDays(end,-14)); ate = fmt(end);
+        label = fmtHuman(de) + ' – ' + fmtHuman(ate);
+    } else if (preset === '30d') {
+        var end = addDays(today, off*30); if (end > today) end = new Date(today);
+        de = fmt(addDays(end,-29)); ate = fmt(end);
+        label = fmtHuman(de) + ' – ' + fmtHuman(ate);
+    } else if (preset === 'custom' && customDe && customAte) {
+        var step = customDays * off;
+        var newAte = addDays(isoToDate(customAte), step); if (newAte > today) newAte = new Date(today);
+        var newDe = addDays(newAte, -(customDays-1));
+        de = fmt(newDe); ate = fmt(newAte);
+        label = fmtHuman(de) + ' – ' + fmtHuman(ate);
+    }
+    return { de: de, ate: ate, label: label || '' };
+}
+
+var dtTable;
+
+function fmtLjs(v) {
+    return v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' L';
+}
+
+function applyNav() {
+    var range = getRangeWithOffset(activePreset, periodOffset);
+    $('#wqLabel').text(range.label);
+    $('#wqNext').prop('disabled', periodOffset >= 0);
+    filterDe = range.de; filterAte = range.ate;
+    if (!dtTable) return;
+    dtTable.draw();
+
+    // Actualizar badge do período
+    var total = 0, n = 0;
+    dtTable.rows({ filter: 'applied' }).data().each(function (row) {
+        // coluna 3: quantidade (string com vírgula e espaços, ex: "10,50")
+        var v = parseFloat(String(row[3]).replace(/\s/g, '').replace(',', '.'));
+        if (!isNaN(v)) { total += v; n++; }
+    });
+    $('#badgePeriodLabel').text(range.label);
+    $('#badgePeriodTotal').text(fmtLjs(total));
+    $('#badgePeriodN').text(n + ' registo' + (n !== 1 ? 's' : ''));
+}
+
 $(document).ready(function () {
 
+    // ── Filtro externo por intervalo de datas ─────────────────
+    $.fn.dataTable.ext.search.push(function(settings, data) {
+        if (!filterDe || !filterAte) return true;
+        var d = data[0].trim();
+        return d >= filterDe && d <= filterAte;
+    });
+
     // ── DataTable ──────────────────────────────────────────────
-    $('#tblConsumos').DataTable({
+    dtTable = $('#tblConsumos').DataTable({
         order: [[0, 'desc']],
         pageLength: 25,
         language: {
@@ -444,26 +560,55 @@ $(document).ready(function () {
         ]
     });
 
-    // ── Carregar utilizadores por responsável (inserção) ────────
-    $('#addResp').on('change', function () {
-        loadUsers($(this).val(), '#addUser', 0);
+    // ── Inicializar filtro com "Este mês" ─────────────────────
+    activePreset = 'mes'; periodOffset = 0; applyNav();
+
+    // ── Clique nos pills ──────────────────────────────────────
+    $('.wq-pill').on('click', function () {
+        $('.wq-pill').removeClass('active');
+        $(this).addClass('active');
+        activePreset = $(this).data('preset');
+        periodOffset = 0;
+        if (activePreset === 'custom') {
+            $('#wqCustomRange').addClass('open');
+            var base = getRangeWithOffset('mes', 0);
+            $('#wqDe').val(base.de); $('#wqAte').val(base.ate);
+            customDe = base.de; customAte = base.ate;
+            customDays = Math.round((isoToDate(base.ate) - isoToDate(base.de)) / 86400000) + 1;
+        } else {
+            $('#wqCustomRange').removeClass('open');
+        }
+        applyNav();
     });
 
-    // ── Modal editar: preencher campos ─────────────────────────
+    // ── Setas de navegação ────────────────────────────────────
+    $('#wqPrev').on('click', function () { periodOffset--; applyNav(); });
+    $('#wqNext').on('click', function () { if (periodOffset >= 0) return; periodOffset++; applyNav(); });
+
+    // ── Calendário personalizado ──────────────────────────────
+    $('#wqApply').on('click', function () {
+        var de = $('#wqDe').val(), ate = $('#wqAte').val();
+        if (!de || !ate) return;
+        if (de > ate) { var t = de; de = ate; ate = t; }
+        customDe = de; customAte = ate;
+        customDays = Math.round((isoToDate(ate) - isoToDate(de)) / 86400000) + 1;
+        periodOffset = 0; applyNav();
+    });
+    $('#wqDe, #wqAte').on('keydown', function (e) { if (e.key === 'Enter') $('#wqApply').trigger('click'); });
+
+    // ── Carregar utilizadores por responsável (inserção) ──────
+    $('#addResp').on('change', function () { loadUsers($(this).val(), '#addUser', 0); });
+
+    // ── Modal editar: preencher campos ────────────────────────
     $(document).on('click', '.btn-edit', function () {
         var d = $(this).data();
-        $('#editId').val(d.id);
-        $('#editData').val(d.data);
-        $('#editQtd').val(d.qtd);
-        $('#editResp').val(d.resp);
+        $('#editId').val(d.id); $('#editData').val(d.data);
+        $('#editQtd').val(d.qtd); $('#editResp').val(d.resp);
         loadUsers(d.resp, '#editUser', d.user);
     });
+    $('#editResp').on('change', function () { loadUsers($(this).val(), '#editUser', 0); });
 
-    $('#editResp').on('change', function () {
-        loadUsers($(this).val(), '#editUser', 0);
-    });
-
-    // ── Modal apagar: preencher dados ──────────────────────────
+    // ── Modal apagar: preencher dados ─────────────────────────
     $(document).on('click', '.btn-delete', function () {
         $('#deleteId').val($(this).data('id'));
         $('#deleteInfo').text($(this).data('info'));

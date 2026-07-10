@@ -77,13 +77,17 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
     $reg = $qReg->fetch(PDO::FETCH_ASSOC);
 
     if ($reg) {
-        $deqids = getRegistoAcessos($pdo, $rid);
-        $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
-
-        if ($n === 0) {
-            $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+        if (_registoTotalmenteValidado($pdo, $rid)) {
+            $_SESSION['val_info'] = 'Este registo já tem todas as validações concluídas — não é necessário solicitar novamente.';
         } else {
-            $_SESSION['val_info'] = 'Pedido de validação enviado a ' . $n . ' responsável(is).';
+            $deqids = getRegistoAcessos($pdo, $rid);
+            $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
+
+            if ($n === 0) {
+                $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+            } else {
+                $_SESSION['val_info'] = 'Pedido de validação enviado a ' . $n . ' responsável(is).';
+            }
         }
     }
 }
@@ -136,6 +140,51 @@ elseif ($acao === 'solicitar_resp' && !empty($_POST['registo_id']) && !empty($_P
         } else {
             $_SESSION['val_info'] = 'Nenhum espaço encontrado para este responsável.';
         }
+    }
+}
+
+// ── Forçar validação de acessos ainda sem pedido enviado ──────────────
+// Admin aprova directamente (sem notificar o responsável do espaço)
+elseif ($acao === 'forcar_sem_pedido' && !empty($_POST['registo_id']) && !empty($_POST['resp_codigo'])) {
+    $rid        = (int)$_POST['registo_id'];
+    $respFilter = trim($_POST['resp_codigo']);
+
+    // Encontrar os labs deste registo cujo responsável é $respFilter
+    $todosDeqids = getRegistoAcessos($pdo, $rid);
+    $labs = array();
+    foreach ($todosDeqids as $deqid) {
+        $qG = $pdo->prepare(
+            "SELECT g.nomegab, r.Codigo AS resp_codigo
+             FROM infodeqb_rds_gabinetes g
+             LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+             WHERE g.deqid = ?"
+        );
+        $qG->execute([$deqid]);
+        foreach ($qG->fetchAll(PDO::FETCH_ASSOC) as $g) {
+            if ((string)$g['resp_codigo'] === $respFilter) {
+                $labs[] = array('deq_id' => $deqid, 'gab_nome' => $g['nomegab']);
+            }
+        }
+    }
+
+    if (!empty($labs)) {
+        $qResp = $pdo->prepare("SELECT respespaco FROM infodeqb_rds_responsaveis WHERE Codigo=?");
+        $qResp->execute([$respFilter]);
+        $respNome = $qResp->fetchColumn() ?: '';
+
+        $firstId  = $labs[0]['deq_id'];
+        $labNames = substr(implode(', ', array_column($labs, 'gab_nome')), 0, 490);
+        $labsJson = json_encode($labs, JSON_UNESCAPED_UNICODE);
+
+        $pdo->prepare(
+            "INSERT INTO infodeqb_rds_validacao
+             (registo_id, deq_id, gab_nome, labs_json, resp_codigo, resp_nome, token, status, nota, respondido_em)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'Validado', 'Aprovação forçada pelo administrador', NOW())"
+        )->execute([$rid, $firstId, $labNames, $labsJson, $respFilter, $respNome, bin2hex(random_bytes(16))]);
+
+        $_SESSION['val_info'] = 'Validação aprovada manualmente pelo administrador (sem pedido enviado ao responsável).';
+    } else {
+        $_SESSION['val_info'] = 'Nenhum espaço encontrado para este responsável.';
     }
 }
 
@@ -226,6 +275,17 @@ elseif ($acao === 'reabrir' && !empty($_POST['val_id'])) {
     $_SESSION['val_info'] = 'Novo pedido de validação enviado ao responsável.';
 }
 
+// ── Forçar validação (admin aprova sem resposta do responsável) ────────
+elseif ($acao === 'forcar_validacao' && !empty($_POST['val_id'])) {
+    $pdo->prepare(
+        "UPDATE infodeqb_rds_validacao
+         SET status='Validado', respondido_em=NOW(),
+             nota='Aprovação forçada pelo administrador'
+         WHERE id=?"
+    )->execute([(int)$_POST['val_id']]);
+    $_SESSION['val_info'] = 'Validação aprovada manualmente pelo administrador.';
+}
+
 // ── Solicitar acessos ao SIGARRA (após validações todas aprovadas) ──────
 elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
     $rid = (int)$_POST['registo_id'];
@@ -249,6 +309,7 @@ elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
          JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
          WHERE ra.registo_id = ?
            AND g.responsavel IS NOT NULL AND g.responsavel != 0
+           AND g.responsavel != 246398
            AND NOT EXISTS (
                SELECT 1 FROM infodeqb_rds_validacao v
                WHERE v.registo_id = ra.registo_id AND v.resp_codigo = g.responsavel
@@ -294,7 +355,7 @@ elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
         );
 
         $body    = format_email($info, 'mail_pedido.html');
-        $subject = 'Acessos DEQ: Solicitação de novos acessos';
+        $subject = 'Acessos DEQB: Solicitação de novos acessos';
         $to      = array('sigarra@fe.up.pt');
         $cc      = array('deqdir@fe.up.pt', 'fmartins@fe.up.pt', 'fpereira@fe.up.pt');
 

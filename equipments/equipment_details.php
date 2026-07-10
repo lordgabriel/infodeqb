@@ -77,7 +77,13 @@ foreach (['jpg','jpeg','png','gif','webp'] as $ext) {
 
 function fmtField($v) {
     if (empty($v)) return null;
-    return nl2br(htmlspecialchars(strip_tags((string)$v), ENT_QUOTES));
+    $s = (string)$v;
+    // Se contém HTML (links, formatação), manter tags seguras sem escapar
+    if ($s !== strip_tags($s)) {
+        return strip_tags($s, '<a><br><b><strong><em><i><p><ul><ol><li><span>');
+    }
+    // Texto simples: escapar e converter quebras de linha
+    return nl2br(htmlspecialchars($s, ENT_QUOTES));
 }
 
 $pageTitle = htmlspecialchars($eq['Equipamento'] ?? 'Equipamento') . ' — Equipamentos';

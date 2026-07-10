@@ -27,6 +27,49 @@ if (! empty($_POST)) {
         ExportFile($data);
     }
 
+    // ── Eliminar definitivamente registos Inativos há mais de 2 anos ──────
+    if (isset($_POST['eliminar_inativos_antigos'])) {
+        $pdo = Database::connect();
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        $cutoff = date('Y-m-d H:i:s', strtotime('-2 years'));
+
+        $qOld = $pdo->prepare(
+            "SELECT autoid, codigo FROM infodeqb_rds_registo
+             WHERE status='Inativo' AND deleted!=1
+               AND datainativo > '0000-00-00 00:00:00' AND datainativo <= ?"
+        );
+        $qOld->execute([$cutoff]);
+        $oldRegs = $qOld->fetchAll(PDO::FETCH_ASSOC);
+
+        $codigos = array();
+        foreach ($oldRegs as $r) {
+            $rid = (int)$r['autoid'];
+            $pdo->prepare("DELETE FROM infodeqb_rds_registo_acessos WHERE registo_id=?")->execute([$rid]);
+            $pdo->prepare("DELETE FROM infodeqb_rds_validacao WHERE registo_id=?")->execute([$rid]);
+            $pdo->prepare("DELETE FROM infodeqb_rds_pedido WHERE registo_id=?")->execute([$rid]);
+            $pdo->prepare("DELETE FROM infodeqb_rds_registo WHERE autoid=?")->execute([$rid]);
+            $codigos[$r['codigo']] = true;
+        }
+
+        // Se o colaborador ficou sem qualquer registo, eliminar também o colaborador
+        $nColabs = 0;
+        foreach (array_keys($codigos) as $cod) {
+            $qRest = $pdo->prepare("SELECT COUNT(*) FROM infodeqb_rds_registo WHERE codigo=? AND deleted!=1");
+            $qRest->execute([$cod]);
+            if ((int)$qRest->fetchColumn() === 0) {
+                $pdo->prepare("DELETE FROM infodeqb_rds_pedido WHERE codigo=?")->execute([$cod]);
+                $pdo->prepare("DELETE FROM infodeqb_rds_colaborador WHERE codigo=?")->execute([$cod]);
+                $nColabs++;
+            }
+        }
+
+        $_SESSION['val_info'] = count($oldRegs) . ' registo(s) inativo(s) há mais de 2 anos eliminado(s) definitivamente.'
+            . ($nColabs ? ' ' . $nColabs . ' colaborador(es) sem mais registos também eliminado(s).' : '');
+
+        header('Location: index.php?tab=pills-inactive'); exit;
+    }
+
     // ── Ações em massa: solicitar validações / pedir acessos ──────────────
     if (isset($_POST['selector']) && is_array($_POST['selector']) &&
         in_array($_POST['action'] ?? '', array('solicitar_validacoes_massa','pedir_acessos_massa'))) {
@@ -53,6 +96,10 @@ if (! empty($_POST)) {
 
                 $deqids = getRegistoAcessos($pdo, (int)$autoid);
                 if (empty($deqids)) { $nIgnorados++; continue; }
+
+                // Não voltar a solicitar se já está tudo validado e não há acessos
+                // sem pedido (mesma condição usada para mostrar o botão em detail.php)
+                if (_registoTotalmenteValidado($pdo, $autoid)) { $nIgnorados++; continue; }
 
                 $nEnviados += _criarValidacoes(
                     $pdo, null, $autoid, $deqids,
@@ -119,7 +166,7 @@ if (! empty($_POST)) {
                     send_email(
                         array('sigarra@fe.up.pt'),
                         $body,
-                        'Acessos DEQ: Solicitação de novos acessos',
+                        'Acessos DEQB: Solicitação de novos acessos',
                         array('deqdir@fe.up.pt','fmartins@fe.up.pt','fpereira@fe.up.pt')
                     );
                     $pdo->prepare("UPDATE infodeqb_rds_registo SET status='Pendente', datacica=NOW() WHERE autoid=?")
@@ -197,6 +244,12 @@ if (! empty($_POST)) {
                      WHERE codigo = ? AND status = "Ativo" AND autoid != ? AND deleted = 0'
                 )->execute([$timestamp, $codPess, (int)$id1]);
             }
+
+            // Ao activar o registo, considerar os acessos como validados
+            $pdo->prepare(
+                "UPDATE infodeqb_rds_validacao SET status = 'Validado', respondido_em = ?
+                 WHERE registo_id = ? AND status != 'Validado'"
+            )->execute([$timestamp, (int)$id1]);
         }
 
         endforeach;
@@ -247,6 +300,15 @@ $qNotifPend = $pdo->query(
      WHERE status='Ativo' AND deleted=0 AND notif_pendente=1"
 );
 $notifPendCount = (int)$qNotifPend->fetchColumn();
+
+// Registos Inativos há mais de 2 anos (candidatos a eliminação definitiva)
+$qInativosAntigos = $pdo->prepare(
+    "SELECT COUNT(*) FROM infodeqb_rds_registo
+     WHERE status='Inativo' AND deleted!=1
+       AND datainativo > '0000-00-00 00:00:00' AND datainativo <= ?"
+);
+$qInativosAntigos->execute([date('Y-m-d H:i:s', strtotime('-2 years'))]);
+$inativosAntigosCount = (int)$qInativosAntigos->fetchColumn();
 $atual = date("Y/m/d");
 $final = date("Y/m/d", strtotime("+1 month"));
 $sth_expire->execute([
@@ -325,9 +387,9 @@ foreach ($pdo->query('SELECT registo_id, lab_id FROM infodeqb_rds_registo_acesso
 }
 $gabFilterByPiso = array(); // piso → [ {deqid, nomegab} ]
 $labIdToNameMap  = array(); // deqid → nomegab
-foreach ($pdo->query('SELECT deqid, nomegab, piso FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY piso, nomegab')
+foreach ($pdo->query('SELECT deqid, nomegab, edificio, piso FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY edificio, piso, nomegab')
               ->fetchAll(PDO::FETCH_ASSOC) as $_gf) {
-    $gabFilterByPiso[$_gf['piso']][] = $_gf;
+    $gabFilterByPiso[$_gf['edificio'] . '|' . $_gf['piso']][] = $_gf;
     $labIdToNameMap[$_gf['deqid']]   = $_gf['nomegab'];
 }
 // Helper: atributo data-labs="..." para uma linha (string vazia se sem labs)
@@ -361,7 +423,7 @@ function _emailRejeicao($pdo, $ped, $notas) {
         send_email(
             array($col['email']),
             $body,
-            'Acessos DEQ: Pedido não aprovado',
+            'Acessos DEQB: Pedido não aprovado',
             array('deqdir@fe.up.pt','fmartins@fe.up.pt')
         );
     } catch (\PHPMailer\PHPMailer\Exception $e) {
@@ -400,7 +462,7 @@ function _emailConclusao($pdo, $ped) {
         send_email(
             array($reg['email']),
             $body,
-            'Acessos DEQ: Acessos atualizados',
+            'Acessos DEQB: Acessos atualizados',
             array('deqdir@fe.up.pt','fmartins@fe.up.pt')
         );
     } catch (\PHPMailer\PHPMailer\Exception $e) {
@@ -562,96 +624,7 @@ if (!empty($_POST['pedido_action']) && !empty($_POST['pedido_id'])) {
         header('Location: index.php'); exit;
     }
 
-    // ── Admin: criar novo registo em nome de outro utilizador ────────────
-    if (isset($_POST['_acao']) && $_POST['_acao'] === 'admin_novo_registo') {
-        $erroAdminReg = null;
-        $adm_codigo   = trim($_POST['adm_codigo'] ?? '');
-        $adm_nome     = trim($_POST['adm_nome']   ?? '');
-        $adm_email    = trim($_POST['adm_email']  ?? '');
-        $adm_inicio   = trim($_POST['adm_datainicio'] ?? '');
-        $adm_fim      = trim($_POST['adm_datafim']    ?? '');
-        $adm_grupo    = (int)($_POST['adm_grupo']    ?? 0);
-        $adm_cat      = (int)($_POST['adm_categoria'] ?? 0);
-        $adm_resp     = (int)($_POST['adm_responsavel'] ?? 0);
-        $adm_outroresp = trim($_POST['adm_outroresponsavel'] ?? '');
-        $adm_acessodeq = (int)($_POST['adm_acessodeq'] ?? 0);
-        $adm_labs      = isset($_POST['adm_acessos']) && is_array($_POST['adm_acessos'])
-                         ? array_map('trim', $_POST['adm_acessos']) : array();
-
-        if ($adm_codigo === '' || $adm_inicio === '' || $adm_grupo === 0) {
-            $erroAdminReg = 'Campos obrigatórios em falta (código UP, data início, grupo).';
-        }
-        if (!$erroAdminReg) {
-            try {
-                $pdoAdm = Database::connect();
-                $pdoAdm->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                // Verificar/criar colaborador
-                $chkCol = $pdoAdm->prepare('SELECT 1 FROM infodeqb_rds_colaborador WHERE codigo=?');
-                $chkCol->execute([$adm_codigo]);
-                if (!$chkCol->fetchColumn()) {
-                    if ($adm_nome === '') {
-                        $erroAdminReg = 'Colaborador não encontrado — preencha o Nome para criar.';
-                    } else {
-                        $pdoAdm->prepare(
-                            'INSERT INTO infodeqb_rds_colaborador (codigo,nome,email,createdate) VALUES (?,?,?,?)'
-                        )->execute([$adm_codigo, $adm_nome, $adm_email, time()]);
-                    }
-                }
-
-                if (!$erroAdminReg) {
-                    $gabMapAdm = getGabMap($pdoAdm);
-                    $labNomes  = array();
-                    foreach ($adm_labs as $_lid) {
-                        $labNomes[] = isset($gabMapAdm[$_lid]) ? $gabMapAdm[$_lid] : $_lid;
-                    }
-                    $acessosStr = implode('; ', $labNomes);
-                    $acessosId  = implode('; ', $adm_labs);
-
-                    $insAdm = $pdoAdm->prepare(
-                        "INSERT INTO infodeqb_rds_registo
-                         (codigo,datainicio,datafim,grupo,categoria,responsavel,outroresponsavel,
-                          acessodeq,acessos,acessosid,status,createdate,dataregisto,deleted)
-                         VALUES (?,?,?,?,?,?,?,?,?,?,'Novo',?,?,0)"
-                    );
-                    $insAdm->execute([
-                        $adm_codigo,
-                        $adm_inicio,
-                        $adm_fim ?: null,
-                        $adm_grupo,
-                        $adm_cat ?: null,
-                        $adm_resp,
-                        $adm_outroresp,
-                        $adm_acessodeq,
-                        $acessosStr,
-                        $acessosId,
-                        time(),
-                        date('Y-m-d H:i:s'),
-                    ]);
-                    $newAdmId = (int)$pdoAdm->lastInsertId();
-                    if ($newAdmId > 0 && !empty($adm_labs)) {
-                        setRegistoAcessos($pdoAdm, $newAdmId, $adm_labs, $gabMapAdm);
-                    }
-                    header('Location: index.php?tab=pills-new&created=1'); exit;
-                }
-            } catch (PDOException $e) {
-                $erroAdminReg = 'Erro BD: ' . $e->getMessage();
-            }
-        }
-        // Se chegou aqui houve erro — guardar na sessão e redirecionar
-        if ($erroAdminReg) {
-            $_SESSION['admin_reg_erro'] = $erroAdminReg;
-            header('Location: index.php'); exit;
-        }
-    }
 }
-
-// ── Dados de referência para modal Admin ────────────────────────────────
-$rowsGrupo   = $pdo->query('SELECT * FROM infodeqb_rds_grupo ORDER BY orderid')->fetchAll(PDO::FETCH_ASSOC);
-$rowsCat     = $pdo->query('SELECT * FROM infodeqb_rds_categoria ORDER BY categoriaid')->fetchAll(PDO::FETCH_ASSOC);
-$grupoCatMap = getGrupoCategoriasMap($pdo);
-$rowsResp    = $pdo->query('SELECT * FROM infodeqb_rds_responsaveis WHERE Codigo != 0 ORDER BY respespaco')->fetchAll(PDO::FETCH_ASSOC);
-$gabRowsAdm  = $pdo->query('SELECT * FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY edificio, piso, nomegab')->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = 'Administração — Colaboradores';
 include ROOT_DIR.'/infodeqb/inc/header.php';
@@ -716,12 +689,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 </div>
 <?php endif; ?>
-<?php if (!empty($_SESSION['admin_reg_erro'])): ?>
-<div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-  <i class="fas fa-exclamation-circle me-1"></i><?= htmlspecialchars($_SESSION['admin_reg_erro']) ?>
-  <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
-</div>
-<?php unset($_SESSION['admin_reg_erro']); endif; ?>
 				<!-- ── Filtro por laboratório ──────────────────────────────────────── -->
 <div class="mb-3 p-2 rounded border bg-light" id="lab-filter-bar" style="font-size:.84rem">
   <div class="d-flex align-items-center flex-wrap" style="gap:8px">
@@ -754,12 +721,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
         <!-- Checkboxes agrupados por piso -->
         <div id="labCheckList" style="max-height:250px;overflow-y:auto;padding:8px 10px">
-<?php foreach ($gabFilterByPiso as $fpiso => $fgabs): ?>
+<?php foreach ($gabFilterByPiso as $fkey => $fgabs): ?>
           <div class="lab-group">
             <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;
                         color:#6c757d;letter-spacing:.04em;
                         border-bottom:1px solid #dee2e6;padding-bottom:2px;margin-bottom:3px;margin-top:6px">
-              <?= htmlspecialchars($fpiso) ?>
+              <?= htmlspecialchars($fgabs[0]['piso']) ?>
             </div>
 <?php foreach ($fgabs as $fg): ?>
             <div class="lab-item" style="padding:2px 0">
@@ -949,10 +916,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
     </a>
   </li>
   <li class="nav-item ms-auto d-flex align-items-center pe-1">
-    <button type="button" class="btn btn-sm btn-success"
-            data-bs-toggle="modal" data-bs-target="#modalAdminNovoRegisto">
+    <a class="btn btn-sm btn-success" href="../index.php?admin=1">
       <i class="fas fa-plus fa-xs me-1"></i>Novo Registo (Admin)
-    </button>
+    </a>
   </li>
 </ul>
 						<div class="tab-content" id="pills-tabContent">
@@ -997,13 +963,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         );
         foreach ($qNovoVals->fetchAll(PDO::FETCH_ASSOC) as $vr) {
             $tot = (int)$vr['total']; $ok = (int)$vr['ok']; $rej = (int)$vr['rej'];
-            if ($tot > 0 && $ok === $tot) {
-                $novoValStatus[(int)$vr['registo_id']] = 'all_ok';
-            } elseif ($rej > 0) {
-                $novoValStatus[(int)$vr['registo_id']] = 'rejected';
-            } elseif ($tot > 0) {
-                $novoValStatus[(int)$vr['registo_id']] = 'pending';
-            }
+            $novoValStatus[(int)$vr['registo_id']] = array(
+                'tot'  => $tot,
+                'ok'   => $ok,
+                'rej'  => $rej,
+                'pend' => $tot - $ok - $rej,
+            );
         }
         // Registos onde existe pelo menos um lab cujo responsável
         // não tem pedido de validação real (mesma lógica do $qSemPedido acima)
@@ -1035,19 +1000,26 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 'Novo'
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $vs = isset($novoValStatus[(int)$row['autoid']]) ? $novoValStatus[(int)$row['autoid']] : 'none';
-                // Badge de estado das validações existentes
+                $vs = isset($novoValStatus[(int)$row['autoid']])
+                    ? $novoValStatus[(int)$row['autoid']]
+                    : array('tot'=>0,'ok'=>0,'rej'=>0,'pend'=>0);
+                $temSemPedidoRow = isset($semPedidoIds[(int)$row['autoid']]);
+
+                // Badges de estado das validações (podem combinar-se)
                 $valBadge = '';
-                if ($vs === 'all_ok') {
+                if ($vs['tot'] > 0 && $vs['ok'] === $vs['tot'] && !$temSemPedidoRow) {
                     $valBadge = ' <span class="badge badge-success" title="Todas as validações concluídas" style="font-size:.7rem">✓ val.</span>';
-                } elseif ($vs === 'rejected') {
-                    $valBadge = ' <span class="badge badge-danger" title="Validação rejeitada" style="font-size:.7rem">✗ val.</span>';
-                } elseif ($vs === 'pending') {
-                    $valBadge = ' <span class="badge badge-warning" title="Validações pendentes" style="font-size:.7rem">⏳ val.</span>';
+                } else {
+                    if ($vs['rej'] > 0) {
+                        $valBadge .= ' <span class="badge badge-danger" title="Validação rejeitada" style="font-size:.7rem">✗ val.</span>';
+                    }
+                    if ($vs['pend'] > 0) {
+                        $valBadge .= ' <span class="badge badge-warning" title="Validações pendentes" style="font-size:.7rem">⏳ val.</span>';
+                    }
                 }
-                // Badge laranja separado: acessos sem pedido de validação enviado
+                // Badge separado: acessos sem pedido de validação enviado
                 $semPedidoBadge = '';
-                if (isset($semPedidoIds[(int)$row['autoid']])) {
+                if ($temSemPedidoRow) {
                     $semPedidoBadge = ' <span class="badge" style="background:#6f42c1;color:#fff;font-size:.7rem" title="Tem acessos sem pedido de validação enviado">⚠ sem pedido</span>';
                 }
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
@@ -1071,7 +1043,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 // Condições para os botões de acção
                 $temPedidosVal   = isset($novoValStatus[$autoidRow]); // já tem validações solicitadas
-                $validacoesOk    = ($vs === 'all_ok');                // todas aprovadas
+                $validacoesOk    = ($vs['tot'] > 0 && $vs['ok'] === $vs['tot']); // todas aprovadas
                 $semPedido       = isset($semPedidoIds[$autoidRow]);  // labs sem pedido
                 $podeAcessos     = $validacoesOk && !$semPedido;
 
@@ -1171,7 +1143,11 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-sm"></i> </a></td>';
+                        '"><i class="fas fa-info fa-sm"></i> </a>';
+                echo '<button type="button" class="btn btn-xs btn-success ms-1" title="Ativar registo"'
+                   . ' onclick="ativarRegistoPendente(' . (int)$row['autoid'] . ',' . json_encode($row['codigo']) . ')">'
+                   . '<i class="fas fa-check fa-xs"></i></button>';
+                echo '</td>';
 
                 echo '</tr>';
             }
@@ -1180,8 +1156,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         ?>
 												</tbody>
 												<tfooter>
-												<tr class="bg-white">
-													<td colspan="8" class="text-end py-2">
+												<tr>
+													<td colspan="8" class="text-end py-2" style="background:#f0f7fa !important;border-top:1px solid #cde0ea !important;">
 														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
 														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-success"
@@ -1260,8 +1236,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 									</form>
 												</tbody>
 												<tfooter>
-												<tr class="bg-white">
-													<td colspan="9" class="text-end py-2">
+												<tr>
+													<td colspan="9" class="text-end py-2" style="background:#f0f7fa !important;border-top:1px solid #cde0ea !important;">
 														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
 														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-info me-1"
@@ -1362,8 +1338,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											</form>
 												</tbody>
 												<tfooter>
-												<tr class="bg-white">
-													<td colspan="9" class="text-end py-2">
+												<tr>
+													<td colspan="9" class="text-end py-2" style="background:#f0f7fa !important;border-top:1px solid #cde0ea !important;">
 														<span class="text-dark me-2"><b>Com os selecionados:</b></span>
 														<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 														   class="batchaction btn btn-sm btn-secondary"
@@ -1382,6 +1358,16 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 								aria-labelledby="pills-inactive-tab">
 								<div class="row ">
 									<div class="col-md-12 col-xs-12">
+										<?php if ($inativosAntigosCount > 0): ?>
+										<form action="index.php" method="post" class="mb-2"
+											  onsubmit="return confirm('Eliminar definitivamente ' + <?= (int)$inativosAntigosCount ?> + ' registo(s) inativo(s) há mais de 2 anos? Esta ação não pode ser revertida.')">
+											<input type="hidden" name="eliminar_inativos_antigos" value="1">
+											<button type="submit" class="btn btn-sm btn-outline-danger">
+												<i class="fas fa-trash-alt me-1"></i> Eliminar registos inativos há +2 anos
+												<span class="badge badge-danger ms-1"><?= $inativosAntigosCount ?></span>
+											</button>
+										</form>
+										<?php endif; ?>
 										<form action='index.php' id='forminativos' method='post'>
 											<div class="d-none">
 												<input name="action" value="Ativo"></input>
@@ -1442,8 +1428,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 										<?php Database::disconnect()?>
 											</tbody>
 											<tfooter>
-											<tr class="bg-white">
-												<td colspan="9" class="text-end py-2">
+											<tr>
+												<td colspan="9" class="text-end py-2" style="background:#f0f7fa !important;border-top:1px solid #cde0ea !important;">
 													<span class="text-dark me-2"><b>Com os selecionados:</b></span>
 													<a type="button" href="#" data-bs-toggle="modal" data-bs-target="#modalaction"
 													   class="batchaction btn btn-sm btn-success"
@@ -1587,9 +1573,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
           <?php endif; ?>
         </form>
         <form method="post" style="display:inline"
-              onsubmit="return confirm('Rejeitar este pedido?')">
+              onsubmit="return rejeitarPedido(this)">
           <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
           <input type="hidden" name="pedido_action" value="Rejeitado">
+          <input type="hidden" name="notas_admin"   value="">
           <button class="btn btn-sm btn-danger">✗ Rejeitar</button>
         </form>
       </td>
@@ -1848,6 +1835,33 @@ function adminAcao(acao, registoId) {
   document.body.appendChild(f);
   f.submit();
 }
+
+// Rejeitar pedido de alteração: exige justificação a enviar ao requerente
+function rejeitarPedido(form) {
+  var motivo = prompt('Indique a justificação da rejeição (será incluída no email ao requerente):');
+  if (motivo === null) return false;
+  motivo = motivo.trim();
+  if (!motivo) {
+    alert('É obrigatório indicar uma justificação.');
+    return false;
+  }
+  form.querySelector('input[name="notas_admin"]').value = motivo;
+  return confirm('Rejeitar este pedido?');
+}
+
+// Ativar um único registo Pendente (linha a linha)
+function ativarRegistoPendente(autoid, codigo) {
+  if (!confirm('Ativar este registo?')) return;
+  var f = document.createElement('form');
+  f.method = 'POST';
+  f.action = 'index.php';
+  f.style.display = 'none';
+  f.innerHTML = '<input name="action" value="Ativo">'
+              + '<input name="selector[' + autoid + ']" value="1">'
+              + '<input name="codigo[' + autoid + ']" value="' + esc(codigo) + '">';
+  document.body.appendChild(f);
+  f.submit();
+}
 </script>
 
 <!-- Logout Modal-->
@@ -1927,28 +1941,40 @@ window._labIdToName = <?= json_encode($labIdToNameMap, JSON_UNESCAPED_UNICODE) ?
   var activeTab  = document.getElementById('pills-active-tab');
   var activePane = document.getElementById('pills-active');
   var _filtered  = false;
+  var _totalPend = activePane ? activePane.querySelectorAll('tbody tr[data-notif-pend]').length : 0;
+  var _btnHtmlOn = btnFilter ? btnFilter.innerHTML : '';
+
+  // Custom search do DataTables — só filtra a tabela #active e só quando activo
+  // Registado em $(document).ready porque o script do DataTables (footer.php)
+  // só é carregado DEPOIS deste bloco inline — $.fn.dataTable ainda não existe aqui.
+  $(document).ready(function () {
+    if (window.jQuery && $.fn.dataTable) {
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (!_filtered || settings.nTable.id !== 'active') return true;
+        var aoRow = settings.aoData ? settings.aoData[dataIndex] : null;
+        var nTr   = aoRow ? aoRow.nTr : null;
+        return !!(nTr && nTr.getAttribute('data-notif-pend') === '1');
+      });
+    }
+  });
 
   function applyFilter(on) {
     _filtered = on;
-    var rows = activePane ? activePane.querySelectorAll('tbody tr[data-notif-pend]') : [];
-    var allRows = activePane ? activePane.querySelectorAll('tbody tr') : [];
 
     if (on) {
-      // Esconder linhas sem a flag
-      allRows.forEach(function (r) {
-        r.style.display = r.getAttribute('data-notif-pend') === '1' ? '' : 'none';
-      });
       if (btnFilter) {
         btnFilter.classList.replace('btn-outline-warning', 'btn-warning');
-        btnFilter.querySelector('span') && (btnFilter.querySelector('span').textContent = '✕ Limpar filtro');
+        btnFilter.innerHTML = '✕ Limpar filtro';
       }
     } else {
-      allRows.forEach(function (r) { r.style.display = ''; });
       if (btnFilter) {
         btnFilter.classList.replace('btn-warning', 'btn-outline-warning');
-        var sp = btnFilter.querySelector('span');
-        if (sp) sp.textContent = '⏳ Ver ' + rows.length + ' pendente' + (rows.length !== 1 ? 's' : '');
+        btnFilter.innerHTML = _btnHtmlOn;
       }
+    }
+
+    if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#active')) {
+      $('#active').DataTable().draw();
     }
   }
 
@@ -1983,210 +2009,6 @@ window._labIdToName = <?= json_encode($labIdToNameMap, JSON_UNESCAPED_UNICODE) ?
   if (window.location.search.indexOf('filter=notif') !== -1) {
     document.addEventListener('DOMContentLoaded', function () {
       setTimeout(activateAndFilter, 200);
-    });
-  }
-}());
-</script>
-
-<!-- ── Modal: Admin — Novo Registo em nome de utilizador ─────────────── -->
-<div class="modal fade" id="modalAdminNovoRegisto" tabindex="-1"
-     aria-labelledby="modalAdminNovoRegistoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <form method="post" action="index.php" id="formAdminNovoRegisto">
-        <input type="hidden" name="_acao" value="admin_novo_registo">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalAdminNovoRegistoLabel">
-            <i class="fas fa-plus-circle me-2 text-success"></i>Novo Registo (Admin)
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-
-          <div class="row g-3">
-
-            <!-- Código UP -->
-            <div class="col-md-4">
-              <label class="form-label fw-semibold">Código UP <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="adm_codigo" id="adm_codigo"
-                     placeholder="ex: up202300001" required>
-              <div class="form-text">Código institucional (up…)</div>
-            </div>
-
-            <!-- Nome -->
-            <div class="col-md-4">
-              <label class="form-label fw-semibold">Nome</label>
-              <input type="text" class="form-control" name="adm_nome" id="adm_nome"
-                     placeholder="Só se não existir na BD">
-              <div class="form-text">Preencher se for colaborador novo</div>
-            </div>
-
-            <!-- Email -->
-            <div class="col-md-4">
-              <label class="form-label fw-semibold">Email</label>
-              <input type="email" class="form-control" name="adm_email" id="adm_email"
-                     placeholder="colaborador@fe.up.pt">
-            </div>
-
-            <!-- Data início -->
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Data de início <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" name="adm_datainicio" required>
-            </div>
-
-            <!-- Data fim -->
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Data de fim</label>
-              <input type="date" class="form-control" name="adm_datafim">
-            </div>
-
-            <!-- Grupo profissional -->
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Grupo profissional <span class="text-danger">*</span></label>
-              <select class="form-select" name="adm_grupo" id="adm_grupo" required>
-                <option value="">-- Seleccione --</option>
-                <?php foreach ($rowsGrupo as $rg): ?>
-                <option value="<?= (int)$rg['grupoid'] ?>"><?= htmlspecialchars($rg['grupo_pro']) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <!-- Categoria -->
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Categoria</label>
-              <select class="form-select" name="adm_categoria" id="adm_categoria">
-                <option value="">-- Seleccione --</option>
-                <?php foreach ($rowsCat as $rc): ?>
-                <option value="<?= (int)$rc['categoriaid'] ?>"><?= htmlspecialchars($rc['categoria_pro']) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <!-- Responsável -->
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Responsável</label>
-              <select class="form-select" name="adm_responsavel" id="adm_responsavel">
-                <option value="0">-- Outro (preencher abaixo) --</option>
-                <?php foreach ($rowsResp as $rr): ?>
-                <option value="<?= (int)$rr['Codigo'] ?>"><?= htmlspecialchars($rr['respespaco']) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <!-- Outro responsável (visível só se select = 0) -->
-            <div class="col-md-6" id="adm_outroresp_wrap">
-              <label class="form-label fw-semibold">Outro responsável</label>
-              <input type="text" class="form-control" name="adm_outroresponsavel"
-                     placeholder="Nome do responsável">
-            </div>
-
-            <!-- Acesso DEQB -->
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Acesso DEQB (Porta Norte)</label>
-              <select class="form-select" name="adm_acessodeq">
-                <option value="0">Não</option>
-                <option value="1">Sim</option>
-              </select>
-            </div>
-
-            <!-- Labs -->
-            <div class="col-12">
-              <label class="form-label fw-semibold">Laboratórios / Espaços</label>
-              <div style="max-height:220px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px;padding:10px">
-                <?php
-                $admGabCurPiso = '';
-                foreach ($gabRowsAdm as $admGab):
-                    if ($admGab['piso'] !== $admGabCurPiso):
-                        if ($admGabCurPiso !== '') echo '</div>';
-                        $admGabCurPiso = $admGab['piso'];
-                        echo '<div class="iq-checkgroup"><span class="iq-checkgroup-label">'
-                           . htmlspecialchars($admGabCurPiso) . '</span>';
-                    endif;
-                ?>
-                <label style="display:flex;align-items:center;gap:6px;font-weight:normal;margin-bottom:2px">
-                  <input type="checkbox" name="adm_acessos[]" value="<?= htmlspecialchars($admGab['deqid']) ?>">
-                  <span><?= htmlspecialchars($admGab['nomegab']) ?></span>
-                  <small class="text-muted" style="font-size:.72rem"><?= htmlspecialchars($admGab['deqid']) ?></small>
-                </label>
-                <?php endforeach; ?>
-                <?php if ($admGabCurPiso !== '') echo '</div>'; ?>
-              </div>
-            </div>
-
-          </div><!-- /row -->
-        </div><!-- /modal-body -->
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success">
-            <i class="fas fa-save me-1"></i>Criar Registo
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-  // Filtro dinâmico de categorias no modal admin
-  var grupoCatMap = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
-  var selGrupo = document.getElementById('adm_grupo');
-  var selCat   = document.getElementById('adm_categoria');
-  var allCatOpts = selCat ? Array.prototype.slice.call(selCat.options) : [];
-
-  function filterCats() {
-    if (!selGrupo || !selCat) return;
-    var gid = parseInt(selGrupo.value, 10);
-    var allowed = grupoCatMap[gid] || null;
-    var prevVal = selCat.value;
-    selCat.innerHTML = '';
-    var defOpt = document.createElement('option');
-    defOpt.value = ''; defOpt.textContent = '-- Seleccione --';
-    selCat.appendChild(defOpt);
-    allCatOpts.forEach(function (opt) {
-      if (!opt.value) return;
-      if (!allowed || allowed.indexOf(parseInt(opt.value, 10)) !== -1) {
-        selCat.appendChild(opt.cloneNode(true));
-      }
-    });
-    selCat.value = prevVal;
-  }
-
-  if (selGrupo) selGrupo.addEventListener('change', filterCats);
-
-  // Mostrar/ocultar campo "outro responsável"
-  var selResp      = document.getElementById('adm_responsavel');
-  var wrapOutroresp = document.getElementById('adm_outroresp_wrap');
-  function toggleOutroresp() {
-    if (!selResp || !wrapOutroresp) return;
-    wrapOutroresp.style.display = (selResp.value === '0') ? '' : 'none';
-  }
-  if (selResp) {
-    selResp.addEventListener('change', toggleOutroresp);
-    toggleOutroresp();
-  }
-
-  // Autocomplete colaborador por código UP
-  var inpCodigo = document.getElementById('adm_codigo');
-  var inpNome   = document.getElementById('adm_nome');
-  var inpEmail  = document.getElementById('adm_email');
-  if (inpCodigo) {
-    var _acTimer = null;
-    inpCodigo.addEventListener('input', function () {
-      clearTimeout(_acTimer);
-      var cod = this.value.trim();
-      if (!cod) return;
-      _acTimer = setTimeout(function () {
-        fetch('ajax-colab.php?codigo=' + encodeURIComponent(cod))
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (data) {
-            if (data && data.nome) {
-              if (inpNome  && !inpNome.value)  inpNome.value  = data.nome;
-              if (inpEmail && !inpEmail.value) inpEmail.value = data.email || '';
-            }
-          })
-          .catch(function () {});
-      }, 400);
     });
   }
 }());

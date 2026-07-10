@@ -62,7 +62,7 @@ if (empty($_SESSION['ids'])) {
             case 'Pendente':
                 $pedido = isset($_SESSION['action']) ? $_SESSION['action'] : null;
                 $body = format_email($info, 'mail_pedido.html');
-                $subject = 'Acessos DEQ: Solicitação de novos acessos';
+                $subject = 'Acessos DEQB: Solicitação de novos acessos';
                 $to = array(
                         'sigarra@fe.up.pt',
                 );
@@ -75,7 +75,7 @@ if (empty($_SESSION['ids'])) {
             case 'notify':
                 $notifica = isset($_SESSION['action']) ? $_SESSION['action'] : null;
                 $body = format_email($info, 'mail_expira.html');
-                $subject = 'Acessos DEQ: Acessos a caducar';
+                $subject = 'Acessos DEQB: Acessos a caducar';
                 $to = array(
                         $info['mail']
                 );
@@ -88,14 +88,14 @@ if (empty($_SESSION['ids'])) {
                 # $desativar = isset($_SESSION['action']) ? $_SESSION['action']
                 # : null;
                 # $body = format_email($info,'mail_desativa.html');
-                # $subject= 'Acessos DEQ: Cancelamento de acessos';
+                # $subject= 'Acessos DEQB: Cancelamento de acessos';
                 # $to=array ('deqdir@fe.up.pt','catc@fe.up.pt');
                 # $list=array('fmartins@fe.up.pt');
                 break;
             case 'Ativo':
                 $ativar = isset($_SESSION['action']) ? $_SESSION['action'] : null;
                 $body = format_email($info, 'mail_ativa.html');
-                $subject = 'Acessos DEQ: Acessos concedidos';
+                $subject = 'Acessos DEQB: Acessos concedidos';
                 $to = array(
                         $info['mail']
                 );

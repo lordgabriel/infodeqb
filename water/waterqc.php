@@ -33,13 +33,11 @@ if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'inserir') {
             )->execute([$dia, $condDest, $phDest]);
         }
         $tocDest = $_POST['toc_dest'] !== '' ? (float)$_POST['toc_dest'] : null;
-        $tcDest  = $_POST['tc_dest']  !== '' ? (float)$_POST['tc_dest']  : null;
-        $icDest  = $_POST['ic_dest']  !== '' ? (float)$_POST['ic_dest']  : null;
-        if ($tocDest !== null || $tcDest !== null || $icDest !== null) {
+        if ($tocDest !== null) {
             $pdo->prepare(
-                'INSERT INTO infodeqb_waterqc_toc (dia, water_type, TOC, TC, IC)
-                 VALUES (?, 2, ?, ?, ?)'
-            )->execute([$dia, $tocDest, $tcDest, $icDest]);
+                'INSERT INTO infodeqb_waterqc_toc (dia, water_type, TOC)
+                 VALUES (?, 2, ?)'
+            )->execute([$dia, $tocDest]);
         }
 
         // Purificada — water_type = 3
@@ -52,13 +50,11 @@ if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'inserir') {
             )->execute([$dia, $condPur, $phPur]);
         }
         $tocPur = $_POST['toc_pur'] !== '' ? (float)$_POST['toc_pur'] : null;
-        $tcPur  = $_POST['tc_pur']  !== '' ? (float)$_POST['tc_pur']  : null;
-        $icPur  = $_POST['ic_pur']  !== '' ? (float)$_POST['ic_pur']  : null;
-        if ($tocPur !== null || $tcPur !== null || $icPur !== null) {
+        if ($tocPur !== null) {
             $pdo->prepare(
-                'INSERT INTO infodeqb_waterqc_toc (dia, water_type, TOC, TC, IC)
-                 VALUES (?, 3, ?, ?, ?)'
-            )->execute([$dia, $tocPur, $tcPur, $icPur]);
+                'INSERT INTO infodeqb_waterqc_toc (dia, water_type, TOC)
+                 VALUES (?, 3, ?)'
+            )->execute([$dia, $tocPur]);
         }
 
         $pdo->commit();
@@ -70,6 +66,159 @@ if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'inserir') {
         $flashMsg  = 'Erro ao inserir registo: ' . $e->getMessage();
         $flashType = 'danger';
     }
+}
+
+// ── Edição de uma linha existente (apenas admins) ─────────────────
+if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'editar_linha') {
+    try {
+        $pdo->beginTransaction();
+        $dia = $_POST['dia'];
+
+        $numOrNull = function ($v) {
+            return ($v !== null && $v !== '') ? (float)$v : null;
+        };
+
+        $upsertPC = function ($id, $type, $cond, $ph) use ($pdo, $dia) {
+            $hasVal = ($cond !== null || $ph !== null);
+            if ($id) {
+                if ($hasVal) {
+                    $pdo->prepare('UPDATE infodeqb_waterqc_ph_cond SET condutivity=?, pH=? WHERE id=?')
+                        ->execute([$cond, $ph, $id]);
+                } else {
+                    $pdo->prepare('DELETE FROM infodeqb_waterqc_ph_cond WHERE id=?')->execute([$id]);
+                }
+            } elseif ($hasVal) {
+                $pdo->prepare('INSERT INTO infodeqb_waterqc_ph_cond (dia, water_type, condutivity, pH) VALUES (?,?,?,?)')
+                    ->execute([$dia, $type, $cond, $ph]);
+            }
+        };
+
+        $upsertTOC = function ($id, $type, $toc) use ($pdo, $dia) {
+            $hasVal = ($toc !== null);
+            if ($id) {
+                if ($hasVal) {
+                    $pdo->prepare('UPDATE infodeqb_waterqc_toc SET TOC=? WHERE id=?')->execute([$toc, $id]);
+                } else {
+                    $pdo->prepare('DELETE FROM infodeqb_waterqc_toc WHERE id=?')->execute([$id]);
+                }
+            } elseif ($hasVal) {
+                $pdo->prepare('INSERT INTO infodeqb_waterqc_toc (dia, water_type, TOC) VALUES (?,?,?)')
+                    ->execute([$dia, $type, $toc]);
+            }
+        };
+
+        $upsertPC((int)($_POST['id_pc_dest'] ?? 0) ?: null, 2,
+                  $numOrNull($_POST['cond_dest'] ?? ''), $numOrNull($_POST['ph_dest'] ?? ''));
+        $upsertPC((int)($_POST['id_pc_pur'] ?? 0) ?: null, 3,
+                  $numOrNull($_POST['cond_pur'] ?? ''), $numOrNull($_POST['ph_pur'] ?? ''));
+        $upsertTOC((int)($_POST['id_toc_dest'] ?? 0) ?: null, 2, $numOrNull($_POST['toc_dest'] ?? ''));
+        $upsertTOC((int)($_POST['id_toc_pur'] ?? 0) ?: null, 3, $numOrNull($_POST['toc_pur'] ?? ''));
+
+        $pdo->commit();
+        $flashMsg  = 'Registo de ' . htmlspecialchars($dia) . ' actualizado.';
+        $flashType = 'success';
+
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        $flashMsg  = 'Erro ao actualizar registo: ' . $e->getMessage();
+        $flashType = 'danger';
+    }
+}
+
+// ── Eliminar todos os registos de um dia (apenas admins) ──────────
+if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'apagar_dia') {
+    try {
+        $pdo->beginTransaction();
+        $dia = $_POST['dia'];
+        $pdo->prepare('DELETE FROM infodeqb_waterqc_ph_cond WHERE dia=?')->execute([$dia]);
+        $pdo->prepare('DELETE FROM infodeqb_waterqc_toc WHERE dia=?')->execute([$dia]);
+        $pdo->commit();
+        $flashMsg  = 'Registos de ' . htmlspecialchars($dia) . ' eliminados.';
+        $flashType = 'success';
+
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        $flashMsg  = 'Erro ao eliminar registo: ' . $e->getMessage();
+        $flashType = 'danger';
+    }
+}
+
+// ── Edição dos dados de um equipamento (apenas admins) ────────────
+if (!empty($_POST) && $isAdmin && ($_POST['_acao'] ?? '') === 'editar_equip') {
+    try {
+        $id    = (int)$_POST['id'];
+        $marca  = trim($_POST['marca']  ?? '');
+        $modelo = trim($_POST['modelo'] ?? '');
+        $dataAq = trim($_POST['data_aquisicao'] ?? '');
+        if ($dataAq === '') $dataAq = null;
+
+        $pdo->prepare(
+            'UPDATE infodeqb_waterqc_equip SET marca=?, modelo=?, data_aquisicao=? WHERE id=?'
+        )->execute([$marca ?: null, $modelo ?: null, $dataAq, $id]);
+
+        $flashMsg  = 'Dados do equipamento actualizados.';
+        $flashType = 'success';
+
+    } catch (Exception $e) {
+        $flashMsg  = 'Erro ao actualizar equipamento: ' . $e->getMessage();
+        $flashType = 'danger';
+    }
+}
+
+// ── Dados dos equipamentos ────────────────────────────────────────
+$equipamentos = $pdo->query('SELECT * FROM infodeqb_waterqc_equip ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+
+// ── Listagem para edição (mês seleccionado, apenas admins) ────────
+$editRows = [];
+$editMes  = '';
+$editPrevMes = '';
+$editNextMes = '';
+$editMesLabel = '';
+if ($isAdmin) {
+    $editMes = preg_replace('/[^0-9\-]/', '', $_GET['edit_mes'] ?? '');
+    if (!preg_match('/^\d{4}-\d{2}$/', $editMes)) $editMes = date('Y-m');
+    $editDe  = $editMes . '-01';
+    $editAte = date('Y-m-t', strtotime($editDe));
+
+    $mesesLPTphp = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    $editMesLabel = $mesesLPTphp[(int)date('n', strtotime($editDe)) - 1] . ' ' . date('Y', strtotime($editDe));
+    $editPrevMes = date('Y-m', strtotime($editDe . ' -1 month'));
+    $editNextMes = date('Y-m', strtotime($editDe . ' +1 month'));
+
+    $qPC = $pdo->prepare(
+        "SELECT id, DATE_FORMAT(dia,'%Y-%m-%d') AS dia, water_type, condutivity, pH
+         FROM infodeqb_waterqc_ph_cond p
+         WHERE dia >= ? AND dia <= ?
+           AND id = (SELECT MAX(id) FROM infodeqb_waterqc_ph_cond p2
+                     WHERE p2.dia = p.dia AND p2.water_type = p.water_type)
+         ORDER BY dia ASC, water_type ASC"
+    );
+    $qPC->execute([$editDe, $editAte]);
+    foreach ($qPC->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $d = $r['dia'];
+        if (!isset($editRows[$d])) $editRows[$d] = [];
+        $key = $r['water_type'] == 2 ? 'pc_dest' : 'pc_pur';
+        $editRows[$d][$key] = ['id' => $r['id'], 'cond' => $r['condutivity'], 'ph' => $r['pH']];
+    }
+
+    $qTOC = $pdo->prepare(
+        "SELECT id, DATE_FORMAT(dia,'%Y-%m-%d') AS dia, water_type, TOC
+         FROM infodeqb_waterqc_toc p
+         WHERE dia >= ? AND dia <= ?
+           AND id = (SELECT MAX(id) FROM infodeqb_waterqc_toc p2
+                     WHERE p2.dia = p.dia AND p2.water_type = p.water_type)
+         ORDER BY dia ASC, water_type ASC"
+    );
+    $qTOC->execute([$editDe, $editAte]);
+    foreach ($qTOC->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $d = $r['dia'];
+        if (!isset($editRows[$d])) $editRows[$d] = [];
+        $key = $r['water_type'] == 2 ? 'toc_dest' : 'toc_pur';
+        $editRows[$d][$key] = ['id' => $r['id'], 'toc' => $r['TOC']];
+    }
+
+    ksort($editRows);
 }
 
 Database::disconnect();
@@ -141,16 +290,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   <input type="number" step="0.001" name="toc_dest"
                          class="form-control form-control-sm">
                 </div>
-                <div class="col form-group mb-0">
-                  <label class="small mb-1">TC</label>
-                  <input type="number" step="0.001" name="tc_dest"
-                         class="form-control form-control-sm">
-                </div>
-                <div class="col form-group mb-0">
-                  <label class="small mb-1">IC</label>
-                  <input type="number" step="0.001" name="ic_dest"
-                         class="form-control form-control-sm">
-                </div>
               </div>
             </div>
           </div>
@@ -179,16 +318,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   <input type="number" step="0.001" name="toc_pur"
                          class="form-control form-control-sm">
                 </div>
-                <div class="col form-group mb-0">
-                  <label class="small mb-1">TC</label>
-                  <input type="number" step="0.001" name="tc_pur"
-                         class="form-control form-control-sm">
-                </div>
-                <div class="col form-group mb-0">
-                  <label class="small mb-1">IC</label>
-                  <input type="number" step="0.001" name="ic_pur"
-                         class="form-control form-control-sm">
-                </div>
               </div>
             </div>
           </div>
@@ -200,6 +329,104 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<?php /* ── Edição de registos introduzidos (apenas admins) ─────────── */ ?>
+<div class="card mb-4 border-secondary">
+  <div class="card-header py-2 d-flex align-items-center"
+       style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#formEdit">
+    <i class="fas fa-pen-to-square text-secondary me-2"></i>
+    <strong class="mr-auto text-secondary">Editar registos</strong>
+    <i class="fas fa-chevron-down fa-xs text-muted"></i>
+  </div>
+  <div id="formEdit" class="collapse<?= (isset($_GET['edit_mes']) || in_array($_POST['_acao'] ?? '', ['editar_linha', 'apagar_dia'])) ? ' show' : '' ?>">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center justify-content-center mb-3" style="gap:12px">
+        <a class="btn btn-sm btn-outline-secondary" href="?edit_mes=<?= htmlspecialchars($editPrevMes) ?>#formEdit">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        <strong><?= htmlspecialchars($editMesLabel) ?></strong>
+        <a class="btn btn-sm btn-outline-secondary" href="?edit_mes=<?= htmlspecialchars($editNextMes) ?>#formEdit">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </div>
+
+      <?php if (!$editRows): ?>
+        <p class="text-center text-muted small mb-0">Sem registos para este mês.</p>
+      <?php else: ?>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle" style="font-size:.82rem">
+          <thead class="text-center">
+            <tr>
+              <th rowspan="2" class="align-middle">Data</th>
+              <th colspan="3">Água Destilada</th>
+              <th colspan="3">Água Purificada</th>
+              <th rowspan="2" class="align-middle">Acções</th>
+            </tr>
+            <tr>
+              <th>Cond. (µS/cm)</th><th>pH</th><th>TOC</th>
+              <th>Cond. (µS/cm)</th><th>pH</th><th>TOC</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php $editRowN = 0; foreach ($editRows as $dia => $r):
+              $editRowN++;
+              $fSave = 'wqEditSave' . $editRowN;
+              $fDel  = 'wqEditDel'  . $editRowN;
+              $pcDest  = $r['pc_dest']  ?? ['id' => 0, 'cond' => null, 'ph' => null];
+              $pcPur   = $r['pc_pur']   ?? ['id' => 0, 'cond' => null, 'ph' => null];
+              $tocDest = $r['toc_dest'] ?? ['id' => 0, 'toc' => null];
+              $tocPur  = $r['toc_pur']  ?? ['id' => 0, 'toc' => null];
+          ?>
+            <tr>
+                <td class="text-nowrap"><?= htmlspecialchars(date('d/m/Y', strtotime($dia))) ?></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.001" name="cond_dest" class="form-control form-control-sm"
+                           value="<?= $pcDest['cond']  !== null ? htmlspecialchars($pcDest['cond'])  : '' ?>"></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.01"  name="ph_dest"   class="form-control form-control-sm"
+                           value="<?= $pcDest['ph']    !== null ? htmlspecialchars($pcDest['ph'])    : '' ?>"></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.001" name="toc_dest"  class="form-control form-control-sm"
+                           value="<?= $tocDest['toc']  !== null ? htmlspecialchars($tocDest['toc'])  : '' ?>"></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.001" name="cond_pur"  class="form-control form-control-sm"
+                           value="<?= $pcPur['cond']   !== null ? htmlspecialchars($pcPur['cond'])   : '' ?>"></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.01"  name="ph_pur"    class="form-control form-control-sm"
+                           value="<?= $pcPur['ph']     !== null ? htmlspecialchars($pcPur['ph'])     : '' ?>"></td>
+                <td><input form="<?= $fSave ?>" type="number" step="0.001" name="toc_pur"   class="form-control form-control-sm"
+                           value="<?= $tocPur['toc']   !== null ? htmlspecialchars($tocPur['toc'])   : '' ?>"></td>
+                <td class="text-center text-nowrap">
+                  <button form="<?= $fSave ?>" type="submit" class="btn btn-sm btn-outline-primary" title="Guardar">
+                    <i class="fas fa-save"></i>
+                  </button>
+                  <button form="<?= $fDel ?>" type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar dia">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+            </tr>
+            <tr style="display:none">
+              <td colspan="8">
+                <form id="<?= $fSave ?>" method="post">
+                  <input type="hidden" name="_acao" value="editar_linha">
+                  <input type="hidden" name="dia" value="<?= htmlspecialchars($dia) ?>">
+                  <input type="hidden" name="id_pc_dest"  value="<?= (int)$pcDest['id']  ?>">
+                  <input type="hidden" name="id_pc_pur"   value="<?= (int)$pcPur['id']   ?>">
+                  <input type="hidden" name="id_toc_dest" value="<?= (int)$tocDest['id'] ?>">
+                  <input type="hidden" name="id_toc_pur"  value="<?= (int)$tocPur['id']  ?>">
+                </form>
+                <form id="<?= $fDel ?>" method="post"
+                      onsubmit="return confirm('Eliminar todos os registos de <?= htmlspecialchars(date('d/m/Y', strtotime($dia))) ?>?');">
+                  <input type="hidden" name="_acao" value="apagar_dia">
+                  <input type="hidden" name="dia" value="<?= htmlspecialchars($dia) ?>">
+                </form>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php endif; ?>
+
     </div>
   </div>
 </div>
@@ -227,6 +454,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .wq-range-inputs { display:none; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; }
 .wq-range-inputs.open { display:flex; }
 </style>
+
+<div class="row">
+<div class="col-lg-9">
 
 <div class="wq-filter-bar">
   <!-- Linha 1: pills de preset + botão exportar -->
@@ -299,12 +529,21 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </div>
   </div>
 </div>
+<div class="d-flex align-items-center justify-content-center mb-2" style="gap:10px">
+  <button class="wq-nav-btn" id="tocPrev" title="Ano anterior">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+  <span class="wq-period-label" id="tocLabel">—</span>
+  <button class="wq-nav-btn" id="tocNext" title="Ano seguinte" disabled>
+    <i class="fas fa-chevron-right"></i>
+  </button>
+</div>
 <div class="row">
   <div class="col-md-6">
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
         <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
-        TOC / TC / IC — Destilada
+        TOC — Destilada
       </div>
       <div class="card-body py-3">
         <canvas id="TCdest"></canvas>
@@ -316,7 +555,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="card mb-4 shadow-sm">
       <div class="card-header py-2">
         <i class="fas fa-chart-line fa-sm me-1 text-muted"></i>
-        TOC / TC / IC — Purificada
+        TOC — Purificada
       </div>
       <div class="card-body py-3">
         <canvas id="TCpur"></canvas>
@@ -325,6 +564,54 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </div>
   </div>
 </div>
+
+</div><!-- /col-lg-9 -->
+
+<div class="col-lg-3">
+  <?php foreach ($equipamentos as $eq): ?>
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header py-2">
+      <i class="fas fa-microchip fa-sm me-1 text-muted"></i>
+      <?= htmlspecialchars($eq['nome']) ?>
+    </div>
+    <div class="card-body py-3">
+      <?php if ($isAdmin): ?>
+      <form method="post">
+        <input type="hidden" name="_acao" value="editar_equip">
+        <input type="hidden" name="id" value="<?= (int)$eq['id'] ?>">
+        <div class="form-group mb-2">
+          <label class="small mb-1 font-weight-bold">Marca</label>
+          <input type="text" name="marca" class="form-control form-control-sm"
+                 value="<?= htmlspecialchars($eq['marca'] ?? '') ?>">
+        </div>
+        <div class="form-group mb-2">
+          <label class="small mb-1 font-weight-bold">Modelo</label>
+          <input type="text" name="modelo" class="form-control form-control-sm"
+                 value="<?= htmlspecialchars($eq['modelo'] ?? '') ?>">
+        </div>
+        <div class="form-group mb-2">
+          <label class="small mb-1 font-weight-bold">Data de aquisição</label>
+          <input type="date" name="data_aquisicao" class="form-control form-control-sm"
+                 value="<?= htmlspecialchars($eq['data_aquisicao'] ?? '') ?>">
+        </div>
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-save me-1"></i><?= t('WATER_SAVE_READING') ?>
+        </button>
+      </form>
+      <?php else: ?>
+      <table class="table table-sm mb-0" style="font-size:.85rem">
+        <tr><th class="text-muted">Marca</th><td><?= htmlspecialchars($eq['marca'] ?: '—') ?></td></tr>
+        <tr><th class="text-muted">Modelo</th><td><?= htmlspecialchars($eq['modelo'] ?: '—') ?></td></tr>
+        <tr><th class="text-muted">Aquisição</th>
+          <td><?= $eq['data_aquisicao'] ? htmlspecialchars(date('d/m/Y', strtotime($eq['data_aquisicao']))) : '—' ?></td></tr>
+      </table>
+      <?php endif; ?>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</div><!-- /col-lg-3 -->
+
+</div><!-- /row -->
 
 <!-- Chart.js v4 + adaptador de datas (uma única inclusão) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -336,12 +623,14 @@ var C = {
     dest:  'rgb(75, 192, 192)',
     pur:   'rgb(54, 162, 235)',
     toc:   'rgb(255, 99, 132)',
-    tc:    'rgb(255, 159, 64)',
-    ic:    'rgb(153, 102, 255)',
 };
 
 // ── Opções base para gráficos de série temporal ───────────────────
-function baseOpts(yLabel) {
+function baseOpts(yLabel, unit) {
+    unit = unit || 'day';
+    var timeCfg = (unit === 'month')
+        ? { unit: 'month', tooltipFormat: 'MM/yyyy', displayFormats: { month: 'MM/yyyy' } }
+        : { unit: 'day', tooltipFormat: 'dd/MM/yyyy', displayFormats: { day: 'dd/MM' } };
     return {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
@@ -352,8 +641,7 @@ function baseOpts(yLabel) {
         scales: {
             x: {
                 type: 'time',
-                time: { unit: 'day', tooltipFormat: 'dd/MM/yyyy',
-                        displayFormats: { day: 'dd/MM' } },
+                time: timeCfg,
                 title: { display: false }
             },
             y: {
@@ -393,13 +681,13 @@ var chartPH = new Chart(document.getElementById('ph'), {
 });
 var chartTCdest = new Chart(document.getElementById('TCdest'), {
     type: 'line',
-    data: { datasets: [dsBase('TOC', C.toc), dsBase('TC', C.tc), dsBase('IC', C.ic)] },
-    options: baseOpts()
+    data: { datasets: [dsBase('TOC', C.toc)] },
+    options: baseOpts(null, 'month')
 });
 var chartTCpur = new Chart(document.getElementById('TCpur'), {
     type: 'line',
-    data: { datasets: [dsBase('TOC', C.toc), dsBase('TC', C.tc), dsBase('IC', C.ic)] },
-    options: baseOpts()
+    data: { datasets: [dsBase('TOC', C.toc)] },
+    options: baseOpts(null, 'month')
 });
 
 // ── Utilitários de data ───────────────────────────────────────────
@@ -425,6 +713,9 @@ var periodOffset  = 0;        // 0 = período actual, -1 = um período atrás, .
 var customDe      = null;     // datas base para modo custom
 var customAte     = null;
 var customDays    = 0;        // duração em dias do range custom
+
+// ── Estado da navegação dos gráficos de TOC (sempre por mês) ─────
+var tocOffset = 0;            // 0 = mês actual, -1 = mês anterior, ...
 
 // ── Calcular range com offset ─────────────────────────────────────
 function getRangeWithOffset(preset, off) {
@@ -495,27 +786,35 @@ function applyNav() {
     // Botão exportar: URL sempre sincronizada com o período visível
     $('#btnExport').attr('href', 'waterqc_export.php?de=' + range.de + '&ate=' + range.ate);
 
-    loadCharts(range.de, range.ate);
+    loadCondPH(range.de, range.ate);
 }
 
-// ── Carregar dados via AJAX ───────────────────────────────────────
-function loadCharts(de, ate) {
-    ['cond-empty','ph-empty','tcdest-empty','tcpur-empty'].forEach(function(id) {
+// ── Aplicar navegação anual dos gráficos de TOC ───────────────────
+function applyTocNav() {
+    var range = getRangeWithOffset('ano', tocOffset);
+
+    $('#tocLabel').text(range.label);
+    $('#tocNext').prop('disabled', tocOffset >= 0);
+
+    loadTOC(range.de, range.ate);
+}
+
+// ── Carregar Condutividade / pH via AJAX ──────────────────────────
+function loadCondPH(de, ate) {
+    ['cond-empty','ph-empty'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.classList.add('d-none');
     });
-    [chartCond, chartPH, chartTCdest, chartTCpur].forEach(function(ch) {
+    [chartCond, chartPH].forEach(function(ch) {
         ch.data.datasets.forEach(function(ds) { ds.data = []; });
     });
 
     $.getJSON('waterqcdata.php', { de: de, ate: ate }, function (resp) {
     var phcond = resp.phcond || [];
-    var toc    = resp.toc    || [];
 
     // Separar pH/condutividade por tipo
     var destCond = [], purCond = [], destPH = [], purPH = [];
     phcond.forEach(function (r) {
-        var pt = { x: r.dia };
         if (r.tipo == 2) {
             destCond.push({ x: r.dia, y: r.condutivity });
             destPH.push(  { x: r.dia, y: r.pH });
@@ -536,37 +835,55 @@ function loadCharts(de, ate) {
     chartPH.update();
     if (!destPH.length && !purPH.length)
         document.getElementById('ph-empty').classList.remove('d-none');
+    }); // end $.getJSON
+} // end loadCondPH
 
-    // Separar TOC/TC/IC por tipo
-    var d_toc = [], d_tc = [], d_ic = [];
-    var p_toc = [], p_tc = [], p_ic = [];
+// ── Carregar TOC via AJAX (filtro mensal próprio) ──────────────────
+function loadTOC(de, ate) {
+    ['tcdest-empty','tcpur-empty'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.add('d-none');
+    });
+    [chartTCdest, chartTCpur].forEach(function(ch) {
+        ch.data.datasets.forEach(function(ds) { ds.data = []; });
+    });
+
+    $.getJSON('waterqcdata.php', { de: de, ate: ate }, function (resp) {
+    var toc = resp.toc || [];
+
+    // Agregar por mês (média) e separar por tipo
+    var sums = { 2: {}, 3: {} };
     toc.forEach(function (r) {
-        if (r.tipo == 2) {
-            d_toc.push({ x: r.dia, y: r.TOC });
-            d_tc.push( { x: r.dia, y: r.TC });
-            d_ic.push( { x: r.dia, y: r.IC });
-        } else {
-            p_toc.push({ x: r.dia, y: r.TOC });
-            p_tc.push( { x: r.dia, y: r.TC });
-            p_ic.push( { x: r.dia, y: r.IC });
+        var mes = r.dia.substring(0, 7); // YYYY-MM
+        var tipo = (r.tipo == 2) ? 2 : 3;
+        if (!sums[tipo][mes]) sums[tipo][mes] = { total: 0, n: 0 };
+        if (r.TOC !== null && r.TOC !== undefined) {
+            sums[tipo][mes].total += r.TOC;
+            sums[tipo][mes].n++;
         }
     });
 
+    function toMonthlyPoints(sumsByMonth) {
+        return Object.keys(sumsByMonth).sort().map(function (mes) {
+            var s = sumsByMonth[mes];
+            return { x: mes + '-01', y: s.n ? (s.total / s.n) : null };
+        });
+    }
+
+    var d_toc = toMonthlyPoints(sums[2]);
+    var p_toc = toMonthlyPoints(sums[3]);
+
     chartTCdest.data.datasets[0].data = d_toc;
-    chartTCdest.data.datasets[1].data = d_tc;
-    chartTCdest.data.datasets[2].data = d_ic;
     chartTCdest.update();
-    if (!d_toc.length && !d_tc.length && !d_ic.length)
+    if (!d_toc.length)
         document.getElementById('tcdest-empty').classList.remove('d-none');
 
     chartTCpur.data.datasets[0].data = p_toc;
-    chartTCpur.data.datasets[1].data = p_tc;
-    chartTCpur.data.datasets[2].data = p_ic;
     chartTCpur.update();
-    if (!p_toc.length && !p_tc.length && !p_ic.length)
+    if (!p_toc.length)
         document.getElementById('tcpur-empty').classList.remove('d-none');
     }); // end $.getJSON
-} // end loadCharts
+} // end loadTOC
 
 $(document).ready(function () {
 
@@ -574,6 +891,10 @@ $(document).ready(function () {
     activePreset  = 'mes';
     periodOffset  = 0;
     applyNav();
+
+    // ── Gráficos de TOC: inicializar com o mês actual ─────────────
+    tocOffset = 0;
+    applyTocNav();
 
     // ── Clique nos pills ──────────────────────────────────────────
     $('.wq-pill').on('click', function () {
@@ -608,6 +929,17 @@ $(document).ready(function () {
         if (periodOffset >= 0) return;
         periodOffset++;
         applyNav();
+    });
+
+    // ── Navegação mensal dos gráficos de TOC ──────────────────────
+    $('#tocPrev').on('click', function () {
+        tocOffset--;
+        applyTocNav();
+    });
+    $('#tocNext').on('click', function () {
+        if (tocOffset >= 0) return;
+        tocOffset++;
+        applyTocNav();
     });
 
     // ── Calendário personalizado — Aplicar ────────────────────────
