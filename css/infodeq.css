@@ -1265,14 +1265,19 @@ i.fas.fa-eraser { color: #e02424 !important; }
   color: #fff !important;
 }
 
-/* ADI ficha — cabeçalhos de secção escuros (primeiro nível) */
+/* Cabeçalho de secção escuro — reutilizável em qualquer card-header
+   que precise de destaque forte (usado por ADI, ServDoc). Nasceu como
+   .adi-section-header (mantida como alias); usar .iq-header-dark em
+   código novo. */
+.iq-header-dark,
 .adi-section-header,
 .adi-ficha .card-header:first-of-type,
 .adi-ficha > .card > .card-header {
-  background: #343a40 !important;
+  background: var(--iq-nav-bg) !important;
   color: #fff !important;
   border-bottom-color: #23272b !important;
 }
+.iq-header-dark .fas,
 .adi-section-header .fas,
 .adi-ficha .card-header:first-of-type .fas {
   color: rgba(255,255,255,.6) !important;
