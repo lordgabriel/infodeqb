@@ -1114,6 +1114,8 @@ body:has(.dsd-subnav) .iq-main {
 .iq-stat-red    .iq-stat-icon { background: #fee2e2; color: #991b1b; }
 .iq-stat-blue   { border-left-color: var(--iq-blue); }
 .iq-stat-blue   .iq-stat-icon { background: var(--iq-blue-light); color: var(--iq-blue-dark); }
+.iq-stat-slate  { border-left-color: var(--iq-gray-400); }
+.iq-stat-slate  .iq-stat-icon { background: var(--iq-gray-100); color: var(--iq-gray-500); }
 
 /* Fix: Bootstrap bg-* nas cards (não deixar o !important branco ganhar) */
 .card.bg-success  { background: #0e9f6e !important; }
