@@ -161,7 +161,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 													class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
 													<input type="text" name="nome"
 														class="form-control has-feedback-left" id="name" required readonly
-														style="background:#f8f9fa;cursor:not-allowed;"
 														value="<?php echo htmlspecialchars($data['nome'])?>"> <span
 														class="fa fa-user form-control-feedback left"
 														aria-hidden="true"></span>
@@ -171,7 +170,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 													class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
 													<input type="email" name="email"
 														class="form-control has-feedback-left" required id="email" readonly
-														style="background:#f8f9fa;cursor:not-allowed;"
 														value="<?php echo htmlspecialchars($data['email'])?>"> <span
 														class="fa fa-envelope form-control-feedback left"
 														aria-hidden="true"></span>

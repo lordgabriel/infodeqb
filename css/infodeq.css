@@ -392,7 +392,7 @@ tr.group, tr.group:hover {
   outline: none !important;
 }
 .form-control[readonly],
-.form-control[disabled] { background: var(--iq-gray-50) !important; color: var(--iq-muted) !important; }
+.form-control[disabled] { background: var(--iq-gray-50) !important; color: var(--iq-muted) !important; cursor: not-allowed !important; }
 textarea.form-control { height: auto !important; resize: vertical; }
 select.form-control { appearance: auto; }
 
@@ -1055,6 +1055,33 @@ body:has(.dsd-subnav) .iq-main {
 }
 
 /* ─────────────────────────────────────────
+   FILTRO DE PERÍODO (Água / Gases Especiais)
+   Pills de preset + navegação por setas + range custom.
+   Centralizado a partir de water/index.php, water/waterqc.php
+   e gases/relatorio.php (estavam duplicados nos 3 ficheiros).
+   ───────────────────────────────────────── */
+.wq-filter-bar { background: var(--iq-gray-50); border: 1px solid var(--iq-border); border-radius: var(--iq-r); padding: 12px 16px; margin-bottom: 1.2rem; }
+.wq-pill {
+  background: var(--iq-surface); border: 1px solid var(--iq-border2); border-radius: 20px;
+  padding: 5px 14px; font-size: .82rem; font-weight: 500; color: var(--iq-gray-600);
+  cursor: pointer; transition: all .12s; white-space: nowrap; line-height: 1.4; outline: none;
+}
+.wq-pill:hover:not(:disabled) { border-color: var(--iq-blue); color: var(--iq-blue); background: var(--iq-blue-light); }
+.wq-pill.active { background: var(--iq-blue); border-color: var(--iq-blue); color: #fff; }
+.wq-nav { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.wq-nav-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--iq-border2);
+  background: var(--iq-surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; color: var(--iq-gray-600); transition: all .12s; outline: none; flex-shrink: 0;
+}
+.wq-nav-btn:hover:not(:disabled) { border-color: var(--iq-blue); color: var(--iq-blue); background: var(--iq-blue-light); }
+.wq-nav-btn:disabled { opacity: .35; cursor: default; }
+.wq-period-label { font-size: .88rem; font-weight: 600; color: var(--iq-text); min-width: 0; }
+.wq-period-sub  { font-size: .75rem; color: var(--iq-muted); margin-left: 4px; }
+.wq-range-inputs { display: none; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.wq-range-inputs.open { display: flex; }
+
+/* ─────────────────────────────────────────
    BREADCRUMB  (Bootstrap override)
    ───────────────────────────────────────── */
 .breadcrumb {
@@ -1114,6 +1141,8 @@ body:has(.dsd-subnav) .iq-main {
 .iq-stat-red    .iq-stat-icon { background: #fee2e2; color: #991b1b; }
 .iq-stat-blue   { border-left-color: var(--iq-blue); }
 .iq-stat-blue   .iq-stat-icon { background: var(--iq-blue-light); color: var(--iq-blue-dark); }
+.iq-stat-slate  { border-left-color: var(--iq-gray-400); }
+.iq-stat-slate  .iq-stat-icon { background: var(--iq-gray-100); color: var(--iq-gray-500); }
 
 /* Fix: Bootstrap bg-* nas cards (não deixar o !important branco ganhar) */
 .card.bg-success  { background: #0e9f6e !important; }
@@ -1236,14 +1265,19 @@ i.fas.fa-eraser { color: #e02424 !important; }
   color: #fff !important;
 }
 
-/* ADI ficha — cabeçalhos de secção escuros (primeiro nível) */
+/* Cabeçalho de secção escuro — reutilizável em qualquer card-header
+   que precise de destaque forte (usado por ADI, ServDoc). Nasceu como
+   .adi-section-header (mantida como alias); usar .iq-header-dark em
+   código novo. */
+.iq-header-dark,
 .adi-section-header,
 .adi-ficha .card-header:first-of-type,
 .adi-ficha > .card > .card-header {
-  background: #343a40 !important;
+  background: var(--iq-nav-bg) !important;
   color: #fff !important;
   border-bottom-color: #23272b !important;
 }
+.iq-header-dark .fas,
 .adi-section-header .fas,
 .adi-ficha .card-header:first-of-type .fas {
   color: rgba(255,255,255,.6) !important;
