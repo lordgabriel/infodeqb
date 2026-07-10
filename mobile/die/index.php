@@ -142,10 +142,12 @@ $pageTitle = 'Contactos DIE';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
-                <!-- Breadcrumbs -->
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><h5 class="mb-0">Eng. Química - Mobilidade OUT</h5></li>
-                </ol>
+                <div class="iq-page-header">
+                  <div>
+                    <h1 class="iq-page-title"><i class="fas fa-building me-2 text-primary"></i>Contactos DIE</h1>
+                    <p class="iq-page-sub">Empresas e instituições internacionais</p>
+                  </div>
+                </div>
 
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -294,8 +296,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                           </div>
 
                           <div class="table-responsive">
-                            <table class="table table-sm table-striped align-middle">
-                              <thead class="table-dark">
+                            <table class="table table-sm table-hover align-middle">
+                              <thead>
                                 <tr>
                                   <th>Nome</th>
                                   <th>Email</th>

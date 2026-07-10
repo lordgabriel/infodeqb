@@ -115,10 +115,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
 <style>
 #adiTable                 { font-size:.875rem; }
-#adiTable thead th        { background:#343a40!important; color:#fff!important; font-size:.875rem; }
-#adiTable .row-unidade td { background:#343a40; color:#fff; font-size:.875rem; }
-#adiTable .row-grupo   td { background:#dde3ea; color:#2d3748; font-size:.85rem; }
-#adiTable .row-subgrupo td{ background:#f0f3f6; color:#6c757d; font-size:.83rem; }
+#adiTable thead th        { background:var(--iq-nav-bg)!important; color:#fff!important; font-size:.875rem; }
+#adiTable .row-unidade td { background:var(--iq-gray-600); color:#fff; font-size:.875rem; }
+#adiTable .row-grupo   td { background:var(--iq-gray-200); color:#2d3748; font-size:.85rem; }
+#adiTable .row-subgrupo td{ background:var(--iq-gray-100); color:#6c757d; font-size:.83rem; }
 </style>
 
 <div class="iq-page-header">
