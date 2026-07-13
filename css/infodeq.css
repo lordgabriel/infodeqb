@@ -4,12 +4,19 @@
    Layout: navbar horizontal escura + conteúdo full-width (sem sidebar).
    ============================================================= */
 
-/* ── Design tokens ── */
+/* ── Design tokens ──
+   Refresh visual (branch design/refresh-total): azul genérico → petróleo
+   (evoca vidro de laboratório) + acento âmbar (rótulo de amostra). */
 :root {
-  /* Blue (mesma paleta que dsd_app) */
-  --iq-blue:       #1a56db;
-  --iq-blue-dark:  #1341b5;
-  --iq-blue-light: #dbeafe;
+  /* Petróleo — acento principal */
+  --iq-blue:       #0b6e73;
+  --iq-blue-dark:  #084d51;
+  --iq-blue-light: #dbeeee;
+
+  /* Âmbar — acento de assinatura (etiquetas, estados "precisa de atenção") */
+  --iq-amber:       #b6650c;
+  --iq-amber-dark:  #8a4c09;
+  --iq-amber-light: #f6e6d2;
 
   /* Gray scale */
   --iq-gray-50:  #f9fafb;
@@ -32,13 +39,13 @@
   --iq-muted:   var(--iq-gray-500);
   --iq-subtle:  var(--iq-gray-400);
 
-  /* Acento = blue */
+  /* Acento = petróleo */
   --iq-accent:   var(--iq-blue);
   --iq-accent-h: var(--iq-blue-dark);
   --iq-accent-lt:var(--iq-blue-light);
 
-  /* Navbar — cinza escuro SB Admin */
-  --iq-nav-bg:       #343a40;
+  /* Navbar — tinta quase-preta (era cinza SB Admin) */
+  --iq-nav-bg:       #16232b;
   --iq-nav-bg-hover: rgba(255,255,255,.10);
   --iq-nav-bg-active:rgba(255,255,255,.16);
 
@@ -51,6 +58,9 @@
   --iq-r:     8px;
   --iq-r2:    12px;
   --iq-tn-h:  72px;   /* altura da top-nav */
+
+  /* Tipografia utilitária — dados/códigos (leitura tipo "instrumento") */
+  --iq-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "IBM Plex Mono", Consolas, monospace;
 }
 
 /* ── Base ── */
@@ -721,7 +731,7 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
 .iq-dash-alert-item:last-child { border-bottom: none; }
 .iq-dash-alert-item:hover { background: var(--iq-gray-50); }
 .iq-dash-alert-name { color: var(--iq-text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.iq-dash-alert-date { color: var(--iq-muted); font-size: .72rem; white-space: nowrap; flex-shrink: 0; }
+.iq-dash-alert-date { font-family: var(--iq-font-mono); color: var(--iq-muted); font-size: .7rem; white-space: nowrap; flex-shrink: 0; }
 .iq-dash-alert-date.urgent { color: #991b1b; font-weight: 600; }
 .iq-dash-alert-empty { padding: 1.2rem 1rem; text-align: center; color: var(--iq-muted); font-size: .78rem; }
 .iq-dash-alerts-more {
@@ -746,9 +756,9 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
 }
 .iq-module {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.1rem 1.1rem 1.1rem 1.25rem;
+  flex-direction: column;
+  gap: .55rem;
+  padding: 1rem 1.1rem 1.05rem 1.25rem;
   background: var(--iq-surface);
   border: 1px solid var(--iq-border);
   border-left-width: 3px;
@@ -759,6 +769,31 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
   transition: box-shadow .18s, border-color .18s, transform .18s;
 }
 .iq-module:hover { box-shadow: var(--iq-sh-md); transform: translateY(-2px); }
+/* Etiqueta "amostra de laboratório" — assinatura do refresh */
+.iq-module-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--iq-font-mono);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--iq-amber);
+  width: fit-content;
+}
+.iq-module-tag::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--iq-amber);
+  border-radius: 1px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.iq-module-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 .iq-module-icon {
   width: 40px; height: 40px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
@@ -1231,10 +1266,12 @@ body:has(.dsd-subnav) .iq-main {
   flex-shrink: 0;
 }
 .iq-stat-value {
-  font-size: 1.6rem;
+  font-family: var(--iq-font-mono);
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
   color: var(--iq-gray-900);
+  font-variant-numeric: tabular-nums;
 }
 .iq-stat-label {
   font-size: .72rem;
