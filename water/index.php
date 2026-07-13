@@ -184,7 +184,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
 <div class="wq-filter-bar">
   <div class="d-flex flex-wrap align-items-center" style="gap:6px">
     <button class="wq-pill" data-preset="semana">Esta semana</button>
-    <button class="wq-pill active" data-preset="mes">Este mês</button>
+    <button class="wq-pill" data-preset="mes">Este mês</button>
     <button class="wq-pill" data-preset="ano">Este ano</button>
     <button class="wq-pill" data-preset="7d">Últimos 7 dias</button>
     <button class="wq-pill" data-preset="15d">Últimos 15 dias</button>
@@ -194,7 +194,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
     </button>
   </div>
   <div class="wq-nav">
-    <button class="wq-nav-btn" id="wqPrev" title="Período anterior">
+    <button class="wq-nav-btn" id="wqPrev" title="Período anterior" disabled>
       <i class="fas fa-chevron-left"></i>
     </button>
     <span class="wq-period-label" id="wqLabel">—</span>
@@ -435,8 +435,9 @@ function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate()+n); return r
 function isoToDate(s) { var p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
 function fmtHuman(s) { var d = isoToDate(s); return d.getDate() + ' ' + mesesPT[d.getMonth()]; }
 
-// ── Estado da navegação ───────────────────────────────────────────
-var activePreset = 'mes', periodOffset = 0;
+// ── Estado da navegação ─────────────────────────────────────────
+// Sem filtro por omissão — só é activado quando o utilizador escolhe um período
+var activePreset = null, periodOffset = 0;
 var customDe = null, customAte = null, customDays = 0;
 var filterDe = null, filterAte = null;
 
@@ -491,6 +492,7 @@ function fmtLjs(v) {
 function applyNav() {
     var range = getRangeWithOffset(activePreset, periodOffset);
     $('#wqLabel').text(range.label);
+    $('#wqPrev').prop('disabled', !activePreset);
     $('#wqNext').prop('disabled', periodOffset >= 0);
     filterDe = range.de; filterAte = range.ate;
     if (!dtTable) return;
@@ -538,8 +540,8 @@ $(document).ready(function () {
         ]
     });
 
-    // ── Inicializar filtro com "Este mês" ─────────────────────
-    activePreset = 'mes'; periodOffset = 0; applyNav();
+    // ── Sem filtro ao carregar — mostra todos os registos até o
+    //    utilizador escolher um período (ver 'activePreset' acima) ──
 
     // ── Clique nos pills ──────────────────────────────────────
     $('.wq-pill').on('click', function () {
