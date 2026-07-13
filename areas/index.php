@@ -183,14 +183,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     border: 1px solid var(--iq-border2); border-radius: 4px; font-size: .8rem;
 }
 #tblAreas input[type=number]:focus {
-    outline: none; border-color: var(--iq-blue); box-shadow: 0 0 0 2px rgba(26,86,219,.15);
+    outline: none; border-color: var(--iq-blue); box-shadow: 0 0 0 2px rgba(11,110,115,.15);
 }
-/* heatmap — escala de intensidade por ETI */
+/* heatmap — escala de intensidade por ETI (degradê petróleo, claro→escuro) */
 .hm-cell { font-size: .78rem; font-weight: 600; }
 .hm-0  { background: var(--iq-gray-50); color: var(--iq-subtle); }
-.hm-low  { background: var(--iq-blue-light); color: #1e40af; }
-.hm-mid  { background: #93c5fd; color: #1e3a8a; }
-.hm-high { background: #3b82f6; color: #fff; }
+.hm-low  { background: var(--iq-blue-light); color: var(--iq-blue-dark); }
+.hm-mid  { background: #7fc2c5; color: #073f42; }
+.hm-high { background: #1f9298; color: #fff; }
 .hm-top  { background: var(--iq-blue-dark); color: #fff; }
 </style>
 
@@ -216,8 +216,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <?php /* ── Painel do form — topo da página ──────────────────── */ ?>
 <div id="formPanel" class="collapse mb-4">
-  <div style="border:2px solid #0d6efd;border-radius:8px;overflow:hidden">
-    <div class="d-flex align-items-center px-3 py-2" style="background:#0d6efd">
+  <div style="border:2px solid var(--iq-blue);border-radius:8px;overflow:hidden">
+    <div class="d-flex align-items-center px-3 py-2" style="background:var(--iq-blue)">
       <i class="fas fa-edit text-white me-2"></i>
       <strong class="text-white me-auto">A minha resposta</strong>
       <?php if ($teminfodeqb_respostas): ?>

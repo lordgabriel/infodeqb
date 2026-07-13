@@ -147,7 +147,7 @@ require_once __DIR__ . '/../includes/header.php';
   ?>
   <!-- SEMESTRE -->
   <tr style="background:#e0eaff" data-collapse-group="<?= $carrKey ?> <?= $docKey ?>" data-collapse-trigger="<?= $semKey ?>">
-    <td colspan="16" style="padding-left:28px;font-size:11px;font-weight:600;color:#1e40af">
+    <td colspan="16" style="padding-left:28px;font-size:11px;font-weight:600;color:var(--iq-blue-dark)">
       <span class="collapse-icon">▾</span> <?= $semLabel ?>
       <span class="collapse-summary" style="display:none;color:var(--blue);margin-left:8px"></span>
     </td>
@@ -183,13 +183,13 @@ require_once __DIR__ . '/../includes/header.php';
   <?php endforeach; ?>
 
   <!-- Subtotal semestre -->
-  <tr style="background:#dbeafe" data-collapse-group="<?= $carrKey ?> <?= $docKey ?>">
-    <td colspan="13" style="text-align:right;font-size:11px;font-weight:600;color:#1e40af;padding-right:8px">
+  <tr style="background:var(--iq-blue-light)" data-collapse-group="<?= $carrKey ?> <?= $docKey ?>">
+    <td colspan="13" style="text-align:right;font-size:11px;font-weight:600;color:var(--iq-blue-dark);padding-right:8px">
       Subtotal <?= $semLabel ?>
     </td>
     <td class="num" style="font-weight:600"><?= fmt($semHs,2) ?></td>
     <td></td>
-    <td class="num" style="color:#1e40af;font-weight:700"><?= fmt($semSlef,2) ?></td>
+    <td class="num" style="color:var(--iq-blue-dark);font-weight:700"><?= fmt($semSlef,2) ?></td>
   </tr>
   <?php endforeach; ?>
 

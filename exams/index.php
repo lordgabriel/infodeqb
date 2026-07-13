@@ -617,7 +617,7 @@ $(document).ready(function () {
         activeStatus = (activeStatus === filter) ? '' : filter;
         $('.stat-badge').removeClass('border-primary').css('box-shadow','');
         if (activeStatus) {
-            $(this).addClass('border-primary').css('box-shadow','0 0 0 2px #0d6efd33');
+            $(this).addClass('border-primary').css('box-shadow','0 0 0 2px #0b6e7333');
         }
         applyFilters();
     });

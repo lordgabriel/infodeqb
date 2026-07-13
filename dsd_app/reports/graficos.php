@@ -572,7 +572,7 @@ function exportarGrafico() {
 })();
 
 // ── Gráfico H SLEf por Carreira ───────────────────────────
-var COLORS = ['#1a56db','#0e9f6e','#d97706','#e02424','#7e3af2','#1c64f2','#057a55','#b45309'];
+var COLORS = ['#0b6e73','#0e9f6e','#d97706','#e02424','#7e3af2','#1c64f2','#057a55','#b45309'];
 
 new Chart(document.getElementById('chart-carreira'), {
     type: 'bar',
@@ -580,7 +580,7 @@ new Chart(document.getElementById('chart-carreira'), {
         labels: <?= json_encode(array_column($carrData, 'label')) ?>,
         datasets: [
             { label: 'H SLEf', data: <?= json_encode(array_map(function($r) { return (float)$r['h_slef']; }, $carrData)) ?>,
-              backgroundColor: '#1a56db' },
+              backgroundColor: '#0b6e73' },
             { label: 'H OT',   data: <?= json_encode(array_map(function($r) { return (float)$r['h_ot']; },   $carrData)) ?>,
               backgroundColor: '#d97706' },
             { label: 'H Tese', data: <?= json_encode(array_map(function($r) { return (float)$r['h_tese']; }, $carrData)) ?>,
@@ -622,7 +622,7 @@ new Chart(document.getElementById('chart-cobertura'), {
               backgroundColor: '#9ca3af' },
             { label: 'Atribuídas',
               data: [<?= (float)$atrTipo['T'] ?>, <?= (float)$atrTipo['TP'] ?>, <?= (float)$atrTipo['L'] ?>, <?= (float)$atrTipo['Sem'] ?>, <?= (float)$atrTipo['OT'] ?>],
-              backgroundColor: '#1a56db' },
+              backgroundColor: '#0b6e73' },
         ]
     },
     options: { responsive:true, plugins:{legend:{position:'top'}},

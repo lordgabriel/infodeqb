@@ -319,7 +319,7 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
     margin:0; transition:background .1s,border-color .1s,color .1s; display:block;
 }
 .uc-radio { position:absolute; opacity:0; width:0; height:0; }
-.uc-radio:checked + .rank-lbl { background:#0d6efd; border-color:#0d6efd; color:#fff; }
+.uc-radio:checked + .rank-lbl { background:var(--iq-blue); border-color:var(--iq-blue); color:#fff; }
 .rank-lbl:hover { background:#e9ecef; border-color:#adb5bd; }
 #tblUcs thead tr.filter-row th { padding:4px 6px; background:#fff; border-top:2px solid #dee2e6; }
 </style>
@@ -564,7 +564,7 @@ function renderFormAdmin($todasUcs, $prefIndex, $targetId, $targetNome) {
 .rank-btns{display:flex;gap:2px;justify-content:center}
 .rank-lbl{width:26px;height:26px;line-height:26px;text-align:center;border:1px solid #dee2e6;border-radius:4px;cursor:pointer;font-size:.78rem;font-weight:600;color:#6c757d;background:#fff;margin:0;transition:background .1s,border-color .1s,color .1s;display:block}
 .uc-radio{position:absolute;opacity:0;width:0;height:0}
-.uc-radio:checked+.rank-lbl{background:#0d6efd;border-color:#0d6efd;color:#fff}
+.uc-radio:checked+.rank-lbl{background:var(--iq-blue);border-color:var(--iq-blue);color:#fff}
 .rank-lbl:hover{background:#e9ecef;border-color:#adb5bd}
 #tblUcs thead tr.filter-row th{padding:4px 6px;background:#fff;border-top:2px solid #dee2e6}
 </style>
