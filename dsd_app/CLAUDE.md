@@ -7,8 +7,10 @@ Aplicação PHP + MySQL para gerir a distribuição de serviço docente do Depar
 - **Backend:** PHP 7 (produção) — ATENÇÃO: todo o código deve ser compatível com PHP 7
   - Sem `mixed` type hints, sem arrow functions `fn()`, sem `match()`, sem named arguments, sem union types, sem nullsafe operator `?->`
 - **BD:** MySQL (phpMyAdmin)
-- **Frontend:** HTML + CSS + JS vanilla (sem frameworks)
-- **Servidor local:** XAMPP (`C:\xampp\htdocs\dsd_app`)
+- **Frontend:** integrado no InfoDEQB principal — `includes/header.php` inclui `infodeqb/inc/header.php`,
+  logo herda Bootstrap 5.3.3, jQuery, DataTables e FontAwesome via CDN (ver `CLAUDE.md` da raiz).
+  CSS próprio só em `assets/css/app.css` (carregado por cima de `infodeq.css` via `$extraCss`), sem JS de framework adicional.
+- **Servidor local:** XAMPP — nested dentro do InfoDEQB em `C:\xampp\htdocs\infodeqb\dsd_app` (já não é uma app standalone)
 - **Servidor produção:** deq.fe.up.pt (`/home/deqfeuppt/public_html/infodeq/dsd_app`)
 
 ## Base de dados
