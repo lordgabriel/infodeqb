@@ -1348,6 +1348,24 @@ body:has(.dsd-subnav) .iq-main {
 /* Código/dado tabular — leitura tipo "instrumento" (códigos UP, datas, IDs) */
 .code { font-family: var(--iq-font-mono); font-size: .92em; color: var(--iq-muted); font-variant-numeric: tabular-nums; }
 
+/* Avatar de iniciais (linhas de tabela — HR list/admin) */
+.iq-avatar-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--iq-blue-light);
+  color: var(--iq-blue-dark);
+  font-family: var(--iq-font-mono);
+  font-size: .64rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+
 .card-body a   { color: var(--iq-blue); text-decoration: none; }
 .card-body a:hover { color: var(--iq-blue-dark); text-decoration: underline; }
 

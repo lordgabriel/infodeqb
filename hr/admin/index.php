@@ -626,6 +626,14 @@ if (!empty($_POST['pedido_action']) && !empty($_POST['pedido_id'])) {
 
 }
 
+// Iniciais para avatar das linhas de tabela (mesmo padrão que hr/list.php)
+function hrAdminInitials($nome) {
+    $nome = trim((string)$nome);
+    if ($nome === '') return '?';
+    $parts = preg_split('/\s+/', $nome);
+    return mb_strtoupper(mb_substr($parts[0], 0, 1) . (count($parts) > 1 ? mb_substr(end($parts), 0, 1) : mb_substr($parts[0], 1, 1)));
+}
+
 $pageTitle = 'Administração — Colaboradores';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
@@ -864,7 +872,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											<div class="d-none">
 												<input id="novo-action" name="action" value="Pendente">
 											</div>
-											<table class="table table-striped table-bordered table-sm "
+											<table class="table table-hover table-sm "
 												id="new">
 												<thead>
 													<tr>
@@ -966,7 +974,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $nomeShow = !empty($row['nome'])
                     ? htmlspecialchars($row['nome'])
                     : '<em class="text-muted">' . htmlspecialchars($row['email']) . '</em>';
-                echo '<td>' . $nomeShow . $valBadge . $semPedidoBadge . '</td>';
+                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $nomeShow . $valBadge . $semPedidoBadge . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';
@@ -1037,7 +1045,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											<div class="d-none">
 												<input name="action" value="Ativo"></input>
 											</div>
-											<table class="table table-striped table-bordered table-sm "
+											<table class="table table-hover table-sm "
 												id="pendent" style="width: 100%">
 												<thead>
 													<tr>
@@ -1066,7 +1074,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td>' . $row['nome'] . '</td>';
+                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datacica'] . '</td>';
@@ -1115,7 +1123,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											<div class="d-none">
 												<input id="action" name="action" value="notify"></input>
 											</div>
-											<table class="table table-striped table-bordered table-sm "
+											<table class="table table-hover table-sm "
 												id="expire" style="width: 100%">
 												<thead>
 													<tr>
@@ -1148,7 +1156,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td>' . $row['nome'] . '</td>';
+                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datafim'] . '</td>';
@@ -1199,7 +1207,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											<div class="d-none">
 												<input name="action" value="Inativo"></input>
 											</div>
-											<table class="table table-striped table-bordered table-sm "
+											<table class="table table-hover table-sm "
 												id="active">
 												<thead>
 													<tr>
@@ -1249,7 +1257,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td>' . $row['nome'] . ($isPend ? ' <span title="Alteração não comunicada ao SIGARRA" style="color:#d08000;font-size:.75rem;">⏳</span>' : '') . '</td>';
+                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . ($isPend ? ' <span title="Alteração não comunicada ao SIGARRA" style="color:#d08000;font-size:.75rem;">⏳</span>' : '') . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';
@@ -1306,7 +1314,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											<div class="d-none">
 												<input name="action" value="Ativo"></input>
 											</div>
-											<table class="table table-striped table-bordered table-sm "
+											<table class="table table-hover table-sm "
 												id="inactive">
 												<thead>
 													<tr>
@@ -1337,7 +1345,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td>' . $row['nome'] . '</td>';
+                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';

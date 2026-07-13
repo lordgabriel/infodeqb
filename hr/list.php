@@ -107,23 +107,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     color: #fff;
 }
 
-/* ── Avatar iniciais ───────────────────────────── */
-.iq-avatar-sm {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #e9ecef;
-    color: #495057;
-    font-size: .68rem;
-    font-weight: 700;
-    flex-shrink: 0;
-    vertical-align: middle;
-    margin-right: 7px;
-}
-
 /* ── Badge unidade ─────────────────────────────── */
 .badge-unidade {
     font-size: .72rem;
