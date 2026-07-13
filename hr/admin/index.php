@@ -1745,7 +1745,7 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
       vN = Array.isArray(vN) ? vN.join('; ') : String(vN);
       var vA = ant && ant[k] != null ? String(ant[k]) : null;
       var changed = vA !== null && vA !== vN;
-      rows += '<tr' + (changed ? ' style="background:#fef3c7"' : '') + '>'
+      rows += '<tr' + (changed ? ' style="background:#f6e6d2"' : '') + '>'
             + '<th style="width:35%;padding:.3rem .6rem">' + L[k] + '</th>'
             + (vA !== null ? '<td style="padding:.3rem .6rem;color:#999">' + esc(vA) + '</td>' : '')
             + '<td style="padding:.3rem .6rem' + (changed ? ';font-weight:600' : '') + '">' + esc(vN) + '</td>'

@@ -325,7 +325,7 @@ var CAT_PALETTE = [
   '#15803d', // verde
   '#c2410c', // laranja-escuro
 ];
-var DETI_COLOR = '#f59e0b'; // âmbar – ETI ≠ 1 (igual em todas as carreiras)
+var DETI_COLOR = '#b6650c'; // âmbar – ETI ≠ 1 (igual em todas as carreiras)
 var GRAY_COLOR = 'rgba(156,163,175,0.35)'; // segmento H/s – H SLEf
 
 // Fallback para docentes sem nome_curto: "João Silva Ferreira" → "João S. F."
@@ -473,7 +473,7 @@ new Chart(document.getElementById('chart-docentes'), {
 
     // ETI ≠ 1
     el.appendChild(divider());
-    el.appendChild(chip(DETI_COLOR, 'ETI ≠ 1', 'background:#fef3c7;border:1px solid #fde68a'));
+    el.appendChild(chip(DETI_COLOR, 'ETI ≠ 1', 'background:#f6e6d2;border:1px solid #e8c691'));
 })();
 
 // ── Exportar gráfico + legenda como PNG ──────────────────
