@@ -959,7 +959,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
                 echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
-                echo '<td>' . $row['codigo'] .
+                echo '<td><span class="code">' . $row['codigo'] . '</span>'.
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
@@ -1062,7 +1062,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
                 echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
-                echo '<td>' . $row['codigo'] .
+                echo '<td><span class="code">' . $row['codigo'] . '</span>'.
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
@@ -1144,7 +1144,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
                 echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
-                echo '<td>' . $row['codigo'] .
+                echo '<td><span class="code">' . $row['codigo'] . '</span>'.
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
@@ -1245,7 +1245,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                     . $trStyle . '>';
                 echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
-                echo '<td>' . $row['codigo'] .
+                echo '<td><span class="code">' . $row['codigo'] . '</span>'.
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
@@ -1333,7 +1333,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<tr data-row-id="' . $row['codigo'] . '"' . $getLabsAttr($row['autoid']) . '>';
                 echo '<td class="text-start"><input name="selector[' .
                         $row['autoid'] . ']" type="checkbox"></td>';
-                echo '<td>' . $row['codigo'] .
+                echo '<td><span class="code">' . $row['codigo'] . '</span>'.
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';

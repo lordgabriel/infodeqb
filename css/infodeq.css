@@ -544,14 +544,14 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
   transition: color .15s, border-color .15s;
 }
 #pills-tab .nav-link:hover {
-  color: #1a3a5c;
-  border-bottom-color: #b8cfe8;
+  color: var(--iq-text);
+  border-bottom-color: var(--iq-amber-light);
   background: transparent;
 }
 #pills-tab .nav-link.active {
-  color: #1a3a5c;
+  color: var(--iq-text);
   font-weight: 700;
-  border-bottom-color: #2475ba;
+  border-bottom-color: var(--iq-amber);
   background: transparent;
 }
 #pills-tab .nav-link .tab-badge {
@@ -568,8 +568,12 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
   margin-left: 6px;
   vertical-align: middle;
 }
-#pills-tab .nav-link .tab-badge-blue   { background: #2475ba; color: #fff; }
-#pills-tab .nav-link .tab-badge-yellow { background: #ffc107; color: #1a1a2e; }
+#pills-tab .nav-link .tab-badge {
+  font-family: var(--iq-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+#pills-tab .nav-link .tab-badge-blue   { background: var(--iq-blue); color: #fff; }
+#pills-tab .nav-link .tab-badge-yellow { background: var(--iq-amber); color: #fff; }
 #pills-tab .nav-link .tab-badge-purple { background: #6f42c1; color: #fff; }
 
 /* Painel de filtro por laboratório (HR admin) — dropdown custom com
@@ -1340,6 +1344,9 @@ body:has(.dsd-subnav) .iq-main {
 .font-weight-500 { font-weight: 500 !important; }
 .font-weight-600 { font-weight: 600 !important; }
 .font-weight-700 { font-weight: 700 !important; }
+
+/* Código/dado tabular — leitura tipo "instrumento" (códigos UP, datas, IDs) */
+.code { font-family: var(--iq-font-mono); font-size: .92em; color: var(--iq-muted); font-variant-numeric: tabular-nums; }
 
 .card-body a   { color: var(--iq-blue); text-decoration: none; }
 .card-body a:hover { color: var(--iq-blue-dark); text-decoration: underline; }
