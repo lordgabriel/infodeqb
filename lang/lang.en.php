@@ -98,7 +98,7 @@ $lang['NAV_DEPT']           = 'Department';
 $lang['NAV_AREAS']          = 'Scientific areas';
 $lang['NAV_SERVDOC']        = 'Teaching preference';
 $lang['NAV_SPACES']         = 'Research spaces';
-$lang['NAV_DSD']            = 'Teaching distribution';
+$lang['NAV_DSD']            = 'Teaching service';
 $lang['NAV_LOGOUT']         = 'Sign out';
 $lang['NAV_ADMIN']          = 'Admin';
 

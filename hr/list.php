@@ -90,38 +90,21 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 }
 .alpha-bar .alpha-letter.active,
 .alpha-bar .alpha-all.active {
-    background: #0d6efd;
-    border-color: #0d6efd;
+    background: var(--iq-blue);
+    border-color: var(--iq-blue);
     color: #fff;
 }
 .alpha-bar .alpha-letter:not(.disabled):hover,
 .alpha-bar .alpha-all:hover {
-    background: #e9f0ff;
-    border-color: #0d6efd;
-    color: #0d6efd;
+    background: var(--iq-blue-light);
+    border-color: var(--iq-blue);
+    color: var(--iq-blue);
     text-decoration: none;
 }
 .alpha-bar .alpha-all.active:hover,
 .alpha-bar .alpha-letter.active:hover {
-    background: #0b5ed7;
+    background: var(--iq-blue-dark);
     color: #fff;
-}
-
-/* ── Avatar iniciais ───────────────────────────── */
-.iq-avatar-sm {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #e9ecef;
-    color: #495057;
-    font-size: .68rem;
-    font-weight: 700;
-    flex-shrink: 0;
-    vertical-align: middle;
-    margin-right: 7px;
 }
 
 /* ── Badge unidade ─────────────────────────────── */
@@ -130,8 +113,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     font-weight: 500;
     padding: 2px 7px;
     border-radius: 10px;
-    background: #e8f0fe;
-    color: #3b5bdb;
+    background: var(--iq-blue-light);
+    color: var(--iq-blue-dark);
     white-space: nowrap;
 }
 

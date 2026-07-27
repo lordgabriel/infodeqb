@@ -69,7 +69,10 @@ if (!empty($_POST)) {
     }
 
     $_SESSION['_water_flash'] = [$flashMsg, $flashType];
-    $ano = isset($_POST['data']) ? (int)substr($_POST['data'], 0, 4) : (int)($_GET['ano'] ?? date('Y'));
+    // Redirecciona para o ano da data inserida/editada, para o registo
+    // continuar visível depois do filtro por ano no servidor
+    $dataRef = $_POST['data'] ?? $_POST['editdata'] ?? null;
+    $ano = $dataRef ? (int)substr($dataRef, 0, 4) : (int)($_GET['ano'] ?? date('Y'));
     header('Location: index.php?ano=' . $ano);
     exit;
 }
@@ -82,6 +85,20 @@ if (isset($_SESSION['_water_flash'])) {
     unset($_SESSION['_water_flash']);
 }
 
+// ── Ano em vista (filtro no servidor — evita carregar o histórico
+//    todo de cada vez; "all" é escolha explícita do utilizador) ────
+$anoAtual  = (int)date('Y');
+$anoParam  = $_GET['ano'] ?? (string)$anoAtual;
+$verTodos  = ($anoParam === 'all');
+$anoFiltro = $verTodos ? null : (int)$anoParam;
+
+$anosDisponiveis = $pdo->query(
+    'SELECT DISTINCT YEAR(data) AS ano FROM infodeqb_water_ultrapure_record ORDER BY ano DESC'
+)->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array($anoAtual, $anosDisponiveis)) {
+    array_unshift($anosDisponiveis, $anoAtual);
+}
+
 // ── Estatísticas ──────────────────────────────────────────────────
 $stAll = $pdo->query(
     'SELECT COUNT(*) AS n, COALESCE(SUM(quantity),0) AS total FROM infodeqb_water_ultrapure_record'
@@ -91,26 +108,35 @@ $stYear = $pdo->prepare(
     'SELECT COUNT(*) AS n, COALESCE(SUM(quantity),0) AS total
      FROM infodeqb_water_ultrapure_record WHERE YEAR(data)=?'
 );
-$stYear->execute([(int)date('Y')]);
+$stYear->execute([$anoFiltro ?? $anoAtual]);
 $stYear = $stYear->fetch(PDO::FETCH_ASSOC);
 
-$stMes = $pdo->prepare(
-    'SELECT COALESCE(SUM(quantity),0) AS total
-     FROM infodeqb_water_ultrapure_record WHERE YEAR(data)=? AND MONTH(data)=?'
-);
-$stMes->execute([(int)date('Y'), (int)date('m')]);
-$stMes = (float)$stMes->fetchColumn();
-
-// ── Todos os registos (filtro feito client-side via DataTable) ────
-$records = $pdo->query(
-    'SELECT rec.autoid, rec.data, rec.quantity,
-            r.id AS resp_id,  r.nome  AS resp_nome,
-            u.userid AS user_id, u.user AS user_nome
-     FROM infodeqb_water_ultrapure_record rec
-     JOIN infodeqb_water_resp r  ON r.id      = rec.resp
-     JOIN infodeqb_water_users u ON u.userid  = rec.user
-     ORDER BY rec.data DESC, rec.autoid DESC'
-)->fetchAll(PDO::FETCH_ASSOC);
+// ── Registos do ano em vista (filtro feito no servidor; dentro do
+//    ano, o período fino — semana/mês/etc. — continua client-side) ─
+if ($verTodos) {
+    $records = $pdo->query(
+        'SELECT rec.autoid, rec.data, rec.quantity,
+                r.id AS resp_id,  r.nome  AS resp_nome,
+                u.userid AS user_id, u.user AS user_nome
+         FROM infodeqb_water_ultrapure_record rec
+         JOIN infodeqb_water_resp r  ON r.id      = rec.resp
+         JOIN infodeqb_water_users u ON u.userid  = rec.user
+         ORDER BY rec.data DESC, rec.autoid DESC'
+    )->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $sthRecords = $pdo->prepare(
+        'SELECT rec.autoid, rec.data, rec.quantity,
+                r.id AS resp_id,  r.nome  AS resp_nome,
+                u.userid AS user_id, u.user AS user_nome
+         FROM infodeqb_water_ultrapure_record rec
+         JOIN infodeqb_water_resp r  ON r.id      = rec.resp
+         JOIN infodeqb_water_users u ON u.userid  = rec.user
+         WHERE YEAR(rec.data) = ?
+         ORDER BY rec.data DESC, rec.autoid DESC'
+    );
+    $sthRecords->execute([$anoFiltro]);
+    $records = $sthRecords->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // ── Listas auxiliares (responsáveis e utilizadores) ───────────────
 $resps = $pdo->query('SELECT id, nome FROM infodeqb_water_resp ORDER BY nome')
@@ -166,7 +192,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
   </div>
   <div class="card flex-fill shadow-sm" style="min-width:150px">
     <div class="card-body py-3 text-center">
-      <div class="text-muted small mb-1"><?= date('Y') ?></div>
+      <div class="text-muted small mb-1"><?= $anoFiltro ?? $anoAtual ?></div>
       <div class="h5 mb-0 font-weight-bold"><?= fmtL($stYear['total']) ?></div>
       <div class="text-muted" style="font-size:.75rem"><?= number_format((int)$stYear['n']) ?> registos</div>
     </div>
@@ -180,11 +206,28 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
   </div>
 </div>
 
-<?php /* ── Barra de filtro ─────────────────────────────────────── */ ?>
+<?php /* ── Ano em vista (filtro no servidor) ───────────────────── */ ?>
+<div class="d-flex flex-wrap align-items-center mb-3" style="gap:8px">
+  <label class="small font-weight-bold mb-0">Ano</label>
+  <select class="form-control form-control-sm" style="width:auto"
+          onchange="location.href='index.php?ano='+this.value">
+    <?php foreach ($anosDisponiveis as $ay): ?>
+    <option value="<?= $ay ?>" <?= (!$verTodos && $anoFiltro == $ay) ? 'selected' : '' ?>><?= $ay ?></option>
+    <?php endforeach; ?>
+    <option value="all" <?= $verTodos ? 'selected' : '' ?>>Todos os anos</option>
+  </select>
+  <?php if ($verTodos): ?>
+  <span class="text-muted small"><i class="fas fa-exclamation-triangle fa-xs me-1"></i>Todos os anos carrega o histórico completo — pode ser lento</span>
+  <?php endif; ?>
+</div>
+
+<?php /* ── Barra de filtro — só faz sentido no ano corrente ou em
+       "todos os anos", onde "hoje" está dentro dos dados carregados ── */ ?>
+<?php if ($verTodos || $anoFiltro === $anoAtual): ?>
 <div class="wq-filter-bar">
   <div class="d-flex flex-wrap align-items-center" style="gap:6px">
     <button class="wq-pill" data-preset="semana">Esta semana</button>
-    <button class="wq-pill active" data-preset="mes">Este mês</button>
+    <button class="wq-pill" data-preset="mes">Este mês</button>
     <button class="wq-pill" data-preset="ano">Este ano</button>
     <button class="wq-pill" data-preset="7d">Últimos 7 dias</button>
     <button class="wq-pill" data-preset="15d">Últimos 15 dias</button>
@@ -192,9 +235,12 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
     <button class="wq-pill" data-preset="custom">
       <i class="fas fa-calendar-alt fa-xs me-1"></i>Personalizado
     </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="wqClear" title="Limpar filtro de período">
+      <i class="fas fa-times fa-xs me-1"></i>Limpar filtros
+    </button>
   </div>
   <div class="wq-nav">
-    <button class="wq-nav-btn" id="wqPrev" title="Período anterior">
+    <button class="wq-nav-btn" id="wqPrev" title="Período anterior" disabled>
       <i class="fas fa-chevron-left"></i>
     </button>
     <span class="wq-period-label" id="wqLabel">—</span>
@@ -210,6 +256,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
     <button class="btn btn-sm btn-primary" id="wqApply">Aplicar</button>
   </div>
 </div>
+<?php endif; ?>
 
 <?php /* ── Tabela de registos + formulário de inserção ───────────── */ ?>
 <div class="card mb-4 shadow-sm">
@@ -435,8 +482,9 @@ function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate()+n); return r
 function isoToDate(s) { var p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
 function fmtHuman(s) { var d = isoToDate(s); return d.getDate() + ' ' + mesesPT[d.getMonth()]; }
 
-// ── Estado da navegação ───────────────────────────────────────────
-var activePreset = 'mes', periodOffset = 0;
+// ── Estado da navegação ─────────────────────────────────────────
+// Sem filtro por omissão — só é activado quando o utilizador escolhe um período
+var activePreset = null, periodOffset = 0;
 var customDe = null, customAte = null, customDays = 0;
 var filterDe = null, filterAte = null;
 
@@ -491,6 +539,7 @@ function fmtLjs(v) {
 function applyNav() {
     var range = getRangeWithOffset(activePreset, periodOffset);
     $('#wqLabel').text(range.label);
+    $('#wqPrev').prop('disabled', !activePreset);
     $('#wqNext').prop('disabled', periodOffset >= 0);
     filterDe = range.de; filterAte = range.ate;
     if (!dtTable) return;
@@ -538,8 +587,8 @@ $(document).ready(function () {
         ]
     });
 
-    // ── Inicializar filtro com "Este mês" ─────────────────────
-    activePreset = 'mes'; periodOffset = 0; applyNav();
+    // ── Sem filtro ao carregar — mostra todos os registos até o
+    //    utilizador escolher um período (ver 'activePreset' acima) ──
 
     // ── Clique nos pills ──────────────────────────────────────
     $('.wq-pill').on('click', function () {
@@ -562,6 +611,22 @@ $(document).ready(function () {
     // ── Setas de navegação ────────────────────────────────────
     $('#wqPrev').on('click', function () { periodOffset--; applyNav(); });
     $('#wqNext').on('click', function () { if (periodOffset >= 0) return; periodOffset++; applyNav(); });
+
+    // ── Limpar filtros — volta ao estado inicial (sem período activo,
+    //    mostra todos os registos do ano em vista) ─────────────────
+    $('#wqClear').on('click', function () {
+        $('.wq-pill').removeClass('active');
+        $('#wqCustomRange').removeClass('open');
+        activePreset = null; periodOffset = 0;
+        filterDe = null; filterAte = null;
+        $('#wqLabel').text('—');
+        $('#wqPrev').prop('disabled', true);
+        $('#wqNext').prop('disabled', true);
+        $('#badgePeriodLabel').text('—');
+        $('#badgePeriodTotal').text('— L');
+        $('#badgePeriodN').text('');
+        if (dtTable) dtTable.draw();
+    });
 
     // ── Calendário personalizado ──────────────────────────────
     $('#wqApply').on('click', function () {

@@ -162,11 +162,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .adi-tabs .nav-link:hover:not(.active) { background:#f3f4f6; }
 
 /* Cores das tabs activas */
-.adi-tabs .nav-link[href="#tab-pub"].active  { background:#e8f0fe; color:#1a56db; }
-.adi-tabs .nav-link[href="#tab-form"].active {background:#e8f0fe; color:#1a56db; }
-.adi-tabs .nav-link[href="#tab-trf"].active  { background:#e8f0fe; color:#1a56db; }
-.adi-tabs .nav-link[href="#tab-ges"].active  { background:#e8f0fe; color:#1a56db; }
-.adi-tabs .nav-link[href="#tab-proj"].active { background:#e8f0fe; color:#1a56db;}
+.adi-tabs .nav-link[href="#tab-pub"].active,
+.adi-tabs .nav-link[href="#tab-form"].active,
+.adi-tabs .nav-link[href="#tab-trf"].active,
+.adi-tabs .nav-link[href="#tab-ges"].active,
+.adi-tabs .nav-link[href="#tab-proj"].active { background:var(--iq-blue-light); color:var(--iq-blue); }
 
 /* ── Cabeçalhos de tabela — mesma cor em todas as secções ──── */
 #tab-pub  thead.table-dark th,
@@ -176,10 +176,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 #tab-proj thead.table-dark th { background:var(--iq-nav-bg)!important; color:#fff!important; }
 
 /* ── Sub-headings de secção ────────────────────────────────── */
-#tab-pub  h6.font-weight-bold { color:#1a56db; }
-#tab-form h6.font-weight-bold.text-primary { color:#1a56db!important; }
-#tab-trf  h6.font-weight-bold.text-primary { color:#1a56db!important; }
-#tab-ges  h6.font-weight-bold.text-primary { color:#1a56db!important; }
+#tab-pub  h6.font-weight-bold { color:var(--iq-blue); }
+#tab-form h6.font-weight-bold.text-primary { color:var(--iq-blue)!important; }
+#tab-trf  h6.font-weight-bold.text-primary { color:var(--iq-blue)!important; }
+#tab-ges  h6.font-weight-bold.text-primary { color:var(--iq-blue)!important; }
 </style>
 
 <div class="iq-page-header d-flex align-items-center">
@@ -209,7 +209,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="row">
       <div class="col-md-6 mb-3 mb-md-0">
         <div class="adi-score-card sc-blue h-100">
-          <div class="mb-2 font-weight-bold" style="color:#1a56db;font-size:.83rem">Produção Científica (P<sub>Ci</sub>)</div>
+          <div class="mb-2 font-weight-bold" style="color:var(--iq-blue);font-size:.83rem">Produção Científica (P<sub>Ci</sub>)</div>
           <div class="d-flex align-items-baseline flex-wrap" style="gap:6px;font-size:.82rem">
             <span>P<sub>Pub</sub> = <strong><?= fmt1($elem['publicacoes_i']) ?></strong></span>
             <span class="text-muted">+</span>

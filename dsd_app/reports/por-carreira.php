@@ -123,16 +123,16 @@ require_once __DIR__ . '/../includes/header.php';
   ?>
   <!-- CATEGORIA -->
   <tr style="background:#e0eaff" data-collapse-group="<?= $carrKey ?>" data-collapse-trigger="<?= $catKey ?>">
-    <td style="padding-left:16px;font-weight:600;color:#1e40af">
+    <td style="padding-left:16px;font-weight:600;color:var(--iq-blue-dark)">
       <span class="collapse-icon">▾</span> <?= esc($categoria) ?>
       <span class="collapse-summary" style="display:none;font-size:11px;color:var(--blue);margin-left:8px"><?= fmt($catData['total'],2) ?> h</span>
     </td>
     <?php foreach ($planos as $p): ?>
-    <td class="num" style="color:#1e40af;border-left:1px solid var(--gray-200)">
+    <td class="num" style="color:var(--iq-blue-dark);border-left:1px solid var(--gray-200)">
       <?= $catPlanos[$p['id']] > 0.005 ? fmt($catPlanos[$p['id']],2) : '' ?>
     </td>
     <?php endforeach; ?>
-    <td class="num" style="color:#1e40af;font-weight:700;border-left:2px solid var(--gray-300)"><?= fmt($catData['total'],2) ?></td>
+    <td class="num" style="color:var(--iq-blue-dark);font-weight:700;border-left:2px solid var(--gray-300)"><?= fmt($catData['total'],2) ?></td>
   </tr>
 
   <?php foreach ($catData['docs'] as $did => $doc): ?>
@@ -149,14 +149,14 @@ require_once __DIR__ . '/../includes/header.php';
   <?php endforeach; ?>
 
   <!-- Subtotal categoria -->
-  <tr style="background:#dbeafe;font-weight:600" data-collapse-group="<?= $carrKey ?>">
-    <td style="padding-left:16px;color:#1e40af;font-size:11px">Total <?= esc($categoria) ?></td>
+  <tr style="background:var(--iq-blue-light);font-weight:600" data-collapse-group="<?= $carrKey ?>">
+    <td style="padding-left:16px;color:var(--iq-blue-dark);font-size:11px">Total <?= esc($categoria) ?></td>
     <?php foreach ($planos as $p): ?>
-    <td class="num" style="color:#1e40af;border-left:1px solid var(--gray-200)">
+    <td class="num" style="color:var(--iq-blue-dark);border-left:1px solid var(--gray-200)">
       <?= $catPlanos[$p['id']] > 0.005 ? fmt($catPlanos[$p['id']],2) : '' ?>
     </td>
     <?php endforeach; ?>
-    <td class="num" style="color:#1e40af;font-weight:700;border-left:2px solid var(--gray-300)"><?= fmt($catData['total'],2) ?></td>
+    <td class="num" style="color:var(--iq-blue-dark);font-weight:700;border-left:2px solid var(--gray-300)"><?= fmt($catData['total'],2) ?></td>
   </tr>
 
   <?php endforeach; ?>

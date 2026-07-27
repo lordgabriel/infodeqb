@@ -521,9 +521,9 @@ $tipoLabelsU = array(
 ?>
 <?php if ($pedidosPendentes): ?>
 <div class="card mb-3 border-warning">
-  <div class="card-header py-2 d-flex align-items-center" style="background:#fffbeb">
+  <div class="card-header py-2 d-flex align-items-center" style="background:var(--iq-amber-light)">
     <i class="fas fa-clock text-warning me-2"></i>
-    <strong style="color:#92400e" class="mr-auto">Pedidos em análise</strong>
+    <strong style="color:var(--iq-amber-dark)" class="mr-auto">Pedidos em análise</strong>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm mb-0" style="font-size:.82rem">

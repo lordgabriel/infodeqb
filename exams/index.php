@@ -157,20 +157,43 @@ $pageTitle = 'Arquivo de Exames';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
-<div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:8px">
-  <h1 class="mr-auto mb-0">
-    <i class="fas fa-archive fa-sm me-2 text-muted"></i>
-    <?= t('EXAM_TITLE') ?>
-  </h1>
-  <?php if ($isExamAdmin): ?>
-  <button class="btn btn-primary btn-sm" id="btnNovoAuto"
-          data-bs-toggle="collapse" data-bs-target="#formPanel">
-    <i class="fas fa-plus me-1"></i><?= t('EXAM_NEW_AUTO') ?>
-  </button>
-  <?php endif; ?>
-  <a href="files/Auto_Entrega_Eliminacao.doc" class="btn btn-outline-secondary btn-sm" download>
-    <i class="fas fa-file-download me-1"></i>Auto de Entrega para Eliminação
-  </a>
+<style>
+/* ── Passos numerados (processo de submissão) ──────────────────── */
+.iq-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.iq-steps li { counter-increment: step; display: flex; gap: .65rem; align-items: flex-start; padding: .32rem 0; font-size: .84rem; color: var(--iq-text); }
+.iq-steps li::before {
+  content: counter(step);
+  flex-shrink: 0; width: 20px; height: 20px; margin-top: .05rem; border-radius: 50%;
+  background: var(--iq-blue-light); color: var(--iq-blue-dark);
+  font-family: var(--iq-font-mono); font-size: .66rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+/* ── Cartão de ticket ───────────────────────────────────────────── */
+.ticket-card { border-left: 3px solid var(--iq-border2); }
+.ticket-card.tk-pending { border-left-color: var(--iq-amber); }
+.ticket-card.tk-done    { border-left-color: #0e9f6e; }
+.ticket-head { display: flex; align-items: center; gap: .75rem; cursor: pointer; background: var(--iq-gray-50); }
+.ticket-main { flex: 1; min-width: 0; overflow: hidden; }
+.ticket-docente { font-weight: 650; font-size: .87rem; color: var(--iq-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-meta { font-size: .73rem; color: var(--iq-muted); display: flex; gap: .4rem; align-items: center; margin-top: 1px; }
+</style>
+
+<div class="iq-page-header">
+  <div>
+    <h1 class="iq-page-title"><i class="fas fa-archive me-2 text-primary"></i><?= t('EXAM_TITLE') ?></h1>
+    <p class="iq-page-sub">Autos de incorporação e arquivo físico de provas de avaliação</p>
+  </div>
+  <div class="d-flex gap-2 ms-auto">
+    <?php if ($isExamAdmin): ?>
+    <button class="btn btn-primary btn-sm" id="btnNovoAuto"
+            data-bs-toggle="collapse" data-bs-target="#formPanel">
+      <i class="fas fa-plus me-1"></i><?= t('EXAM_NEW_AUTO') ?>
+    </button>
+    <?php endif; ?>
+    <a href="files/Auto_Entrega_Eliminacao.doc" class="btn btn-outline-secondary btn-sm" download>
+      <i class="fas fa-file-download me-1"></i>Auto de Entrega para Eliminação
+    </a>
+  </div>
 </div>
 
 <?php if ($flashMsg): ?>
@@ -182,142 +205,160 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; ?>
 
 <?php /* ════════ FORMULÁRIO ══════════════════════════════════════ */ ?>
-<?php
-// Para admin: oculto por omissão (collapse); para utilizador: sempre visível
-$formWrapOpen  = $isExamAdmin ? '<div class="collapse mb-4" id="formPanel"><div class="card border-primary"><div class="card-header py-2 bg-primary text-white d-flex align-items-center"><strong class="mr-auto"><i class="fas fa-file-alt me-2"></i>' . t('EXAM_NEW_AUTO') . '</strong>' . (isset($_SESSION['uid']) ? '<span class="badge badge-light ms-2" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '<button type="button" class="btn btn-sm btn-outline-light py-0 ms-2" data-bs-toggle="collapse" data-bs-target="#formPanel"><i class="fas fa-times fa-xs"></i></button></div><div class="card-body">' : '<div class="card mb-4"><div class="card-header py-2"><i class="fas fa-file-alt fa-sm me-2 text-muted"></i><strong>' . t('EXAM_AUTO_TITLE') . '</strong>' . (isset($_SESSION['uid']) ? ' <span class="badge badge-secondary ms-1" style="font-size:.72rem">' . htmlspecialchars($_SESSION['uid']) . '</span>' : '') . '</div><div class="card-body">';
-$formWrapClose = $isExamAdmin ? '</div></div></div>' : '</div></div>';
-echo $formWrapOpen;
-?>
-  <form method="post" class="mb-3">
-    <input type="hidden" name="_acao" value="inserir">
-    <div class="form-row align-items-end">
-      <div class="col-md-3 form-group mb-2">
-        <label class="small font-weight-bold"><?= t('EXAM_TEACHER') ?> <span class="text-danger">*</span></label>
-        <input type="text" name="name" class="form-control form-control-sm" required
-               placeholder="Nome do docente"
-               value="<?= htmlspecialchars($_SESSION['name'] ?? '') ?>"
-               <?= isset($_SESSION['name']) ? 'readonly' : '' ?>>
-      </div>
-      <div class="col-md-2 form-group mb-2">
-        <label class="small font-weight-bold">Curso <span class="text-danger">*</span></label>
-        <input type="text" name="curso" class="form-control form-control-sm" required placeholder="Designação">
-      </div>
-      <div class="col-md-2 form-group mb-2">
-        <label class="small font-weight-bold">Ano Letivo <span class="text-danger">*</span></label>
-        <select name="ano" class="form-control form-control-sm" required>
-          <option disabled selected value="">Seleccione</option>
-          <?= $option_ano ?>
-        </select>
-      </div>
-      <div class="col-md-3 form-group mb-2">
-        <label class="small font-weight-bold"><?= t('EXAM_COURSE_UNIT') ?> <span class="text-danger">*</span></label>
-        <input type="text" name="uc" class="form-control form-control-sm" required placeholder="Nome por extenso">
-      </div>
-      <div class="col-md-1 form-group mb-2">
-        <label class="small font-weight-bold"><?= t('EXAM_TYPOLOGY') ?> <span class="text-danger">*</span></label>
-        <input type="text" name="tipo" class="form-control form-control-sm" required placeholder="Ex: Testes">
-      </div>
-      <div class="col-md-1 form-group mb-2">
-        <label class="d-block">&nbsp;</label>
-        <button type="submit" class="btn btn-info btn-sm btn-block">
-          <i class="fas fa-plus me-1"></i>Adicionar
-        </button>
-      </div>
-    </div>
-  </form>
-
-  <?php if (!empty($pendentes)): ?>
-  <div class="table-responsive mb-3">
-    <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-      <thead class="">
-        <tr>
-          <th>Curso</th><th style="width:7em">Ano Letivo</th>
-          <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
-          <th style="width:5em" class="text-center">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php foreach ($pendentes as $row): ?>
-        <tr>
-          <td><?= htmlspecialchars($row['curso']) ?></td>
-          <td><?= htmlspecialchars($row['ano_letivo']) ?></td>
-          <td><?= htmlspecialchars($row['unidade_curricular']) ?></td>
-          <td><?= htmlspecialchars($row['tipologia']) ?></td>
-          <td class="text-center text-nowrap">
-            <a href="#" class="btn-edit-user text-info me-1"
-               data-bs-toggle="modal" data-bs-target="#modalEditUser"
-               data-id="<?= (int)$row['autoid'] ?>"
-               data-curso="<?= htmlspecialchars($row['curso'], ENT_QUOTES) ?>"
-               data-ano="<?= htmlspecialchars($row['ano_letivo'], ENT_QUOTES) ?>"
-               data-uc="<?= htmlspecialchars($row['unidade_curricular'], ENT_QUOTES) ?>"
-               data-tipologia="<?= htmlspecialchars($row['tipologia'], ENT_QUOTES) ?>">
-              <i class="fas fa-edit fa-xs"></i>
-            </a>
-            <a href="#" class="btn-del-user text-danger"
-               data-bs-toggle="modal" data-bs-target="#modalDelUser"
-               data-id="<?= (int)$row['autoid'] ?>">
-              <i class="fas fa-trash fa-xs"></i>
-            </a>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+<?php $formPanelOpen = $isExamAdmin ? '<div class="collapse mb-4" id="formPanel">' : ''; ?>
+<?php echo $formPanelOpen; ?>
+<div class="card <?= $isExamAdmin ? 'border-primary' : 'mb-4' ?>">
+  <div class="card-header py-2 d-flex align-items-center <?= $isExamAdmin ? 'bg-primary text-white' : '' ?>">
+    <strong class="mr-auto">
+      <i class="fas fa-file-alt me-2 <?= $isExamAdmin ? '' : 'text-muted' ?>"></i>
+      <?= $isExamAdmin ? t('EXAM_NEW_AUTO') : t('EXAM_AUTO_TITLE') ?>
+    </strong>
+    <?php if (isset($_SESSION['uid'])): ?>
+    <span class="code <?= $isExamAdmin ? 'ms-2' : 'ms-1' ?>" style="<?= $isExamAdmin ? 'color:#fff' : '' ?>"><?= htmlspecialchars($_SESSION['uid']) ?></span>
+    <?php endif; ?>
+    <?php if ($isExamAdmin): ?>
+    <button type="button" class="btn btn-sm btn-outline-light py-0 ms-2" data-bs-toggle="collapse" data-bs-target="#formPanel">
+      <i class="fas fa-times fa-xs"></i>
+    </button>
+    <?php endif; ?>
   </div>
-  <div class="d-flex align-items-center justify-content-between">
-    <small class="text-muted"><?= count($pendentes) ?> linha(s) adicionada(s)</small>
-    <form method="post">
-      <input type="hidden" name="_acao" value="submeter">
-      <button type="submit" class="btn btn-primary btn-sm">
-        <i class="fas fa-paper-plane me-1"></i><?= t('EXAM_SUBMIT_PDF') ?>
-      </button>
+  <div class="card-body">
+
+    <form method="post" class="mb-3">
+      <input type="hidden" name="_acao" value="inserir">
+      <div class="row g-2">
+        <div class="col-12 col-md-4 form-group mb-2">
+          <label class="small font-weight-bold"><?= t('EXAM_TEACHER') ?> <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control form-control-sm" required
+                 placeholder="Nome do docente"
+                 value="<?= htmlspecialchars($_SESSION['name'] ?? '') ?>"
+                 <?= isset($_SESSION['name']) ? 'readonly' : '' ?>>
+          <?php if (isset($_SESSION['name'])): ?>
+          <div class="form-text" style="font-size:.72rem"><i class="fas fa-lock fa-xs me-1"></i>Fixo para este auto</div>
+          <?php endif; ?>
+        </div>
+        <div class="col-6 col-md-3 form-group mb-2">
+          <label class="small font-weight-bold">Curso <span class="text-danger">*</span></label>
+          <input type="text" name="curso" class="form-control form-control-sm" required placeholder="Designação">
+        </div>
+        <div class="col-6 col-md-2 form-group mb-2">
+          <label class="small font-weight-bold">Ano Letivo <span class="text-danger">*</span></label>
+          <select name="ano" class="form-control form-control-sm" required>
+            <option disabled selected value="">Seleccione</option>
+            <?= $option_ano ?>
+          </select>
+        </div>
+        <div class="col-9 col-md-2 form-group mb-2">
+          <label class="small font-weight-bold"><?= t('EXAM_TYPOLOGY') ?> <span class="text-danger">*</span></label>
+          <input type="text" name="tipo" class="form-control form-control-sm" required placeholder="Ex: Testes">
+        </div>
+        <div class="col-3 col-md-1 form-group mb-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-info btn-sm btn-block w-100" title="Adicionar linha">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="col-12 form-group mb-0">
+          <label class="small font-weight-bold"><?= t('EXAM_COURSE_UNIT') ?> <span class="text-danger">*</span></label>
+          <input type="text" name="uc" class="form-control form-control-sm" required placeholder="Nome por extenso">
+        </div>
+      </div>
     </form>
-  </div>
-  <?php else: ?>
-  <p class="text-muted small mb-0">
-    <i class="fas fa-info-circle me-1"></i>Adicione linhas acima para criar o auto de incorporação.
-  </p>
-  <?php endif; ?>
 
-  <hr class="my-3">
-  <ol class="mb-3" style="font-size:.84rem">
-    <li class="mb-1">Organizar os elementos de avaliação por ano letivo e por unidade curricular.</li>
-    <li class="mb-1">Preencher o formulário. Cada linha pode referenciar mais que uma UC mas <strong>apenas um ano letivo</strong>.</li>
-    <li class="mb-1">Clicar em <strong>Submeter</strong> — será gerado um PDF com o auto de incorporação que deve ser impresso.</li>
-    <li class="mb-1">Entregar os elementos devidamente identificados no secretariado juntamente com o auto gerado.</li>
-    <li class="mb-1">Após boa recepção, o auto será carimbado, assinado e devolvido.</li>
-    <li class="mb-0">No final do ano N, os arquivos do ano letivo N‑6/N‑5 são enviados para o Serviço de Arquivo da FEUP para eliminação.</li>
-  </ol>
-  <div class="alert alert-warning mb-0" style="display:block;font-size:.83rem">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    Só devem ser entregues documentos dentro do prazo de arquivo obrigatório (5 anos). Caso esse prazo tenha sido ultrapassado, preencha o
-    <a href="files/Auto_Entrega_Eliminacao.doc" class="font-weight-bold" download>Auto de Entrega para Eliminação</a>
-    e solicite a eliminação ao Serviço de Arquivo.
+    <?php if (!empty($pendentes)): ?>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
+        <thead class="">
+          <tr>
+            <th>Curso</th><th style="width:7em">Ano Letivo</th>
+            <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
+            <th style="width:5em" class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($pendentes as $row): ?>
+          <tr>
+            <td><?= htmlspecialchars($row['curso']) ?></td>
+            <td><?= htmlspecialchars($row['ano_letivo']) ?></td>
+            <td><?= htmlspecialchars($row['unidade_curricular']) ?></td>
+            <td><?= htmlspecialchars($row['tipologia']) ?></td>
+            <td class="text-center text-nowrap">
+              <a href="#" class="btn-edit-user text-info me-1"
+                 data-bs-toggle="modal" data-bs-target="#modalEditUser"
+                 data-id="<?= (int)$row['autoid'] ?>"
+                 data-curso="<?= htmlspecialchars($row['curso'], ENT_QUOTES) ?>"
+                 data-ano="<?= htmlspecialchars($row['ano_letivo'], ENT_QUOTES) ?>"
+                 data-uc="<?= htmlspecialchars($row['unidade_curricular'], ENT_QUOTES) ?>"
+                 data-tipologia="<?= htmlspecialchars($row['tipologia'], ENT_QUOTES) ?>">
+                <i class="fas fa-edit fa-xs"></i>
+              </a>
+              <a href="#" class="btn-del-user text-danger"
+                 data-bs-toggle="modal" data-bs-target="#modalDelUser"
+                 data-id="<?= (int)$row['autoid'] ?>">
+                <i class="fas fa-trash fa-xs"></i>
+              </a>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex align-items-center justify-content-between">
+      <small class="text-muted"><?= count($pendentes) ?> linha(s) adicionada(s)</small>
+      <form method="post">
+        <input type="hidden" name="_acao" value="submeter">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fas fa-paper-plane me-1"></i><?= t('EXAM_SUBMIT_PDF') ?>
+        </button>
+      </form>
+    </div>
+    <?php else: ?>
+    <p class="text-muted small mb-0">
+      <i class="fas fa-info-circle me-1"></i>Adicione linhas acima para criar o auto de incorporação.
+    </p>
+    <?php endif; ?>
+
   </div>
-<?php echo $formWrapClose; ?>
+</div>
+
+<div class="card <?= $isExamAdmin ? '' : 'mb-4' ?>" style="<?= $isExamAdmin ? 'margin-top:1rem' : '' ?>">
+  <div class="card-header py-2">
+    <i class="fas fa-list-ol fa-sm me-2 text-muted"></i><strong>Como funciona</strong>
+  </div>
+  <div class="card-body">
+    <ol class="iq-steps mb-3">
+      <li>Organizar os elementos de avaliação por ano letivo e por unidade curricular.</li>
+      <li>Preencher o formulário acima. Cada linha pode referenciar mais que uma UC mas <strong>apenas um ano letivo</strong>.</li>
+      <li>Clicar em <strong>Submeter</strong> — será gerado um PDF com o auto de incorporação que deve ser impresso.</li>
+      <li>Entregar os elementos devidamente identificados no secretariado juntamente com o auto gerado.</li>
+      <li>Após boa recepção, o auto será carimbado, assinado e devolvido.</li>
+      <li>No final do ano N, os arquivos do ano letivo N‑6/N‑5 são enviados para o Serviço de Arquivo da FEUP para eliminação.</li>
+    </ol>
+    <div class="alert alert-warning mb-0" style="display:block;font-size:.83rem">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Só devem ser entregues documentos dentro do prazo de arquivo obrigatório (5 anos). Caso esse prazo tenha sido ultrapassado, preencha o
+      <a href="files/Auto_Entrega_Eliminacao.doc" class="font-weight-bold" download>Auto de Entrega para Eliminação</a>
+      e solicite a eliminação ao Serviço de Arquivo.
+    </div>
+  </div>
+</div>
+<?php if ($isExamAdmin) echo '</div>'; /* fecha #formPanel */ ?>
 
 <?php if ($isExamAdmin): ?>
 <?php /* ════════ DASHBOARD ADMIN ═══════════════════════════════ */ ?>
 
 <?php /* ── Badges de estado ──────────────────────────────────── */ ?>
-<div class="d-flex flex-wrap mb-3" style="gap:10px">
-  <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="" style="cursor:pointer;min-width:110px">
-    <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i>Total</div>
-      <div class="h4 mb-0 font-weight-bold"><?= count($ticketsAgrupados) ?></div>
-    </div>
+<div class="iq-stat-grid mb-3">
+  <div class="iq-stat iq-stat-blue stat-badge" data-filter="" style="cursor:pointer" title="Ver todos">
+    <div class="iq-stat-icon"><i class="fas fa-list"></i></div>
+    <div><div class="iq-stat-value"><?= count($ticketsAgrupados) ?></div><div class="iq-stat-label">Total de autos</div></div>
   </div>
-  <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="por-arquivar" style="cursor:pointer;min-width:130px">
-    <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i><i class="fas fa-clock fa-xs me-1"></i>Por arquivar</div>
-      <div class="h4 mb-0 font-weight-bold text-warning"><?= $nPorArquivar ?></div>
-    </div>
+  <div class="iq-stat iq-stat-yellow stat-badge" data-filter="por-arquivar" style="cursor:pointer" title="Filtrar por arquivar">
+    <div class="iq-stat-icon"><i class="fas fa-clock"></i></div>
+    <div><div class="iq-stat-value"><?= $nPorArquivar ?></div><div class="iq-stat-label">Por arquivar</div></div>
   </div>
-  <div class="card flex-fill shadow-sm text-center stat-badge" data-filter="arquivado" style="cursor:pointer;min-width:120px">
-    <div class="card-body py-3">
-      <div class="text-muted small mb-1"><i class="fas fa-eye fa-xs me-1"></i><i class="fas fa-box fa-xs me-1"></i>Arquivados</div>
-      <div class="h4 mb-0 font-weight-bold text-success"><?= $nArquivados ?></div>
-    </div>
+  <div class="iq-stat iq-stat-green stat-badge" data-filter="arquivado" style="cursor:pointer" title="Filtrar arquivados">
+    <div class="iq-stat-icon"><i class="fas fa-box"></i></div>
+    <div><div class="iq-stat-value"><?= $nArquivados ?></div><div class="iq-stat-label">Arquivados</div></div>
   </div>
 </div>
 
@@ -371,18 +412,20 @@ echo $formWrapOpen;
   $status   = $temCaixa ? 'arquivado' : 'por-arquivar';
   $bodyId   = 'tb-' . $ti;
 ?>
-<div class="card mb-2 ticket-card"
+<div class="card mb-2 ticket-card <?= $temCaixa ? 'tk-done' : 'tk-pending' ?>"
      data-status="<?= $status ?>"
      data-docente="<?= htmlspecialchars(mb_strtolower($first['docente']), ENT_QUOTES) ?>"
      data-data="<?= htmlspecialchars($first['data']) ?>">
-  <div class="card-header py-2 d-flex align-items-center"
-       style="background:#f8f9fa;cursor:pointer"
+  <div class="card-header ticket-head py-2"
        data-bs-toggle="collapse" data-bs-target="#<?= $bodyId ?>">
-    <i class="fas fa-chevron-down fa-xs text-muted me-2 ticket-chevron"></i>
-    <div class="mr-auto">
-      <code class="text-dark" style="font-size:.78rem"><?= htmlspecialchars($ticket) ?></code>
-      <span class="text-muted mx-2" style="font-size:.8rem"><?= htmlspecialchars($first['data']) ?></span>
-      <span style="font-size:.85rem"><?= htmlspecialchars($first['docente']) ?></span>
+    <i class="fas fa-chevron-down fa-xs text-muted ticket-chevron"></i>
+    <div class="ticket-main">
+      <div class="ticket-docente"><?= htmlspecialchars($first['docente']) ?></div>
+      <div class="ticket-meta">
+        <span class="code"><?= htmlspecialchars($ticket) ?></span>
+        <span>·</span>
+        <span><?= htmlspecialchars($first['data']) ?></span>
+      </div>
     </div>
     <span class="badge badge-<?= $temCaixa ? 'success' : 'warning' ?> me-2" style="font-size:.72rem">
       <?= $temCaixa ? '<i class="fas fa-box fa-xs me-1"></i>' . t('infodeqb_exam_archiveD') : '<i class="fas fa-clock fa-xs me-1"></i>' . t('EXAM_TO_ARCHIVE') ?>
@@ -617,7 +660,7 @@ $(document).ready(function () {
         activeStatus = (activeStatus === filter) ? '' : filter;
         $('.stat-badge').removeClass('border-primary').css('box-shadow','');
         if (activeStatus) {
-            $(this).addClass('border-primary').css('box-shadow','0 0 0 2px #0d6efd33');
+            $(this).addClass('border-primary').css('box-shadow','0 0 0 2px #0b6e7333');
         }
         applyFilters();
     });

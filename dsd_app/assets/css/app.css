@@ -6,9 +6,9 @@
 
 /* ── CSS Variables (globais — nomes distintos de infodeq.css) ── */
 :root {
-  --blue:       #1a56db;
-  --blue-dark:  #1341b5;
-  --blue-light: #dbeafe;
+  --blue:       #0b6e73;
+  --blue-dark:  #084d51;
+  --blue-light: #dbeeee;
   --rpt-hdr:    #2563eb;
   --rpt-sub:    #3b82f6;
   --rpt-grp:    #eff6ff;
@@ -164,7 +164,7 @@
 .dsd-page textarea:focus {
   outline: none;
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+  box-shadow: 0 0 0 3px rgba(11,110,115,.12);
 }
 .dsd-page textarea { resize: vertical; min-height: 80px; }
 .dsd-page .form-actions {

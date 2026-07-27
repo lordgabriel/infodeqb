@@ -177,60 +177,62 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="card shadow-sm mb-3">
         <div class="card-header py-2"><strong>Identificação</strong></div>
         <div class="card-body">
-          <div class="form-group">
-            <label class="small font-weight-bold"><?= t('EQUIP_LAB') ?> <span class="text-danger">*</span></label>
-            <select name="Laboratorio" class="form-control" required
-                    <?= (!$isAdmin && $equipId) ? 'disabled' : '' ?>>
-              <option value="">— seleccione —</option>
-              <?php foreach ($labs as $l):
-                $selected = ($eq['Laboratorio'] === $l['lab_id']);
-                $disabled = !$isAdmin && !in_array($l['lab_id'], $labsDoUser);
-                if ($disabled) continue; ?>
-              <option value="<?= htmlspecialchars($l['lab_id']) ?>"
-                      <?= $selected ? 'selected' : '' ?>>
-                <?= htmlspecialchars($l['designacao']) ?>
-              </option>
-              <?php endforeach; ?>
-            </select>
-            <?php if (!$isAdmin && $equipId): ?>
-            <input type="hidden" name="Laboratorio" value="<?= htmlspecialchars($eq['Laboratorio']) ?>">
-            <?php endif; ?>
-          </div>
-          <div class="form-group">
-            <label class="small font-weight-bold"><?= t('EQUIP_NAME') ?> <span class="text-danger">*</span></label>
-            <input type="text" name="Equipamento" class="form-control" required
-                   value="<?= htmlspecialchars($eq['Equipamento'] ?? '') ?>">
+          <div class="form-row">
+            <div class="col-md-4 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_LAB') ?> <span class="text-danger">*</span></label>
+              <select name="Laboratorio" class="form-control" required
+                      <?= (!$isAdmin && $equipId) ? 'disabled' : '' ?>>
+                <option value="">— seleccione —</option>
+                <?php foreach ($labs as $l):
+                  $selected = ($eq['Laboratorio'] === $l['lab_id']);
+                  $disabled = !$isAdmin && !in_array($l['lab_id'], $labsDoUser);
+                  if ($disabled) continue; ?>
+                <option value="<?= htmlspecialchars($l['lab_id']) ?>"
+                        <?= $selected ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($l['designacao']) ?>
+                </option>
+                <?php endforeach; ?>
+              </select>
+              <?php if (!$isAdmin && $equipId): ?>
+              <input type="hidden" name="Laboratorio" value="<?= htmlspecialchars($eq['Laboratorio']) ?>">
+              <?php endif; ?>
+            </div>
+            <div class="col-md-8 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_NAME') ?> <span class="text-danger">*</span></label>
+              <input type="text" name="Equipamento" class="form-control" required
+                     value="<?= htmlspecialchars($eq['Equipamento'] ?? '') ?>">
+            </div>
           </div>
           <div class="form-row">
-            <div class="col-md-5 form-group">
+            <div class="col-md-5 form-group mb-2">
               <label class="small font-weight-bold">Marca</label>
               <input type="text" name="Marca" class="form-control"
                      value="<?= htmlspecialchars($eq['Marca'] ?? '') ?>">
             </div>
-            <div class="col-md-5 form-group">
+            <div class="col-md-5 form-group mb-2">
               <label class="small font-weight-bold">Modelo</label>
               <input type="text" name="Modelo" class="form-control"
                      value="<?= htmlspecialchars($eq['Modelo'] ?? '') ?>">
             </div>
-            <div class="col-md-2 form-group">
+            <div class="col-md-2 form-group mb-2">
               <label class="small font-weight-bold">Qtd.</label>
               <input type="number" name="Quantidade" class="form-control" min="1"
                      value="<?= (int)($eq['Quantidade'] ?? 1) ?>">
             </div>
           </div>
           <div class="form-row">
-            <div class="col-md-3 form-group">
+            <div class="col-md-3 form-group mb-0">
               <label class="small font-weight-bold">Ano aquisição</label>
               <input type="text" name="AnoAquisicao" class="form-control" maxlength="11"
                      placeholder="ex: 2022"
                      value="<?= htmlspecialchars($eq['AnoAquisicao'] ?? '') ?>">
             </div>
-            <div class="col-md-4 form-group">
+            <div class="col-md-4 form-group mb-0">
               <label class="small font-weight-bold">Responsável</label>
               <input type="text" name="Responsavel" class="form-control"
                      value="<?= htmlspecialchars($eq['Responsavel'] ?? '') ?>">
             </div>
-            <div class="col-md-5 form-group">
+            <div class="col-md-5 form-group mb-0">
               <label class="small font-weight-bold">Técnico</label>
               <input type="text" name="Tecnico" class="form-control"
                      value="<?= htmlspecialchars($eq['Tecnico'] ?? '') ?>">
@@ -243,22 +245,24 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="card shadow-sm mb-3">
         <div class="card-header py-2"><strong>Detalhes operacionais</strong></div>
         <div class="card-body">
+          <div class="form-row">
           <?php foreach ([
             'Descricao'    => ['Descrição',               2],
-            'Condicoes'    => ['Condições de utilização',  3],
+            'Condicoes'    => ['Condições de utilização',  2],
             'Horario'      => ['Horário',                  2],
             'Amostras'     => ['Tipo de amostras',         2],
-            'Operacao'     => ['Operação',                 3],
+            'Operacao'     => ['Operação',                 2],
             'Custo'        => ['Custo',                    2],
-            'Procedimento' => ['Procedimento',             3],
+            'Procedimento' => ['Procedimento',             2],
             'Observacoes'  => ['Observações',              2],
           ] as $field => [$label, $rows]): ?>
-          <div class="form-group">
+          <div class="col-md-6 form-group mb-2">
             <label class="small font-weight-bold"><?= htmlspecialchars($label) ?></label>
             <textarea name="<?= $field ?>" class="form-control" rows="<?= $rows ?>"
                       style="font-size:.85rem"><?= htmlspecialchars($eq[$field] ?? '') ?></textarea>
           </div>
           <?php endforeach; ?>
+          </div>
         </div>
       </div>
 
