@@ -63,7 +63,7 @@ infodeqb/
 │   ├── lang.pt.php         ← ~350 chaves PT
 │   └── lang.en.php         ← ~350 chaves EN
 ├── css/infodeq.css         ← design system (Bootstrap override)
-├── vendor/                 ← mPDF, PHPMailer, etc. (Bootstrap/jQuery/DataTables/FontAwesome locais aqui já não são usados pelo core — tudo carregado via CDN, ver inc/header.php)
+├── vendor/                 ← Dompdf (geração de PDF, exams/), PHPMailer, etc. (Bootstrap/jQuery/DataTables/FontAwesome locais aqui já não são usados pelo core — tudo carregado via CDN, ver inc/header.php)
 ├── hr/                     ← Gestão de Colaboradores
 ├── water/                  ← Qualidade da Água + Consumos
 ├── equipments/             ← Catálogo de Equipamentos
@@ -133,6 +133,7 @@ infodeqb/
 - **Página unificada:** `exams/index.php` — admin vê dashboard + form; utilizador vê só form
 - **Grupos por ticket:** cards colapsáveis, filtros (status badges + docente + datas)
 - **"Arquivado":** ticket onde TODAS as linhas têm `num_caixa` (não só uma)
+- **PDF do auto de incorporação:** `exams/success.php` (após submissão) e `exams/admin/printticket.php` (reimprimir) usam **Dompdf** (`vendor/dompdf/`, vendorizado manualmente sem Composer — ver `vendor/composer/autoload_static.php`). Precisa da extensão `gd` do PHP ativa (para embutir o logótipo no PDF) — confirmar em produção com `php -m | grep gd`.
 
 ## Módulo Serviço Docente
 - **`servdoc/index.php`** — utilizadores em `inv_deqb` podem submeter preferências; admin vê dashboard + pode editar preferências de qualquer docente
