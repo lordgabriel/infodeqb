@@ -1,15 +1,14 @@
 <?php
 // require composer autoload
-require_once '../../../../deqwww.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 require ROOT_DIR . '/infodeqb/vendor/autoload.php';
 include ROOT_DIR . '/infodeqb/session.php';
+require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 
-if (! ($_SESSION['user'] &&
-        ($_SESSION['user'] == 'up356946@up.pt' ||
-        $_SESSION['user'] == 'up448105@up.pt' ||
-        $_SESSION['user'] == 'up424064@up.pt'))) {
-
-    header('location:' . HTTP_DIR . '/infodeqb/denied.php');
+$isExamAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsExam);
+if (!$isExamAdmin) {
+    header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
+    exit;
 }
 /*
  * if(!isset($_SERVER['HTTP_REFERER'])){
@@ -43,17 +42,6 @@ $mpdf->SetHTMLFooter(
         <td width="33%" style="text-align: right;">{PAGENO}/{nbpg}</td>
     </tr>
 </table>');
-
-echo '<tr>
-  <th class="col-sm-2">' . $id1 .
-        '</th>
-  <th class="col-sm-2">Ano Letivo</th>
-  <th class="col-sm-2">Unidade curricular</th>
-  <th class="col-sm-2" >Tipologia</th>
-  <th class="col-sm-1" >Ações</th>
-</tr>
-</thead>
-<tbody>';
 
 while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
     $docente = $row['docente'];
