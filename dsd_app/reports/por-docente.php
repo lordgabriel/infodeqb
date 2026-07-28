@@ -87,7 +87,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📄 Relatório por Docente</div>
+    <div class="page-title"><i class="fas fa-file-alt me-1"></i>Relatório por Docente</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -95,7 +95,7 @@ require_once __DIR__ . '/../includes/header.php';
     <button class="btn btn-secondary btn-sm" onclick="expandAll('doc-')">⊞ Expandir docentes</button>
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('sem-')">⊟ Colapsar semestres</button>
     <button class="btn btn-secondary btn-sm" onclick="expandAll('sem-')">⊞ Expandir semestres</button>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir</button>
     <a href="por-ciclo.php" class="btn btn-secondary">Por Ciclo →</a>
   </div>
 </div>
@@ -130,8 +130,8 @@ require_once __DIR__ . '/../includes/header.php';
         <option value="2S" <?= $filterSem === '2S' ? 'selected' : '' ?>>2S</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end">🔍</button>
-    <a href="por-docente.php" class="btn btn-secondary btn-sm" style="align-self:flex-end">✕</a>
+    <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end"><i class="fas fa-search"></i></button>
+    <a href="por-docente.php" class="btn btn-secondary btn-sm" style="align-self:flex-end"><i class="fas fa-times"></i></a>
   </form>
 </div>
 
@@ -249,7 +249,7 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
         <?php if ($u['outros_planos']): ?><div style="font-size:10px;color:var(--gray-400)"><?= esc($u['outros_planos']) ?></div><?php endif; ?>
       </td>
-      <td style="text-align:center"><?= $u['regente'] ? '⭐' : '' ?></td>
+      <td style="text-align:center"><?= $u['regente'] ? '<i class="fas fa-star"></i>' : '' ?></td>
       <td class="num"><?= fmt((float)$u['semanas'], 2) ?></td>
       <td class="num"><?= $u['turmas_T']  > 0 ? fmt((float)$u['turmas_T'], 2).'/'.fmt((float)$u['horas_T'], 2)  : '–' ?></td>
       <td class="num"><?= $u['turmas_TP'] > 0 ? fmt((float)$u['turmas_TP'], 2).'/'.fmt((float)$u['horas_TP'], 2) : '–' ?></td>

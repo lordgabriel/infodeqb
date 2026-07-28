@@ -37,19 +37,19 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📚 Catálogo de Unidades Curriculares</div>
+    <div class="page-title"><i class="fas fa-book me-1"></i>Catálogo de Unidades Curriculares</div>
     <div class="page-sub"><?= count($ucs) ?> UCs &mdash; dados estáveis (não variam por ano)</div>
   </div>
   <div style="display:flex;gap:10px">
-    <a href="ocorrencias.php" class="btn btn-secondary">📅 Ver Ocorrências</a>
-    <a href="import-csv.php" class="btn btn-secondary">📥 Importar CSV</a>
-    <a href="uc-form.php" class="btn btn-primary">➕ Adicionar UC</a>
+    <a href="ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ver Ocorrências</a>
+    <a href="import-csv.php" class="btn btn-secondary"><i class="fas fa-file-upload me-1"></i>Importar CSV</a>
+    <a href="uc-form.php" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Adicionar UC</a>
   </div>
 </div>
 
 <div class="card">
 <div class="filter-bar">
-  <input type="text" id="search-uc" placeholder="🔍 Pesquisar…">
+  <input type="text" id="search-uc" placeholder="Pesquisar…">
   <select data-filter-select="0" data-filter-table="tbl-uc">
     <option value="">Todos os planos</option>
     <?php foreach ($planos as $p): ?>
@@ -60,7 +60,7 @@ require_once __DIR__ . '/../includes/header.php';
     <option value="">Qualquer semestre</option>
     <option value="1S">1S</option><option value="2S">2S</option><option value="A">Anual</option>
   </select>
-  <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+  <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir</button>
 </div>
 
 <div class="table-wrap">
@@ -92,10 +92,10 @@ require_once __DIR__ . '/../includes/header.php';
     <td class="num"><?= $u['horas_L'] > 0 ? fmt((float)$u['horas_L'],2) : '–' ?></td>
     <td class="num"><?= $u['horas_OT'] > 0 ? fmt((float)$u['horas_OT'],2) : '–' ?></td>
     <td style="text-align:center;white-space:nowrap">
-      <a href="uc-form.php?id=<?= $u['id'] ?>" class="btn btn-secondary btn-xs">✏️</a>
+      <a href="uc-form.php?id=<?= $u['id'] ?>" class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></a>
       <form method="post" style="display:inline">
         <input type="hidden" name="delete_id" value="<?= $u['id'] ?>">
-        <button class="btn btn-danger btn-xs" data-confirm="Remover esta UC?">🗑️</button>
+        <button class="btn btn-danger btn-xs" data-confirm="Remover esta UC?"><i class="fas fa-trash"></i></button>
       </form>
     </td>
   </tr>

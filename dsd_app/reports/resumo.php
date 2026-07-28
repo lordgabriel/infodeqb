@@ -50,10 +50,10 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📊 Resumo de Horas Totais por Docente</div>
+    <div class="page-title"><i class="fas fa-chart-bar me-1"></i>Resumo de Horas Totais por Docente</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
-  <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir / PDF</button>
 </div>
 
 <div class="card">

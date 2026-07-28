@@ -112,7 +112,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">🎓 Relatório por Ciclo de Estudos</div>
+    <div class="page-title"><i class="fas fa-graduation-cap me-1"></i>Relatório por Ciclo de Estudos</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
     <button class="btn btn-secondary btn-sm" onclick="expandAll('sem-')">⊞ Semestres</button>
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('uc-')">⊟ UCs</button>
     <button class="btn btn-secondary btn-sm" onclick="expandAll('uc-')">⊞ UCs</button>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir / PDF</button>
   </div>
 </div>
 
@@ -158,8 +158,8 @@ require_once __DIR__ . '/../includes/header.php';
         <option value="2S" <?= $filterSem === '2S' ? 'selected' : '' ?>>2S</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary" style="align-self:flex-end">🔍 Filtrar</button>
-    <a href="por-ciclo.php" class="btn btn-secondary" style="align-self:flex-end">✕</a>
+    <button type="submit" class="btn btn-primary" style="align-self:flex-end"><i class="fas fa-search me-1"></i>Filtrar</button>
+    <a href="por-ciclo.php" class="btn btn-secondary" style="align-self:flex-end"><i class="fas fa-times"></i></a>
   </form>
 </div>
 
@@ -210,7 +210,7 @@ function badgeFalta(array $f): string {
         $hasData = true;
         $delta = $f[$t]['falta'];
         if (abs($delta) < 0.01) {
-            $partes[] = "<span style='color:var(--green);font-weight:600'>$t ✓</span>";
+            $partes[] = "<span style='color:var(--green);font-weight:600'>$t <i class='fas fa-check'></i></span>";
         } elseif ($delta > 0) {
             $partes[] = "<span style='color:var(--red);font-weight:600'>$t −" . fmt($delta, 1) . "</span>";
         } else {
@@ -220,11 +220,11 @@ function badgeFalta(array $f): string {
     if (!$hasData) return '';
 
     if (abs($totalFalta) < 0.01) {
-        $resumo = "<span style='color:var(--green);font-weight:700'>✅ OK</span>";
+        $resumo = "<span style='color:var(--green);font-weight:700'><i class='fas fa-check-circle me-1'></i>OK</span>";
     } elseif ($totalFalta > 0) {
-        $resumo = "<span style='color:var(--red);font-weight:700'>⚠️ Falta " . fmt($totalFalta, 1) . " h/sem</span>";
+        $resumo = "<span style='color:var(--red);font-weight:700'><i class='fas fa-exclamation-triangle me-1'></i>Falta " . fmt($totalFalta, 1) . " h/sem</span>";
     } else {
-        $resumo = "<span style='color:var(--red);font-weight:700'>⚠️ Excesso " . fmt(-$totalFalta, 1) . " h/sem</span>";
+        $resumo = "<span style='color:var(--red);font-weight:700'><i class='fas fa-exclamation-triangle me-1'></i>Excesso " . fmt(-$totalFalta, 1) . " h/sem</span>";
     }
     return $resumo . " <span style='color:var(--gray-400);font-size:10px'>(" . implode(' · ', $partes) . ")</span>";
 }
@@ -274,7 +274,7 @@ foreach ($tree as $planoSigla => $planoData):
          style="cursor:pointer;background:var(--gray-100);border-left:4px solid var(--blue);
                 padding:8px 14px;border-radius:6px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-weight:700;color:var(--gray-900);font-size:14px">
-        <span class="collapse-icon">▾</span> 📚 <?= esc($anoLabel) ?>
+        <span class="collapse-icon">▾</span> <i class="fas fa-book me-1"></i><?= esc($anoLabel) ?>
         <span class="collapse-summary" style="display:none">
           <?= sumLabel($anoData['n_ucs'] . ' UCs', $anoData, true) ?>
         </span>
@@ -299,7 +299,7 @@ foreach ($tree as $planoSigla => $planoData):
            style="cursor:pointer;background:var(--blue-light);padding:6px 12px;border-radius:4px;
                   display:flex;justify-content:space-between;align-items:center">
         <div style="font-weight:600;color:var(--blue-dark);font-size:13px">
-          <span class="collapse-icon">▾</span> 📅 <?= $semLabel ?>
+          <span class="collapse-icon">▾</span> <i class="fas fa-calendar-alt me-1"></i><?= $semLabel ?>
           <span class="collapse-summary" style="display:none">
             <?= sumLabel(count($semData['ucs']) . ' UCs', $semData, true) ?>
           </span>
@@ -327,7 +327,7 @@ foreach ($tree as $planoSigla => $planoData):
               <span class="collapse-icon">▾</span> <strong><?= esc($info['uc_nome']) ?></strong>
               <span class="badge badge-gray" style="margin-left:6px;font-size:10px"><?= esc($info['tipo']) ?></span>
               <?php if ($info['outros_planos']): ?>
-                <span style="font-size:10px;color:var(--orange);margin-left:6px">⚠️ <?= esc($info['outros_planos']) ?></span>
+                <span style="font-size:10px;color:var(--orange);margin-left:6px"><i class="fas fa-exclamation-triangle me-1"></i><?= esc($info['outros_planos']) ?></span>
               <?php endif; ?>
               <span class="collapse-summary" style="display:none;font-size:11px;color:var(--gray-500);margin-left:8px">
                 · <?= count($ucBloco['docentes']) ?> docente(s) · SLEf <strong style="color:var(--blue)"><?= fmt($ucBloco['tot_slef'], 2) ?></strong>
@@ -375,8 +375,8 @@ foreach ($tree as $planoSigla => $planoData):
               <div style="font-size:10px;color:var(--gray-400)"><?= esc($d['depto'] ?? '') ?></div>
             </td>
             <td style="font-size:11px"><?= esc($d['carreira']) ?></td>
-            <td style="text-align:center"><?= $d['regente'] ? '⭐' : '' ?></td>
-            <td style="text-align:center"><?= $d['dsd_por_docente'] ? '✅' : '<span style="color:var(--orange)">❌</span>' ?></td>
+            <td style="text-align:center"><?= $d['regente'] ? '<i class="fas fa-star"></i>' : '' ?></td>
+            <td style="text-align:center"><?= $d['dsd_por_docente'] ? '<i class="fas fa-check-circle"></i>' : '<span style="color:var(--orange)"><i class="fas fa-times-circle"></i></span>' ?></td>
             <td class="num"><?= fmt((float)$d['semanas'], 2) ?></td>
             <td class="num"><?= fmt((float)$d['turmas_T'], 2) ?></td><td class="num"><?= fmt((float)$d['horas_T'], 2) ?></td>
             <td class="num"><?= fmt((float)$d['turmas_TP'], 2) ?></td><td class="num"><?= fmt((float)$d['horas_TP'], 2) ?></td>

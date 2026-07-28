@@ -88,7 +88,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title"><?= $id ? '✏️ Editar Docente' : '➕ Adicionar Docente' ?></div>
+    <div class="page-title"><?= $id ? '<i class="fas fa-edit me-1"></i>Editar Docente' : '<i class="fas fa-plus me-1"></i>Adicionar Docente' ?></div>
   </div>
   <a href="docentes.php" class="btn btn-secondary">← Voltar</a>
 </div>
@@ -169,7 +169,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="form-group full">
       <div style="background:var(--blue-light);border-radius:6px;padding:7px 12px;font-size:12px;color:var(--blue-dark);margin-bottom:8px">
-        💡 Carreira, Categoria, DETI, H SLEf, Ref ECDU e Observações são guardados por ano letivo (<?= esc($al['designacao']) ?>). Nome e Departamento são permanentes.
+        <i class="fas fa-lightbulb me-1"></i>Carreira, Categoria, DETI, H SLEf, Ref ECDU e Observações são guardados por ano letivo (<?= esc($al['designacao']) ?>). Nome e Departamento são permanentes.
       </div>
       <label>Observações</label>
       <textarea name="observacoes"><?= esc($docente['observacoes'] ?? '') ?></textarea>
@@ -178,7 +178,7 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary">💾 Guardar</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar</button>
     <a href="docentes.php" class="btn btn-secondary">Cancelar</a>
   </div>
 </form>

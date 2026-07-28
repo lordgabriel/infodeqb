@@ -252,14 +252,14 @@ function badgeFalta(array $f): string {
         $total += $f[$t]['falta'];
         if ($f[$t]['nec']<=0 && $f[$t]['atr']<=0) continue;
         $has=true; $d=$f[$t]['falta'];
-        if (abs($d)<0.01) $partes[]="<span style='color:var(--green)'>$t ✓</span>";
+        if (abs($d)<0.01) $partes[]="<span style='color:var(--green)'>$t <i class='fas fa-check'></i></span>";
         elseif ($d>0)     $partes[]="<span style='color:var(--red)'>$t −".fmt($d,1)."</span>";
         else              $partes[]="<span style='color:var(--red)'>$t +".fmt(-$d,1)."</span>";
     }
     if (!$has) return '';
-    if (abs($total)<0.01) $res="<span style='color:var(--green);font-weight:700'>✅ OK</span>";
-    elseif ($total>0)     $res="<span style='color:var(--orange);font-weight:700'>⚠️ Falta ".fmt($total,1)."</span>";
-    else                  $res="<span style='color:var(--red);font-weight:700'>⚠️ Excesso ".fmt(-$total,1)."</span>";
+    if (abs($total)<0.01) $res="<span style='color:var(--green);font-weight:700'><i class='fas fa-check-circle me-1'></i>OK</span>";
+    elseif ($total>0)     $res="<span style='color:var(--orange);font-weight:700'><i class='fas fa-exclamation-triangle me-1'></i>Falta ".fmt($total,1)."</span>";
+    else                  $res="<span style='color:var(--red);font-weight:700'><i class='fas fa-exclamation-triangle me-1'></i>Excesso ".fmt(-$total,1)."</span>";
     return $res.' <span style="color:var(--gray-400);font-size:10px">('.implode(' · ',$partes).')</span>';
 }
 
@@ -321,8 +321,8 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modal-dist" class="modal-overlay" style="display:none">
  <div class="modal-box" style="max-width:860px;width:95vw">
   <div class="modal-header">
-   <div id="modal-title" class="modal-title">➕ Adicionar Serviço</div>
-   <button class="modal-close" onclick="closeModal()">✕</button>
+   <div id="modal-title" class="modal-title"><i class="fas fa-plus me-1"></i>Adicionar Serviço</div>
+   <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
   </div>
   <div class="modal-body" style="padding:0">
 
@@ -392,12 +392,12 @@ require_once __DIR__ . '/../includes/header.php';
       <label id="lbl-dsd" style="display:flex;align-items:center;gap:6px;cursor:pointer;
              background:var(--blue-light);border:2px solid var(--blue);border-radius:6px;
              padding:5px 12px;font-weight:600;font-size:13px;white-space:nowrap;transition:all .15s">
-       <input type="checkbox" id="f-dsd" checked onchange="updateDsdStyle()"> ✅ Conta no DSD
+       <input type="checkbox" id="f-dsd" checked onchange="updateDsdStyle()"> <i class="fas fa-check-circle me-1"></i>Conta no DSD
       </label>
       <label id="lbl-reg" style="display:flex;align-items:center;gap:6px;cursor:pointer;
              background:var(--gray-100);border:2px solid var(--gray-300);border-radius:6px;
              padding:5px 12px;font-weight:600;font-size:13px;white-space:nowrap;transition:all .15s">
-       <input type="checkbox" id="f-reg" onchange="updateRegStyle()"> ⭐ Regente (R)
+       <input type="checkbox" id="f-reg" onchange="updateRegStyle()"> <i class="fas fa-star me-1"></i>Regente (R)
       </label>
      </div>
     </div>
@@ -456,33 +456,33 @@ require_once __DIR__ . '/../includes/header.php';
 
   <!-- Footer -->
   <div style="padding:12px 18px;border-top:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-   <button type="button" class="btn btn-primary" onclick="saveAllLines()" id="btn-save-all">💾 Guardar tudo</button>
+   <button type="button" class="btn btn-primary" onclick="saveAllLines()" id="btn-save-all"><i class="fas fa-save me-1"></i>Guardar tudo</button>
    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button type="button" class="btn btn-secondary" onclick="openCopyPanel()" id="btn-copy-dist"
            style="margin-left:auto" title="Copiar esta distribuição para outras UCs partilhadas">
-     📋 Copiar para…
+     <i class="fas fa-clipboard-list me-1"></i>Copiar para…
    </button>
    <span id="save-status" style="font-size:12px;color:var(--gray-500)"></span>
   </div>
 
   <!-- Painel de cópia -->
   <div id="copy-panel" style="display:none;padding:14px 18px;border-top:2px solid var(--blue);background:var(--blue-light)">
-    <div style="font-weight:600;margin-bottom:10px;color:var(--blue-dark)">📋 Copiar distribuição para UCs partilhadas</div>
+    <div style="font-weight:600;margin-bottom:10px;color:var(--blue-dark)"><i class="fas fa-clipboard-list me-1"></i>Copiar distribuição para UCs partilhadas</div>
     <p style="font-size:12px;color:var(--gray-600);margin-bottom:10px">
-      Selecciona as UCs destino. A distribuição será copiada com <strong>DSD ❌</strong> (não duplica horas)
+      Selecciona as UCs destino. A distribuição será copiada com <strong>DSD <i class="fas fa-times-circle"></i></strong> (não duplica horas)
       e substituirá toda a distribuição existente nessas UCs.
     </p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
       <select id="copy-plano-filter" onchange="filterCopyList()" style="min-width:120px;font-size:12px">
         <option value="">Todos os planos</option>
       </select>
-      <input type="text" id="copy-search" oninput="filterCopyList()" placeholder="🔍 Pesquisar UC…" style="flex:1;font-size:12px">
+      <input type="text" id="copy-search" oninput="filterCopyList()" placeholder="Pesquisar UC…" style="flex:1;font-size:12px">
     </div>
     <div id="copy-uc-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:12px">
       <div style="color:var(--gray-400);font-size:12px">Selecciona primeiro uma UC acima.</div>
     </div>
     <div style="display:flex;gap:8px">
-      <button type="button" class="btn btn-primary btn-sm" onclick="executeCopy()">📋 Copiar agora</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="executeCopy()"><i class="fas fa-clipboard-list me-1"></i>Copiar agora</button>
       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('copy-panel').style.display='none'">Cancelar</button>
     </div>
   </div>
@@ -499,13 +499,13 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
  <div>
-  <div class="page-title">📋 Distribuição de Serviço Docente</div>
+  <div class="page-title"><i class="fas fa-clipboard-list me-1"></i>Distribuição de Serviço Docente</div>
   <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?> &mdash; <?= count($rows) ?> registos</div>
  </div>
  <div style="display:flex;gap:10px">
-  <a href="ocorrencias.php" class="btn btn-secondary">📅 Ocorrências</a>
-  <a href="../reports/por-docente.php" class="btn btn-secondary">📊 Relatório</a>
-  <button class="btn btn-primary" onclick="openModal()">➕ Adicionar</button>
+  <a href="ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
+  <a href="../reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Relatório</a>
+  <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus me-1"></i>Adicionar</button>
  </div>
 </div>
 
@@ -550,16 +550,16 @@ require_once __DIR__ . '/../includes/header.php';
     <option value="2S" <?= $filterSem === '2S' ? 'selected' : '' ?>>2S</option>
    </select>
   </div>
-  <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end">🔍</button>
-  <a href="distribuicao.php" class="btn btn-secondary btn-sm" style="align-self:flex-end">✕</a>
+  <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end"><i class="fas fa-search"></i></button>
+  <a href="distribuicao.php" class="btn btn-secondary btn-sm" style="align-self:flex-end"><i class="fas fa-times"></i></a>
  </form>
  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-  <input type="text" id="search-uc" placeholder="🔍 Pesquisar UC…" oninput="searchUC(this.value)"
+  <input type="text" id="search-uc" placeholder="Pesquisar UC…" oninput="searchUC(this.value)"
          style="flex:1;max-width:400px">
   <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;
                 background:var(--gray-100);border:1px solid var(--gray-300);border-radius:6px;padding:4px 10px">
     <input type="checkbox" id="filtro-sem-sd" onchange="searchUC(document.getElementById('search-uc').value)">
-    ⚠️ Só UCs sem serviço
+    <i class="fas fa-exclamation-triangle me-1"></i>Só UCs sem serviço
   </label>
   <span id="search-count" style="font-size:12px;color:var(--gray-500)"></span>
  </div>
@@ -596,7 +596,7 @@ foreach ($ucsSemSD as $oc) {
 <div style="width:240px;flex-shrink:0;position:sticky;top:70px">
   <div class="card" style="padding:10px 12px;border-left:4px solid var(--orange)">
     <div style="font-weight:600;font-size:12px;color:var(--orange);margin-bottom:8px">
-      ⚠️ Sem serviço (<?= count($ucsSemSD) ?>)
+      <i class="fas fa-exclamation-triangle me-1"></i>Sem serviço (<?= count($ucsSemSD) ?>)
     </div>
     <?php foreach ($semSdByPlano as $plano => $ucs): ?>
     <div style="margin-bottom:4px">
@@ -674,7 +674,7 @@ foreach ($ucsSemSD as $oc) {
      <span style="font-weight:400;font-size:11px;opacity:.7">F SLEf: <?= fmt((float)$r['f_slef'], 2) ?></span>
      <button type="button" class="btn btn-secondary btn-xs"
              onclick="editUC(<?= (int)$r['ocor_id'] ?>)"
-             style="padding:2px 8px;font-size:11px">✏️ UC</button>
+             style="padding:2px 8px;font-size:11px"><i class="fas fa-edit me-1"></i>UC</button>
      <button type="button" class="btn btn-primary btn-xs"
              onclick="openModal(null, <?= (int)$r['ocor_id'] ?>)"
              style="padding:2px 8px;font-size:11px">+ Serviço</button>
@@ -688,8 +688,8 @@ foreach ($ucsSemSD as $oc) {
   <td>
    <strong><a href="#" onclick="showDocInfo(<?= (int)$r['docente_id'] ?>,event)" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gray-400)"><?= esc($r['docente_nome']) ?></a></strong>
   </td>
-  <td style="text-align:center"><?= $r['regente'] ? '⭐' : '' ?></td>
-  <td style="text-align:center"><?= $r['dsd_por_docente'] ? '✅' : '❌' ?></td>
+  <td style="text-align:center"><?= $r['regente'] ? '<i class="fas fa-star"></i>' : '' ?></td>
+  <td style="text-align:center"><?= $r['dsd_por_docente'] ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>' ?></td>
   <td class="num"><?= fmt((float)$r['semanas'], 2) ?></td>
   <td class="num"><?= $r['turmas_T']  ? fmt((float)$r['turmas_T'],1).'/'.fmt((float)$r['horas_T'],1)  : '–' ?></td>
   <td class="num"><?= $r['turmas_TP'] ? fmt((float)$r['turmas_TP'],1).'/'.fmt((float)$r['horas_TP'],1) : '–' ?></td>
@@ -702,10 +702,10 @@ foreach ($ucsSemSD as $oc) {
   </td>
   <td class="num" style="color:var(--orange)"><?= $r['h_tese'] > 0 ? fmt((float)$r['h_tese'], 2) : '–' ?></td>
   <td style="text-align:center;white-space:nowrap;padding:4px 6px">
-   <button type="button" class="btn btn-secondary btn-xs" onclick="openModal(<?= (int)$r['id'] ?>)">✏️</button>
+   <button type="button" class="btn btn-secondary btn-xs" onclick="openModal(<?= (int)$r['id'] ?>)"><i class="fas fa-edit"></i></button>
    <form method="post" style="display:inline">
     <input type="hidden" name="delete_id" value="<?= $r['id'] ?>">
-    <button type="submit" class="btn btn-danger btn-xs" data-confirm="Remover?">🗑️</button>
+    <button type="submit" class="btn btn-danger btn-xs" data-confirm="Remover?"><i class="fas fa-trash"></i></button>
    </form>
   </td>
  </tr>
@@ -796,11 +796,11 @@ function togglePlanoSD(id) {
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <strong id="panel-uc-title" style="font-size:14px"></strong>
     <button onclick="document.getElementById('panel-uc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)">✕</button>
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
   </div>
   <div id="panel-uc-body" style="font-size:13px;line-height:1.8"></div>
   <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs">✏️ Editar ocorrência</a>
+    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar ocorrência</a>
     <button onclick="document.getElementById('panel-uc').style.display='none'"
             class="btn btn-secondary btn-xs">Fechar</button>
   </div>
@@ -812,11 +812,11 @@ function togglePlanoSD(id) {
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <strong id="panel-doc-title" style="font-size:14px"></strong>
     <button onclick="document.getElementById('panel-doc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)">✕</button>
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
   </div>
   <div id="panel-doc-body" style="font-size:13px;line-height:1.8"></div>
   <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs">✏️ Editar docente</a>
+    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar docente</a>
     <button onclick="document.getElementById('panel-doc').style.display='none'"
             class="btn btn-secondary btn-xs">Fechar</button>
   </div>
@@ -859,7 +859,7 @@ function showUcInfo(ocorId, e) {
   document.getElementById('panel-uc-body').innerHTML =
     `<table style="width:100%;border-collapse:collapse">${rows}</table>`
     + `<div style="margin-top:8px">Estudantes: <b>${oc.estudantes}</b> | F SLEf: <b>${fmtN(oc.f_slef,2)}</b> | Semanas: <b>${fmtN(oc.semanas,1)}</b></div>`
-    + `<div style="margin-top:4px;color:${col};font-weight:600">Nec: ${fmtN(need,2)} | Atr: ${fmtN(done,2)} | ${Math.abs(diff)<0.01?'✅ OK':diff>0?'Falta '+fmtN(diff,2):'Excesso '+fmtN(-diff,2)}</div>`;
+    + `<div style="margin-top:4px;color:${col};font-weight:600">Nec: ${fmtN(need,2)} | Atr: ${fmtN(done,2)} | ${Math.abs(diff)<0.01?'<i class="fas fa-check-circle me-1"></i>OK':diff>0?'Falta '+fmtN(diff,2):'Excesso '+fmtN(-diff,2)}</div>`;
   document.getElementById('panel-uc-edit').href = 'ocorrencia-form.php?id=' + ocorId + '&back_scroll=' + Math.round(window.scrollY);
   positionPanel(document.getElementById('panel-uc'), e);
   document.getElementById('panel-doc').style.display = 'none';
@@ -939,7 +939,7 @@ function onOcorChange() {
     g('oc-info').innerHTML =
       `F SLEf: <b>${fmtN(oc.f_slef,2)}</b> | Semanas: <b>${fmtN(oc.semanas,1)}</b> | Estudantes: <b>${oc.estudantes}</b>` +
       ` &nbsp;|&nbsp; Necessário: <b>${fmtN(need,2)}</b> h/sem &nbsp; Atribuído: <b>${fmtN(done,2)}</b> h/sem` +
-      ` &nbsp; <span style="color:${color};font-weight:600">${diff > 0.01 ? 'Falta: '+fmtN(diff,2) : diff < -0.01 ? 'Excesso: '+fmtN(-diff,2) : '✅ OK'}</span>`;
+      ` &nbsp; <span style="color:${color};font-weight:600">${diff > 0.01 ? 'Falta: '+fmtN(diff,2) : diff < -0.01 ? 'Excesso: '+fmtN(-diff,2) : '<i class="fas fa-check-circle me-1"></i>OK'}</span>`;
     // Pre-fill horas from ocorrencia
     ['T','TP','L','Sem','OT'].forEach(k => {
       if ((parseFloat(g('f-t'+k).value)||0) === 0) {
@@ -987,7 +987,7 @@ function refreshLineCalc() {
       : parseFloat(bal.done)||0;
     const diff = need - done;
     const col  = Math.abs(diff)<0.01 ? 'var(--green)' : diff>0 ? 'var(--red)' : 'var(--blue)';
-    balHtml = ` | UC: Nec <b>${fmtN(need,2)}</b> Atr <b>${fmtN(done,2)}</b> <span style="color:${col};font-weight:600">${Math.abs(diff)<0.01?'✅':diff>0?'−'+fmtN(diff,2):'+'+fmtN(-diff,2)}</span>`;
+    balHtml = ` | UC: Nec <b>${fmtN(need,2)}</b> Atr <b>${fmtN(done,2)}</b> <span style="color:${col};font-weight:600">${Math.abs(diff)<0.01?'<i class="fas fa-check-circle"></i>':diff>0?'−'+fmtN(diff,2):'+'+fmtN(-diff,2)}</span>`;
   }
   g('line-calc').innerHTML = `H/s: <b>${fmtN(hs,2)}</b> | H SLEf: <b style="color:var(--blue)">${fmtN(hslef,2)}</b>${balHtml}`;
   // Also update the oc-info balance if there are pending lines
@@ -1064,7 +1064,7 @@ function editLine(idx) {
   g('f-htese').value=line.htese;
   editingIdx = idx;
   g('line-mode-label').textContent = 'A editar linha ' + (idx+1);
-  g('btn-add-line').textContent    = '✓ Actualizar linha';
+  g('btn-add-line').textContent    = '<i class="fas fa-check me-1"></i>Actualizar linha';
   g('btn-cancel-edit').style.display = '';
   onOcorChange(); refreshLineCalc();
 }
@@ -1101,11 +1101,11 @@ function renderLines() {
       c(f1(line.tL)+'/'+f2(line.hL)) +
       c(f1(line.tSem)+'/'+f2(line.hSem)) +
       c(f1(line.tOT)+'/'+f2(line.hOT)) +
-      c(line.dsd ? '✓' : '–') +
+      c(line.dsd ? '<i class="fas fa-check"></i>' : '–') +
       c(line.reg ? 'R' : '–') +
       `<td style="white-space:nowrap;padding:2px 6px">
-        <button type="button" class="btn btn-secondary btn-xs" onclick="editLine(${idx})">✏️</button>
-        <button type="button" class="btn btn-danger btn-xs" onclick="removeLine(${idx})">🗑</button>
+        <button type="button" class="btn btn-secondary btn-xs" onclick="editLine(${idx})"><i class="fas fa-edit"></i></button>
+        <button type="button" class="btn btn-danger btn-xs" onclick="removeLine(${idx})"><i class="fas fa-trash"></i></button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -1132,7 +1132,7 @@ function openModal(editId, ocorId) {
     if (!reg) { alert('Registo não encontrado.'); return; }
     const _oid = String(reg.ocor_id || reg.ocorrencia_id || '');
     const _o2  = _oid ? ocorData[_oid] : null;
-    g('modal-title').textContent = '✏️ Editar Linha' + (_o2 ? ' — ['+(_o2.plano_sigla||'')+'] '+(_o2.designacao||'') : '');
+    g('modal-title').textContent = '<i class="fas fa-edit me-1"></i>Editar Linha' + (_o2 ? ' — ['+(_o2.plano_sigla||'')+'] '+(_o2.designacao||'') : '');
     g('modal-uc-section').style.display = 'none';
     g('f-ocor').value    = reg.ocorrencia_id || reg.ocor_id;
     g('f-doc').value     = reg.docente_id;
@@ -1151,11 +1151,11 @@ function openModal(editId, ocorId) {
     pendingLines = [line];
     editingIdx = 0;
     g('line-mode-label').textContent = 'A editar registo existente';
-    g('btn-add-line').textContent    = '✓ Actualizar';
+    g('btn-add-line').textContent    = '<i class="fas fa-check me-1"></i>Actualizar';
     g('btn-cancel-edit').style.display = 'none';
     onOcorChange(); refreshLineCalc();
   } else {
-    g('modal-title').textContent = '➕ Adicionar Serviço';
+    g('modal-title').textContent = '<i class="fas fa-plus me-1"></i>Adicionar Serviço';
     g('modal-uc-section').style.display = '';
     if (ocorId) { g('f-ocor').value = String(ocorId); onOcorChange(); }
     else if (preOcor) { g('f-ocor').value = String(preOcor); onOcorChange(); }
@@ -1195,7 +1195,7 @@ function updateBalFromPending() {
     const col = Math.abs(diff) < 0.01 ? 'var(--green)' : diff > 0 ? 'var(--orange)' : 'var(--red)';
     html += `<span style="font-size:11px;background:var(--gray-100);padding:2px 8px;border-radius:4px">
       <b>${k}</b>: ${fmtN(need,1)}→<b style="color:${col}">${fmtN(done,1)}</b>
-      <span style="color:${col}">${Math.abs(diff)<0.01?'✅':diff>0?'−'+fmtN(diff,1):'+'+fmtN(-diff,1)}</span>
+      <span style="color:${col}">${Math.abs(diff)<0.01?'<i class="fas fa-check-circle"></i>':diff>0?'−'+fmtN(diff,1):'+'+fmtN(-diff,1)}</span>
     </span>`;
     totalNeed += need; totalDone += done;
   });
@@ -1206,7 +1206,7 @@ function updateBalFromPending() {
   g('oc-info').innerHTML =
     `F SLEf: <b>${fmtN(oc.f_slef,2)}</b> | Semanas: <b>${fmtN(oc.semanas||13,1)}</b> | Estudantes: <b>${oc.estudantes||0}</b>`
     + ` &nbsp;|&nbsp; Nec: <b>${fmtN(totalNeed,2)}</b> Atr (pendente): <b>${fmtN(totalDone,2)}</b>`
-    + ` <span style="color:${totalCol};font-weight:600">${Math.abs(totalDiff)<0.01?'✅ OK':totalDiff>0?'Falta: '+fmtN(totalDiff,2):'Excesso: '+fmtN(-totalDiff,2)}</span>`
+    + ` <span style="color:${totalCol};font-weight:600">${Math.abs(totalDiff)<0.01?'<i class="fas fa-check-circle me-1"></i>OK':totalDiff>0?'Falta: '+fmtN(totalDiff,2):'Excesso: '+fmtN(-totalDiff,2)}</span>`
     + html;
 }
 
@@ -1294,7 +1294,7 @@ function renderCopyList() {
       <input type="checkbox" class="copy-dest" value="${o.id}" ${isSel ? 'checked' : ''} onchange="renderCopyList()">
       <span class="badge badge-blue" style="font-size:10px">${o.plano}</span>
       ${o.nome}
-      ${o.n_dist > 0 ? '<span style="font-size:10px;color:var(--orange);margin-left:4px">⚠️ tem '+o.n_dist+' linha(s)</span>' : ''}
+      ${o.n_dist > 0 ? '<span style="font-size:10px;color:var(--orange);margin-left:4px"><i class="fas fa-exclamation-triangle me-1"></i>tem '+o.n_dist+' linha(s)</span>' : ''}
     </label>`;
 
   list.innerHTML =
@@ -1322,13 +1322,13 @@ function executeCopy() {
   .then(r => r.json())
   .then(d => {
     if (d.ok) {
-      g('save-status').textContent = '✅ Copiado para ' + d.copied + ' UC(s)';
+      g('save-status').textContent = '<i class="fas fa-check-circle me-1"></i>Copiado para ' + d.copied + ' UC(s)';
       setTimeout(() => window.location.reload(), 800);
     } else {
-      g('save-status').textContent = '❌ ' + d.error;
+      g('save-status').textContent = '<i class="fas fa-times-circle me-1"></i>' + d.error;
     }
   })
-  .catch(() => g('save-status').textContent = '❌ Erro ao copiar');
+  .catch(() => g('save-status').textContent = '<i class="fas fa-times-circle me-1"></i>Erro ao copiar');
 }
 
 function closeModal() {
@@ -1351,7 +1351,7 @@ function editUC(ocorId) {
   const _oc = ocorData[String(ocorId)];
   const _plano  = _oc ? (_oc.plano_sigla || '') : '';
   const _ucNome = _oc ? (_oc.designacao  || '') : '';
-  g('modal-title').textContent = '✏️ ' + (_plano ? '['+_plano+'] ' : '') + (_ucNome || 'Editar Serviço da UC');
+  g('modal-title').textContent = '<i class="fas fa-edit me-1"></i>' + (_plano ? '['+_plano+'] ' : '') + (_ucNome || 'Editar Serviço da UC');
 
   // Show modal immediately with loading state (avoids carreira-filter blindspot in rowData)
   g('lines-body').innerHTML = '<tr id="lines-empty"><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">A carregar…</td></tr>';
@@ -1446,11 +1446,11 @@ window.addEventListener('DOMContentLoaded', () => editUC(<?= (int)$_GET['edit_uc
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <strong id="panel-uc-title" style="font-size:14px"></strong>
     <button onclick="document.getElementById('panel-uc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)">✕</button>
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
   </div>
   <div id="panel-uc-body" style="font-size:13px;line-height:1.8"></div>
   <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs">✏️ Editar ocorrência</a>
+    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar ocorrência</a>
     <button onclick="document.getElementById('panel-uc').style.display='none'"
             class="btn btn-secondary btn-xs">Fechar</button>
   </div>
@@ -1462,11 +1462,11 @@ window.addEventListener('DOMContentLoaded', () => editUC(<?= (int)$_GET['edit_uc
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <strong id="panel-doc-title" style="font-size:14px"></strong>
     <button onclick="document.getElementById('panel-doc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)">✕</button>
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
   </div>
   <div id="panel-doc-body" style="font-size:13px;line-height:1.8"></div>
   <div style="margin-top:12px">
-    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs">✏️ Editar docente</a>
+    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar docente</a>
   </div>
 </div>
 

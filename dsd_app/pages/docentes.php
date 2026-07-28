@@ -42,22 +42,22 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">👩‍🏫 Docentes e Colaboradores</div>
+    <div class="page-title"><i class="fas fa-chalkboard-teacher me-1"></i>Docentes e Colaboradores</div>
     <div class="page-sub"><?= count($docentes) ?> registos</div>
   </div>
-  <a href="docente-form.php" class="btn btn-primary">➕ Adicionar Docente</a>
+  <a href="docente-form.php" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Adicionar Docente</a>
 </div>
 
 <div class="card">
   <div class="filter-bar">
-    <input type="text" id="search" placeholder="🔍 Pesquisar por nome, carreira, departamento…">
+    <input type="text" id="search" placeholder="Pesquisar por nome, carreira, departamento…">
     <select data-filter-select="2" data-filter-table="tbl-doc">
       <option value="">Todas as carreiras</option>
       <?php foreach ($carreiras as $c): ?>
         <option value="<?= esc($c['designacao']) ?>"><?= esc($c['designacao']) ?></option>
       <?php endforeach; ?>
     </select>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir</button>
   </div>
 
   <div class="table-wrap">
@@ -89,13 +89,13 @@ require_once __DIR__ . '/../includes/header.php';
       <td class="num"><?= fmt((float)$d['h_slef'], 1) ?></td>
       <td class="num"><?= fmt((float)$d['ref_ecdu'], 1) ?></td>
       <td style="max-width:200px;font-size:12px;color:var(--gray-500)"><?= esc($d['observacoes'] ?? '') ?></td>
-      <td style="text-align:center"><?= $d['snap_id'] ? '<span class="badge badge-green" title="Snapshot deste ano">✓</span>' : '<span class="badge badge-gray" title="A usar dados base">base</span>' ?></td>
+      <td style="text-align:center"><?= $d['snap_id'] ? '<span class="badge badge-green" title="Snapshot deste ano"><i class="fas fa-check"></i></span>' : '<span class="badge badge-gray" title="A usar dados base">base</span>' ?></td>
       <td style="text-align:center;white-space:nowrap">
-        <a href="docente-form.php?id=<?= $d['id'] ?>" class="btn btn-secondary btn-xs">✏️</a>
+        <a href="docente-form.php?id=<?= $d['id'] ?>" class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></a>
         <form method="post" style="display:inline">
           <input type="hidden" name="delete_id" value="<?= $d['id'] ?>">
           <button type="submit" class="btn btn-danger btn-xs"
-                  data-confirm="Remover <?= esc($d['nome']) ?>?">🗑️</button>
+                  data-confirm="Remover <?= esc($d['nome']) ?>?"><i class="fas fa-trash"></i></button>
         </form>
       </td>
     </tr>

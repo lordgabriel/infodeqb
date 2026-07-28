@@ -67,14 +67,14 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📊 Por Carreira e Categoria</div>
+    <div class="page-title"><i class="fas fa-chart-bar me-1"></i>Por Carreira e Categoria</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?> — H SLEf</div>
   </div>
   <div style="display:flex;gap:8px">
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('carr-')">⊟ Carreiras</button>
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('cat-');expandAll('carr-')">↕ Categorias</button>
     <button class="btn btn-secondary btn-sm" onclick="expandAll('')">⊞ Tudo</button>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir</button>
   </div>
 </div>
 

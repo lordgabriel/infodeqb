@@ -40,7 +40,7 @@ $areas = $db->query("SELECT * FROM infodeqb_dsd_area_cientifica ORDER BY sigla")
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
-  <div><div class="page-title">🔬 Áreas Científicas</div></div>
+  <div><div class="page-title"><i class="fas fa-flask me-1"></i>Áreas Científicas</div></div>
 </div>
 
 <div class="card">
@@ -51,7 +51,7 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="form-group"><label>Designação</label>
     <input type="text" name="designacao" id="a-desig"></div>
   <div class="form-group full" style="display:flex;gap:10px">
-    <button class="btn btn-primary" type="submit">💾 Guardar</button>
+    <button class="btn btn-primary" type="submit"><i class="fas fa-save me-1"></i>Guardar</button>
     <button type="button" class="btn btn-secondary" onclick="document.querySelector('form').reset();document.getElementById('a-id').value=''">Limpar</button>
   </div>
 </form>
@@ -71,7 +71,7 @@ require_once __DIR__ . '/../includes/header.php';
               onclick='document.getElementById("a-id").value=<?= $a['id'] ?>;
                        document.getElementById("a-sigla").value=<?= json_encode($a['sigla']) ?>;
                        document.getElementById("a-desig").value=<?= json_encode($a['designacao'] ?? '') ?>;
-                       window.scrollTo({top:0,behavior:"smooth"})'>✏️</button>
+                       window.scrollTo({top:0,behavior:"smooth"})'><i class="fas fa-edit"></i></button>
     </td>
   </tr>
   <?php endforeach; ?>

@@ -282,7 +282,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📥 Importar CSV</div>
+    <div class="page-title"><i class="fas fa-file-upload me-1"></i>Importar CSV</div>
     <div class="page-sub">Ano letivo activo: <strong><?= esc($al['designacao']) ?></strong></div>
   </div>
   <a href="admin.php" class="btn btn-secondary">← Administração</a>
@@ -291,7 +291,7 @@ require_once __DIR__ . '/../includes/header.php';
 <?php if ($resultado): ?>
 <div class="card" style="border-left:4px solid <?= $resultado['erros'] ? 'var(--orange)' : 'var(--green)' ?>">
   <div class="card-title" style="color:<?= $resultado['erros'] ? 'var(--orange)' : 'var(--green)' ?>">
-    <?= $resultado['erros'] ? '⚠️' : '✅' ?> Resultado da Importação
+    <?= $resultado['erros'] ? '<i class="fas fa-exclamation-triangle"></i>' : '<i class="fas fa-check-circle"></i>' ?> Resultado da Importação
   </div>
   <div style="font-size:14px;margin-bottom:10px">
     <strong><?= $resultado['rows'] ?></strong> registos importados com sucesso
@@ -315,15 +315,15 @@ require_once __DIR__ . '/../includes/header.php';
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
 <div class="card">
-  <div class="card-title">📤 Carregar Ficheiro CSV</div>
+  <div class="card-title"><i class="fas fa-file-export me-1"></i>Carregar Ficheiro CSV</div>
   <form method="post" enctype="multipart/form-data" id="import-form">
 
     <div class="form-group">
       <label>Tipo de importação</label>
       <select name="tipo" id="sel-tipo" onchange="tipoChange()">
-        <option value="catalogo">📚 Catálogo de UCs</option>
-        <option value="ocorrencias">📅 Ocorrências (por ano letivo)</option>
-        <option value="docentes">👩‍🏫 Docentes / Colaboradores</option>
+        <option value="catalogo"><i class="fas fa-book me-1"></i>Catálogo de UCs</option>
+        <option value="ocorrencias"><i class="fas fa-calendar-alt me-1"></i>Ocorrências (por ano letivo)</option>
+        <option value="docentes"><i class="fas fa-chalkboard-teacher me-1"></i>Docentes / Colaboradores</option>
       </select>
     </div>
 
@@ -368,12 +368,12 @@ require_once __DIR__ . '/../includes/header.php';
       <span class="form-hint">Normalmente 1.</span>
     </div>
 
-    <button type="submit" class="btn btn-primary">📥 Importar</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-file-upload me-1"></i>Importar</button>
   </form>
 </div>
 
 <div class="card">
-  <div class="card-title">📋 Formato esperado</div>
+  <div class="card-title"><i class="fas fa-clipboard-list me-1"></i>Formato esperado</div>
 
   <div id="info-catalogo">
     <p style="font-size:13px;color:var(--gray-600);margin-bottom:10px">
@@ -432,8 +432,8 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 
   <p style="margin-top:12px;font-size:12px;color:var(--gray-500)">
-    ✅ Registos existentes são <strong>actualizados</strong>, não duplicados.<br>
-    💡 Planos, áreas, carreiras e departamentos são criados automaticamente.
+    <i class="fas fa-check-circle me-1"></i>Registos existentes são <strong>actualizados</strong>, não duplicados.<br>
+    <i class="fas fa-lightbulb me-1"></i>Planos, áreas, carreiras e departamentos são criados automaticamente.
   </p>
 </div>
 

@@ -38,7 +38,7 @@ $rows = $db->query("SELECT * FROM infodeqb_dsd_categoria ORDER BY ordem, designa
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
-  <div><div class="page-title">🏷️ Categorias</div>
+  <div><div class="page-title"><i class="fas fa-tags me-1"></i>Categorias</div>
   <div class="page-sub"><?= count($rows) ?> registos</div></div>
   <a href="admin.php" class="btn btn-secondary">← Administração</a>
 </div>
@@ -51,7 +51,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="form-group"><label>Ordem</label>
       <input type="number" name="ordem" id="f-ord" value="99" min="0"></div>
     <div class="form-group full" style="display:flex;gap:10px">
-      <button class="btn btn-primary" type="submit">💾 Guardar</button>
+      <button class="btn btn-primary" type="submit"><i class="fas fa-save me-1"></i>Guardar</button>
       <button class="btn btn-secondary" type="button" onclick="limpar()">Limpar</button>
     </div>
   </form>
@@ -65,10 +65,10 @@ require_once __DIR__ . '/../includes/header.php';
     <td><?= esc($r['designacao']) ?></td>
     <td style="text-align:center"><?= (int)$r['ordem'] ?></td>
     <td style="text-align:right;white-space:nowrap">
-      <button class="btn btn-secondary btn-xs" onclick='editar(<?= json_encode($r) ?>)'>✏️</button>
+      <button class="btn btn-secondary btn-xs" onclick='editar(<?= json_encode($r) ?>)'><i class="fas fa-edit"></i></button>
       <form method="post" style="display:inline">
         <input type="hidden" name="delete_id" value="<?= $r['id'] ?>">
-        <button class="btn btn-danger btn-xs" data-confirm="Remover?">🗑️</button>
+        <button class="btn btn-danger btn-xs" data-confirm="Remover?"><i class="fas fa-trash"></i></button>
       </form>
     </td>
   </tr>

@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📅 Ocorrência: <?= esc($ocor['uc_nome']) ?></div>
+    <div class="page-title"><i class="fas fa-calendar-alt me-1"></i>Ocorrência: <?= esc($ocor['uc_nome']) ?></div>
     <div class="page-sub">
       Ano letivo <strong><?= esc($al['designacao']) ?></strong> &mdash;
       <?= esc($ocor['codigo'] ?? '') ?> &mdash;
@@ -136,7 +136,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Painel de horas (h/sem) -->
 <div class="card" style="background:linear-gradient(135deg, var(--blue-light), #fff);border-left:4px solid var(--blue)">
-  <div class="card-title">📊 Estado das Horas <span style="font-size:11px;font-weight:400;color:var(--gray-500)">(h/sem equivalentes)</span></div>
+  <div class="card-title"><i class="fas fa-chart-bar me-1"></i>Estado das Horas <span style="font-size:11px;font-weight:400;color:var(--gray-500)">(h/sem equivalentes)</span></div>
   <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;font-size:12px">
     <?php foreach (['T','TP','L','Sem','OT','total'] as $k):
       $n = $necess[$k] ?? 0; $a = $atribs[$k] ?? 0; $f = $falta[$k] ?? 0;
@@ -147,14 +147,14 @@ require_once __DIR__ . '/../includes/header.php';
       <div style="font-size:18px;font-weight:700;margin:4px 0"><?= fmt($n, 1) ?></div>
       <div style="font-size:11px;color:var(--gray-500)">Atrib: <?= fmt($a, 1) ?></div>
       <div style="font-size:11px;font-weight:600;color:<?= $cor ?>">
-        <?= abs($f) < 0.01 ? '✅ OK' : ($f > 0 ? '⚠️ Falta ' . fmt($f, 1) : '⚠️ Excesso ' . fmt(-$f, 1)) ?>
+        <?= abs($f) < 0.01 ? '<i class="fas fa-check-circle me-1"></i>OK' : ($f > 0 ? '<i class="fas fa-exclamation-triangle me-1"></i>Falta ' . fmt($f, 1) : '<i class="fas fa-exclamation-triangle me-1"></i>Excesso ' . fmt(-$f, 1)) ?>
       </div>
     </div>
     <?php endforeach; ?>
   </div>
   <?php if ($ocor['n_dist'] ?? 0): ?>
   <p style="font-size:11px;color:var(--gray-500);margin-top:10px">
-    💡 <em>Necessárias = nº turmas × h/semana</em> &middot;
+    <i class="fas fa-lightbulb me-1"></i><em>Necessárias = nº turmas × h/semana</em> &middot;
     <em>Atribuídas = soma das distribuições, normalizadas pelas semanas</em>
   </p>
   <?php endif; ?>
@@ -251,7 +251,7 @@ $tipos = [
                  style="width:80px;text-align:right" class="ocor-input"
                  title="<?= $hUC > 0 ? 'Padrão da UC: '.fmt($hUC,2).' h' : '' ?>">
           <?php if ($isDiff): ?>
-          <span style="font-size:10px;color:var(--orange)" title="Diferente do padrão da UC (<?= fmt($hUC,2) ?> h)">⚠️</span>
+          <span style="font-size:10px;color:var(--orange)" title="Diferente do padrão da UC (<?= fmt($hUC,2) ?> h)"><i class="fas fa-exclamation-triangle"></i></span>
           <?php elseif ($hUC > 0): ?>
           <span style="font-size:10px;color:var(--gray-400)">(<?= fmt($hUC,2) ?>h)</span>
           <?php endif; ?>
@@ -278,10 +278,10 @@ $tipos = [
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary">💾 Guardar Ocorrência</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar Ocorrência</button>
     <a href="ocorrencias.php" class="btn btn-secondary">Cancelar</a>
     <a href="distribuicao.php?ocorrencia=<?= $id ?>" class="btn btn-success" style="margin-left:auto">
-      ➕ Atribuir Docente a esta Ocorrência →
+      <i class="fas fa-plus me-1"></i>Atribuir Docente a esta Ocorrência →
     </a>
   </div>
 </form>

@@ -187,7 +187,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📅 Anos Letivos</div>
+    <div class="page-title"><i class="fas fa-calendar-alt me-1"></i>Anos Letivos</div>
     <div class="page-sub">Gestão do histórico</div>
   </div>
 </div>
@@ -212,7 +212,7 @@ require_once __DIR__ . '/../includes/header.php';
       <td style="text-align:center">
         <?= (int)$s['n_doc'] ?>
         <?php if ($s['n_doc_snap'] > 0): ?>
-          <div style='font-size:10px;color:var(--green)'>✓ <?= (int)$s['n_doc_snap'] ?> snap</div>
+          <div style='font-size:10px;color:var(--green)'><i class="fas fa-check me-1"></i><?= (int)$s['n_doc_snap'] ?> snap</div>
         <?php else: ?>
           <div style='font-size:10px;color:var(--orange)'>sem snapshot</div>
         <?php endif; ?>
@@ -221,7 +221,7 @@ require_once __DIR__ . '/../includes/header.php';
       <td style="text-align:center"><?= (int)$s['n_dist'] ?></td>
       <td style="text-align:center">
         <?php if ($a['ativo']): ?>
-          <span class="badge badge-green">✅ Activo</span>
+          <span class="badge badge-green"><i class="fas fa-check-circle me-1"></i>Activo</span>
         <?php else: ?>
           <div style="display:flex;gap:6px;justify-content:center">
             <form method="post">
@@ -233,7 +233,7 @@ require_once __DIR__ . '/../includes/header.php';
                   onsubmit="return confirm('Apagar este ano letivo e todos os dados associados (ocorrências, distribuições, snapshots)? Esta acção é irreversível.')">
               <input type="hidden" name="action" value="apagar">
               <input type="hidden" name="id" value="<?= $a['id'] ?>">
-              <button class="btn btn-danger btn-xs">🗑</button>
+              <button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
             </form>
           </div>
         <?php endif; ?>
@@ -272,12 +272,12 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
       <input type="hidden" name="designacao" id="desig-val" value="<?= esc($sugestao) ?>">
     </div>
-    <button type="submit" class="btn btn-primary">➕ Criar e Activar</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Criar e Activar</button>
   </form>
 </div>
 
 <div class="card">
-  <div class="card-title">📋 Copiar entre Anos</div>
+  <div class="card-title"><i class="fas fa-clipboard-list me-1"></i>Copiar entre Anos</div>
   <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
     Copia ocorrências (turmas, horas, estudantes) e, opcionalmente, a distribuição de docentes.
   </p>
@@ -343,7 +343,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="form-actions" style="border-top:none;padding-top:0">
       <button type="submit" class="btn btn-success"
               data-confirm="Confirma? Ocorrências existentes no destino não serão duplicadas; distribuições serão acrescentadas.">
-        📋 Copiar
+        <i class="fas fa-clipboard-list me-1"></i>Copiar
       </button>
     </div>
   </form>
@@ -367,8 +367,8 @@ function updateDestStatus() {
     + '<strong>' + (al?.designacao || toId) + '</strong> tem actualmente: '
     + '<span style="color:var(--blue)">' + s.n_ocs + ' ocorrências</span>, '
     + '<span style="color:var(--green)">' + s.n_dist + ' distribuições</span>'
-    + (snap > 0 ? ', <span style="color:var(--green)">✓ ' + snap + ' snapshots docentes</span>' 
-               : ', <span style="color:var(--orange)">⚠️ sem snapshot de docentes</span>')
+    + (snap > 0 ? ', <span style="color:var(--green)"><i class="fas fa-check me-1"></i>' + snap + ' snapshots docentes</span>' 
+               : ', <span style="color:var(--orange)"><i class="fas fa-exclamation-triangle me-1"></i>sem snapshot de docentes</span>')
     + '</div>';
 }
 

@@ -82,7 +82,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📅 Ocorrências</div>
+    <div class="page-title"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</div>
     <div class="page-sub"><?= count($ocsList) ?> ocorrências · <?= esc($al['designacao']) ?></div>
   </div>
 </div>
@@ -102,7 +102,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="card" style="margin-bottom:12px;border-left:4px solid var(--red)">
   <div style="font-weight:600;font-size:13px;color:var(--red);margin-bottom:10px">
-    ⚠️ <?= count($semSD) ?> UC(s) com ocorrência mas sem serviço atribuído
+    <i class="fas fa-exclamation-triangle me-1"></i><?= count($semSD) ?> UC(s) com ocorrência mas sem serviço atribuído
   </div>
   <?php foreach ($semSdByPlano as $plano => $ucs): ?>
   <div style="margin-bottom:4px">
@@ -127,7 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="delete_id" value="<?= (int)$o['id'] ?>">
             <button class="btn btn-danger btn-xs"
                     data-confirm="Apagar esta ocorrência?"
-                    title="Apagar ocorrência">🗑️</button>
+                    title="Apagar ocorrência"><i class="fas fa-trash"></i></button>
           </form>
         </span>
       </div>
@@ -153,7 +153,7 @@ function toggleOcPlanoSD(id) {
 ?>
 <div class="card" style="padding:10px 12px;border-left:4px solid var(--orange)">
   <div style="font-weight:600;font-size:12px;color:var(--orange);margin-bottom:8px">
-    ➕ Sem ocorrência (<?= count($semOcor) ?>)
+    <i class="fas fa-plus me-1"></i>Sem ocorrência (<?= count($semOcor) ?>)
   </div>
   <?php foreach ($byPlanoOcor as $plano => $ucs): ?>
   <div style="margin-bottom:4px">
@@ -218,7 +218,7 @@ function toggleOcPlano(id) {
     <button type="button" class="btn btn-secondary btn-sm"
             onclick="document.getElementById('filtro-plano').value='';
                      document.getElementById('filtro-uc').value='';
-                     filtrarOcor()">✕ Limpar</button>
+                     filtrarOcor()"><i class="fas fa-times me-1"></i>Limpar</button>
     <span style="border-left:1px solid var(--gray-200);margin:0 4px"></span>
     <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarTodos()">⊟ Planos</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="expandirTodos()">⊞ Planos</button>
@@ -234,7 +234,7 @@ function toggleOcPlano(id) {
     <input type="hidden" name="fp" id="h-fp" value="<?= esc($fp) ?>">
     <input type="hidden" name="fu" id="h-fu" value="<?= esc($fu) ?>">
     <button type="button" class="btn btn-danger btn-sm" onclick="apagarSelecionados()"
-            id="btn-apagar" style="display:none">🗑️ Apagar seleccionados</button>
+            id="btn-apagar" style="display:none"><i class="fas fa-trash me-1"></i>Apagar seleccionados</button>
   </form>
   <span id="sel-count" style="font-size:12px;color:var(--gray-500)"></span>
 </div>
@@ -325,7 +325,7 @@ function toggleOcPlano(id) {
         <?= esc($o['uc_nome']) ?>
       </a>
       <?php if ($o['outros_planos']): ?>
-        <span style="font-size:10px;color:var(--orange)">⚠️ <?= esc($o['outros_planos']) ?></span>
+        <span style="font-size:10px;color:var(--orange)"><i class="fas fa-exclamation-triangle me-1"></i><?= esc($o['outros_planos']) ?></span>
       <?php endif; ?>
     </td>
     <td class="num"><?= (int)$o['estudantes'] ?: '–' ?></td>
@@ -338,17 +338,17 @@ function toggleOcPlano(id) {
     <td class="num"><strong><?= fmt($necess['total'], 1) ?></strong></td>
     <td class="num"><?= fmt($atribs['total'], 1) ?></td>
     <td class="num" style="color:<?= $corFalta ?>;font-weight:600">
-      <?= abs($falta) < 0.01 ? '✅' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
+      <?= abs($falta) < 0.01 ? '<i class="fas fa-check-circle"></i>' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
     </td>
     <td style="text-align:center;white-space:nowrap">
       <a href="ocorrencia-form.php?id=<?= $o['id'] ?>&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fu='.urlencode($fu)) ?>"
-         class="btn btn-secondary btn-xs">✏️</a>
+         class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></a>
       <form method="post" style="display:inline">
         <input type="hidden" name="delete_id" value="<?= $o['id'] ?>">
         <input type="hidden" name="fp" value="<?= esc($fp) ?>">
         <input type="hidden" name="fu" value="<?= esc($fu) ?>">
         <button class="btn btn-danger btn-xs"
-                data-confirm="Remover esta ocorrência e todas as distribuições associadas?">🗑️</button>
+                data-confirm="Remover esta ocorrência e todas as distribuições associadas?"><i class="fas fa-trash"></i></button>
       </form>
     </td>
   </tr>
@@ -506,7 +506,7 @@ if ('<?= esc($fp) ?>' || '<?= esc($fu) ?>') filtrarOcor();
       <div style="font-size:12px;opacity:.8" id="dp-sub"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px">✏️ Editar UC</a>
+      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px"><i class="fas fa-edit me-1"></i>Editar UC</a>
       <button onclick="closeDist()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 4px">×</button>
     </div>
   </div>
@@ -552,8 +552,8 @@ function showDist(ocId, ucNome, evt) {
           <td style="text-align:center;font-size:11px;font-family:monospace">${r.turmas}</td>
           <td class="num">${r.hs.toFixed(2)}</td>
           <td class="num" style="color:var(--blue)">${r.h_slef.toFixed(2)}</td>
-          <td style="text-align:center">${r.dsd ? '✅' : '❌'}</td>
-          <td style="text-align:center">${r.reg ? '⭐' : '–'}</td>
+          <td style="text-align:center">${r.dsd ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
+          <td style="text-align:center">${r.reg ? '<i class="fas fa-star"></i>' : '–'}</td>
         </tr>`;
       });
       html += `<tr style="background:var(--blue-light);font-weight:700">
@@ -563,8 +563,8 @@ function showDist(ocId, ucNome, evt) {
         <td colspan="2"></td>
       </tr></tbody></table>`;
       html += `<div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-        <a href="distribuicao.php?ocor=${ocId}" class="btn btn-secondary btn-sm">📊 Ver na Distribuição</a>
-        <button onclick="editDistFromPanel(${ocId})" class="btn btn-primary btn-sm">✏️ Editar Serviço</button>
+        <a href="distribuicao.php?ocor=${ocId}" class="btn btn-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Ver na Distribuição</a>
+        <button onclick="editDistFromPanel(${ocId})" class="btn btn-primary btn-sm"><i class="fas fa-edit me-1"></i>Editar Serviço</button>
       </div>`;
       document.getElementById('dp-body').innerHTML = html;
     })
