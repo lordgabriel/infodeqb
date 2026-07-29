@@ -333,7 +333,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
     <div class="form-group" style="margin:0;flex:1;min-width:200px">
      <label>Unidade Curricular *</label>
-     <select id="f-ocor" onchange="onOcorChange()">
+     <select id="f-ocor" onchange="handleUcSelected()">
       <option value="">— Selecionar —</option>
       <?php foreach ($ocorrencias as $o): ?>
        <option value="<?= $o['id'] ?>" data-plano="<?= esc($o['plano_sigla'] ?? '') ?>">
@@ -658,12 +658,9 @@ foreach ($ucsSemSD as $oc) {
      ?>
      <?php if ($badge): ?><span style="font-size:11px"><?= $badge ?></span><?php endif; ?>
      <span style="font-weight:400;font-size:11px;opacity:.7">F SLEf: <?= fmt((float)$r['f_slef'], 2) ?></span>
-     <button type="button" class="btn btn-secondary btn-xs"
-             onclick="editUC(<?= (int)$r['ocor_id'] ?>)"
-             style="padding:2px 8px;font-size:11px"><i class="fas fa-edit me-1"></i>UC</button>
      <button type="button" class="btn btn-primary btn-xs"
              onclick="openModal(null, <?= (int)$r['ocor_id'] ?>)"
-             style="padding:2px 8px;font-size:11px">+ Serviço</button>
+             style="padding:2px 8px;font-size:11px"><i class="fas fa-edit me-1"></i>Serviço</button>
    </span>
   </td>
  </tr>

@@ -329,50 +329,98 @@ function saveAllLines() {
 }
 
 // ── Modal ─────────────────────────────────────────────────────
+// Carrega TODAS as linhas de uma UC para o editor (o modal tem sempre âmbito UC).
+// highlightEditId (opcional): id de uma linha existente a pré-carregar no formulário de edição.
+function loadUcLines(ocorId, highlightEditId) {
+  pendingLines = []; editingIdx = -1; deletedIds = [];
+  g('lines-body').innerHTML = '<tr id="lines-empty"><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">A carregar…</td></tr>';
+  g('btn-save-all').disabled = true;
+
+  return fetch('ajax-dist.php?edit_lines=1&ocor_id=' + ocorId + '&_=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      pendingLines = [];
+      (data.rows || []).forEach(function(reg) {
+        pendingLines.push({
+          ocorrencia_id: ocorId,
+          docente_id:    reg.docente_id,
+          docente_nome:  reg.docente_nome,
+          semanas:       reg.semanas,
+          dsd:           reg.dsd_por_docente,
+          reg:           reg.regente,
+          tT:  reg.turmas_T,  hT:  reg.horas_T,
+          tTP: reg.turmas_TP, hTP: reg.horas_TP,
+          tL:  reg.turmas_L,  hL:  reg.horas_L,
+          tSem:reg.turmas_Sem,hSem:reg.horas_Sem,
+          tOT: reg.turmas_OT, hOT: reg.horas_OT,
+          htese: reg.h_tese || 0,
+          edit_id: reg.id,
+        });
+      });
+      renderLines();
+      updateBalFromPending();
+      if (highlightEditId) {
+        const idx = pendingLines.findIndex(function(l) { return String(l.edit_id) === String(highlightEditId); });
+        if (idx >= 0) editLine(idx);
+      }
+    })
+    .catch(function() {
+      g('lines-body').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:16px">Erro ao carregar linhas.</td></tr>';
+    });
+}
+
+// Chamado quando o select de UC muda (dropdown do modal)
+function handleUcSelected() {
+  onOcorChange();
+  const ocId = g('f-ocor').value;
+  if (ocId) {
+    loadUcLines(ocId);
+  } else {
+    pendingLines = []; editingIdx = -1; deletedIds = [];
+    resetLineEditor();
+    renderLines();
+  }
+}
+
+// Abre o modal sempre com âmbito de UC: mostra todas as linhas dessa ocorrência.
+// editId (opcional): destaca essa linha específica no formulário de edição.
+// ocorId (opcional): UC a pré-selecionar; se omitido, usa a do registo (editId) ou preOcor.
 function openModal(editId, ocorId) {
   pendingLines = []; editingIdx = -1; deletedIds = [];
   resetLineEditor();
-  const r1 = v => Math.round(parseFloat(v||0)*10)/10;
 
+  let targetOcorId = ocorId ? String(ocorId) : '';
   if (editId) {
-    // Edit existing row
     const reg = rowData[String(editId)];
     if (!reg) { alert('Registo não encontrado.'); return; }
-    const _oid = String(reg.ocor_id || reg.ocorrencia_id || '');
-    const _o2  = _oid ? ocorData[_oid] : null;
-    g('modal-title').textContent = '<i class="fas fa-edit me-1"></i>Editar Linha' + (_o2 ? ' — ['+(_o2.plano_sigla||'')+'] '+(_o2.designacao||'') : '');
-    g('modal-uc-section').style.display = 'none';
-    g('f-ocor').value    = reg.ocorrencia_id || reg.ocor_id;
-    g('f-doc').value     = reg.docente_id;
-    g('f-semanas').value = reg.semanas;
-    g('f-dsd').checked   = reg.dsd_por_docente == 1;
-    g('f-reg').checked   = reg.regente == 1;
-    g('f-tT').value=r1(reg.turmas_T); g('f-hT').value=r1(reg.horas_T);
-    g('f-tTP').value=r1(reg.turmas_TP); g('f-hTP').value=r1(reg.horas_TP);
-    g('f-tL').value=r1(reg.turmas_L); g('f-hL').value=r1(reg.horas_L);
-    g('f-tSem').value=r1(reg.turmas_Sem); g('f-hSem').value=r1(reg.horas_Sem);
-    g('f-tOT').value=r1(reg.turmas_OT); g('f-hOT').value=r1(reg.horas_OT);
-    g('f-htese').value=reg.h_tese||0;
-    const line = getCurrentLine();
-    line.edit_id = editId;
-    line.docente_nome = reg.docente_nome;
-    pendingLines = [line];
-    editingIdx = 0;
-    g('line-mode-label').textContent = 'A editar registo existente';
-    g('btn-add-line').textContent    = '<i class="fas fa-check me-1"></i>Actualizar';
-    g('btn-cancel-edit').style.display = 'none';
-    onOcorChange(); refreshLineCalc();
-  } else {
-    g('modal-title').textContent = '<i class="fas fa-plus me-1"></i>Adicionar Serviço';
-    g('modal-uc-section').style.display = '';
-    if (ocorId) { g('f-ocor').value = String(ocorId); onOcorChange(); }
-    else if (preOcor) { g('f-ocor').value = String(preOcor); onOcorChange(); }
+    targetOcorId = String(reg.ocorrencia_id || reg.ocor_id || '');
+  } else if (!targetOcorId && preOcor) {
+    targetOcorId = String(preOcor);
   }
 
-  renderLines();
+  g('modal-uc-section').style.display = '';
+  g('f-plano-filter').value = '';
+  filterOcs();
+  g('f-ocor').value = targetOcorId; // limpa seleção anterior quando targetOcorId é ''
+
+  if (targetOcorId) {
+    onOcorChange();
+    const oc = ocorData[targetOcorId];
+    g('modal-title').textContent = '<i class="fas fa-clipboard-list me-1"></i>'
+      + (oc ? '['+(oc.plano_sigla||'')+'] '+(oc.designacao||'') : 'Serviço da UC');
+  } else {
+    g('modal-title').textContent = '<i class="fas fa-plus me-1"></i>Adicionar Serviço';
+  }
+
   resetCheckboxStyles();
   g('modal-dist').style.display = 'flex';
   document.body.style.overflow  = 'hidden';
+
+  if (targetOcorId) {
+    loadUcLines(targetOcorId, editId);
+  } else {
+    renderLines();
+  }
 }
 
 // Recalcula balanço por tipologia a partir das linhas pendentes
@@ -545,59 +593,6 @@ function closeModal() {
   pendingLines = []; editingIdx = -1;
 }
 
-function editUC(ocorId) {
-  pendingLines = []; editingIdx = -1; deletedIds = [];
-  resetLineEditor();
-
-  // Pre-select the UC
-  g('f-ocor').value = String(ocorId);
-  g('modal-uc-section').style.display = '';
-  g('f-plano-filter').value = '';
-  filterOcs();
-  onOcorChange();
-
-  const _oc = ocorData[String(ocorId)];
-  const _plano  = _oc ? (_oc.plano_sigla || '') : '';
-  const _ucNome = _oc ? (_oc.designacao  || '') : '';
-  g('modal-title').textContent = '<i class="fas fa-edit me-1"></i>' + (_plano ? '['+_plano+'] ' : '') + (_ucNome || 'Editar Serviço da UC');
-
-  // Show modal immediately with loading state (avoids carreira-filter blindspot in rowData)
-  g('lines-body').innerHTML = '<tr id="lines-empty"><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">A carregar…</td></tr>';
-  g('btn-save-all').disabled = true;
-  resetCheckboxStyles();
-  g('modal-dist').style.display = 'flex';
-  document.body.style.overflow  = 'hidden';
-
-  // Fetch ALL lines for this UC from server (unfiltered by carreira)
-  fetch('ajax-dist.php?edit_lines=1&ocor_id=' + ocorId + '&_=' + Date.now())
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      pendingLines = [];
-      (data.rows || []).forEach(function(reg) {
-        pendingLines.push({
-          ocorrencia_id: ocorId,
-          docente_id:    reg.docente_id,
-          docente_nome:  reg.docente_nome,
-          semanas:       reg.semanas,
-          dsd:           reg.dsd_por_docente,
-          reg:           reg.regente,
-          tT:  reg.turmas_T,  hT:  reg.horas_T,
-          tTP: reg.turmas_TP, hTP: reg.horas_TP,
-          tL:  reg.turmas_L,  hL:  reg.horas_L,
-          tSem:reg.turmas_Sem,hSem:reg.horas_Sem,
-          tOT: reg.turmas_OT, hOT: reg.horas_OT,
-          htese: reg.h_tese || 0,
-          edit_id: reg.id,
-        });
-      });
-      renderLines();
-      updateBalFromPending();
-    })
-    .catch(function() {
-      g('lines-body').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:16px">Erro ao carregar linhas.</td></tr>';
-    });
-}
-
 // ── Input listeners ───────────────────────────────────────────
 ['f-tT','f-hT','f-tTP','f-hTP','f-tL','f-hL','f-tSem','f-hSem','f-tOT','f-hOT','f-semanas'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', refreshLineCalc);
@@ -643,6 +638,6 @@ if (distBootstrap) {
   window.addEventListener('DOMContentLoaded', () => {
     if (distBootstrap.type === 'edit')     openModal(distBootstrap.id);
     else if (distBootstrap.type === 'new')     openModal(null, distBootstrap.ocorId);
-    else if (distBootstrap.type === 'editUc')  editUC(distBootstrap.ocorId);
+    else if (distBootstrap.type === 'editUc')  openModal(null, distBootstrap.ocorId);
   });
 }
