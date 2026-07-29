@@ -753,33 +753,18 @@ foreach ($ucsSemSD as $oc) {
 </div><!-- end flex layout -->
 
 
-<div id="panel-uc" style="display:none;position:fixed;z-index:1100;background:#fff;border:1px solid var(--gray-200);
-  border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:16px;min-width:280px;max-width:400px">
+<!-- Painel de info flutuante (partilhado entre UC e docente) -->
+<div id="panel-info" style="display:none;position:fixed;z-index:1100;background:#fff;border:1px solid var(--gray-200);
+  border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:16px;min-width:260px;max-width:400px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <strong id="panel-uc-title" style="font-size:14px"></strong>
-    <button onclick="document.getElementById('panel-uc').style.display='none'"
+    <strong id="panel-info-title" style="font-size:14px"></strong>
+    <button onclick="document.getElementById('panel-info').style.display='none'"
             style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
   </div>
-  <div id="panel-uc-body" style="font-size:13px;line-height:1.8"></div>
+  <div id="panel-info-body" style="font-size:13px;line-height:1.8"></div>
   <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar ocorrência</a>
-    <button onclick="document.getElementById('panel-uc').style.display='none'"
-            class="btn btn-secondary btn-xs">Fechar</button>
-  </div>
-</div>
-
-<!-- Docente info panel -->
-<div id="panel-doc" style="display:none;position:fixed;z-index:1100;background:#fff;border:1px solid var(--gray-200);
-  border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:16px;min-width:260px;max-width:360px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <strong id="panel-doc-title" style="font-size:14px"></strong>
-    <button onclick="document.getElementById('panel-doc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
-  </div>
-  <div id="panel-doc-body" style="font-size:13px;line-height:1.8"></div>
-  <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar docente</a>
-    <button onclick="document.getElementById('panel-doc').style.display='none'"
+    <a id="panel-info-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar</a>
+    <button onclick="document.getElementById('panel-info').style.display='none'"
             class="btn btn-secondary btn-xs">Fechar</button>
   </div>
 </div>
@@ -787,7 +772,6 @@ foreach ($ucsSemSD as $oc) {
 <script>
 const rowData  = <?= json_encode(array_column($rows, null, 'id'), JSON_HEX_QUOT|JSON_HEX_TAG) ?>;
 const ocorData  = <?= json_encode(array_column($ocorrencias, null, 'id'), JSON_HEX_QUOT|JSON_HEX_TAG) ?>;
-const docInfoData = <?= json_encode(array_column($docentes, null, 'id'), JSON_HEX_QUOT|JSON_HEX_TAG) ?>;
 const docSnap     = <?= json_encode(array_column(
   array_map(function($d) { return ['id'=>$d['id'],'nome'=>$d['nome'],'carreira'=>$d['carreira']]; }, $docentes),
   null, 'id'), JSON_HEX_QUOT|JSON_HEX_TAG) ?>;
@@ -804,35 +788,5 @@ elseif (isset($_GET['edit_uc'])) $distBootstrap = ['type' => 'editUc', 'ocorId' 
 const distBootstrap = <?= json_encode($distBootstrap) ?>;
 </script>
 <script src="<?= BASE_URL ?>/assets/js/distribuicao.js?v=<?= filemtime(__DIR__ . '/../assets/js/distribuicao.js') ?>"></script>
-
-<!-- UC info panel -->
-<div id="panel-uc" style="display:none;position:fixed;z-index:1100;background:#fff;border:1px solid var(--gray-200);
-  border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:16px;min-width:280px;max-width:400px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <strong id="panel-uc-title" style="font-size:14px"></strong>
-    <button onclick="document.getElementById('panel-uc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
-  </div>
-  <div id="panel-uc-body" style="font-size:13px;line-height:1.8"></div>
-  <div style="margin-top:12px;display:flex;gap:8px">
-    <a id="panel-uc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar ocorrência</a>
-    <button onclick="document.getElementById('panel-uc').style.display='none'"
-            class="btn btn-secondary btn-xs">Fechar</button>
-  </div>
-</div>
-
-<!-- Docente info panel -->
-<div id="panel-doc" style="display:none;position:fixed;z-index:1100;background:#fff;border:1px solid var(--gray-200);
-  border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.15);padding:16px;min-width:260px;max-width:360px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    <strong id="panel-doc-title" style="font-size:14px"></strong>
-    <button onclick="document.getElementById('panel-doc').style.display='none'"
-            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray-400)"><i class="fas fa-times"></i></button>
-  </div>
-  <div id="panel-doc-body" style="font-size:13px;line-height:1.8"></div>
-  <div style="margin-top:12px">
-    <a id="panel-doc-edit" href="#" class="btn btn-secondary btn-xs"><i class="fas fa-edit me-1"></i>Editar docente</a>
-  </div>
-</div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

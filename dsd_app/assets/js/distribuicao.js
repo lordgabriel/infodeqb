@@ -1,6 +1,6 @@
 /* DSD – Distribuição (pages/distribuicao.php)
    Depende dos globals definidos inline na página antes deste ficheiro:
-   rowData, ocorData, docInfoData, docSnap, balData, preOcor, savedScroll, distAnoLetivoId, distBootstrap */
+   rowData, ocorData, docSnap, balData, preOcor, savedScroll, distAnoLetivoId, distBootstrap */
 'use strict';
 
 // Cascade carreira → docente no form de filtro da página
@@ -50,6 +50,14 @@ function positionPanel(panel, e) {
   panel.style.top  = y + 'px';
 }
 
+// Painel flutuante único, partilhado entre info de UC e info de docente
+function renderInfoPanel(title, bodyHtml, editHref, e) {
+  document.getElementById('panel-info-title').textContent = title;
+  document.getElementById('panel-info-body').innerHTML = bodyHtml;
+  document.getElementById('panel-info-edit').href = editHref;
+  positionPanel(document.getElementById('panel-info'), e);
+}
+
 function showUcInfo(ocorId, e) {
   e.preventDefault();
   const oc = ocorData[ocorId];
@@ -65,14 +73,11 @@ function showUcInfo(ocorId, e) {
     const hT = parseFloat(oc['horas_'+k])||0;
     return nT||hT ? `<tr><td style="color:var(--gray-500)">${l}</td><td>${fmtN(nT,1)} turmas</td><td>${fmtN(hT,2)} h/sem</td></tr>` : '';
   }).join('');
-  document.getElementById('panel-uc-title').textContent = oc.designacao;
-  document.getElementById('panel-uc-body').innerHTML =
+  const body =
     `<table style="width:100%;border-collapse:collapse">${rows}</table>`
     + `<div style="margin-top:8px">Estudantes: <b>${oc.estudantes}</b> | F SLEf: <b>${fmtN(oc.f_slef,2)}</b> | Semanas: <b>${fmtN(oc.semanas,1)}</b></div>`
     + `<div style="margin-top:4px;color:${col};font-weight:600">Nec: ${fmtN(need,2)} | Atr: ${fmtN(done,2)} | ${Math.abs(diff)<0.01?'<i class="fas fa-check-circle me-1"></i>OK':diff>0?'Falta '+fmtN(diff,2):'Excesso '+fmtN(-diff,2)}</div>`;
-  document.getElementById('panel-uc-edit').href = 'ocorrencia-form.php?id=' + ocorId + '&back_scroll=' + Math.round(window.scrollY);
-  positionPanel(document.getElementById('panel-uc'), e);
-  document.getElementById('panel-doc').style.display = 'none';
+  renderInfoPanel(oc.designacao, body, 'ocorrencia-form.php?id=' + ocorId + '&back_scroll=' + Math.round(window.scrollY), e);
 }
 
 function showDocInfo(docId, e) {
@@ -82,21 +87,17 @@ function showDocInfo(docId, e) {
   // Get dist rows for this docente
   const distRows = Object.values(rowData).filter(r => r.docente_id == docId);
   let total_slef = distRows.reduce((s,r) => s + (parseFloat(r.h_slef_uc)||0), 0);
-  document.getElementById('panel-doc-title').textContent = doc.nome;
-  document.getElementById('panel-doc-body').innerHTML =
+  const body =
     `<div>Carreira: <b>${doc.carreira||'–'}</b></div>`
     + `<div>UCs neste ano: <b>${distRows.length}</b></div>`
     + `<div>Total H SLEf (ano): <b style="color:var(--blue)">${fmtN(total_slef,2)}</b> h/sem</div>`;
-  document.getElementById('panel-doc-edit').href = 'docente-form.php?id=' + docId + '&back_scroll=' + Math.round(window.scrollY);
-  positionPanel(document.getElementById('panel-doc'), e);
-  document.getElementById('panel-uc').style.display = 'none';
+  renderInfoPanel(doc.nome, body, 'docente-form.php?id=' + docId + '&back_scroll=' + Math.round(window.scrollY), e);
 }
 
-// Close panels on click outside
+// Close panel on click outside
 document.addEventListener('click', e => {
-  if (!e.target.closest('#panel-uc,#panel-doc,[onclick*="showUcInfo"],[onclick*="showDocInfo"]')) {
-    document.getElementById('panel-uc').style.display = 'none';
-    document.getElementById('panel-doc').style.display = 'none';
+  if (!e.target.closest('#panel-info,[onclick*="showUcInfo"],[onclick*="showDocInfo"]')) {
+    document.getElementById('panel-info').style.display = 'none';
   }
 });
 
