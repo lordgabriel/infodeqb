@@ -272,7 +272,7 @@ function editLine(idx) {
   g('f-htese').value=line.htese;
   editingIdx = idx;
   g('line-mode-label').textContent = 'A editar linha ' + (idx+1);
-  g('btn-add-line').textContent    = '<i class="fas fa-check me-1"></i>Actualizar linha';
+  g('btn-add-line').innerHTML      = '<i class="fas fa-check me-1"></i>Actualizar linha';
   g('btn-cancel-edit').style.display = '';
   onOcorChange(); refreshLineCalc();
 }
@@ -406,10 +406,10 @@ function openModal(editId, ocorId) {
   if (targetOcorId) {
     onOcorChange();
     const oc = ocorData[targetOcorId];
-    g('modal-title').textContent = '<i class="fas fa-clipboard-list me-1"></i>'
+    g('modal-title').innerHTML = '<i class="fas fa-clipboard-list me-1"></i>'
       + (oc ? '['+(oc.plano_sigla||'')+'] '+(oc.designacao||'') : 'Serviço da UC');
   } else {
-    g('modal-title').textContent = '<i class="fas fa-plus me-1"></i>Adicionar Serviço';
+    g('modal-title').innerHTML = '<i class="fas fa-plus me-1"></i>Adicionar Serviço';
   }
 
   resetCheckboxStyles();
@@ -578,13 +578,13 @@ function executeCopy() {
   .then(r => r.json())
   .then(d => {
     if (d.ok) {
-      g('save-status').textContent = '<i class="fas fa-check-circle me-1"></i>Copiado para ' + d.copied + ' UC(s)';
+      g('save-status').innerHTML = '<i class="fas fa-check-circle me-1"></i>Copiado para ' + d.copied + ' UC(s)';
       setTimeout(() => window.location.reload(), 800);
     } else {
-      g('save-status').textContent = '<i class="fas fa-times-circle me-1"></i>' + d.error;
+      g('save-status').innerHTML = '<i class="fas fa-times-circle me-1"></i>' + d.error;
     }
   })
-  .catch(() => g('save-status').textContent = '<i class="fas fa-times-circle me-1"></i>Erro ao copiar');
+  .catch(() => g('save-status').innerHTML = '<i class="fas fa-times-circle me-1"></i>Erro ao copiar');
 }
 
 function closeModal() {
