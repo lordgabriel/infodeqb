@@ -147,6 +147,25 @@ function horasAtribuidas(PDO $db, int $ocorrenciaId): array {
     return array_map('floatval', $r);
 }
 
+/**
+ * Como horasAtribuidas(), mas agregando em memória a partir de linhas de
+ * distribuição já carregadas (evita 1 query por ocorrência em páginas que
+ * já têm todas as linhas do ano em memória, ex: listagens/tabelas).
+ */
+function horasAtribuidasFromRows(array $rows): array {
+    $tipos = ['T','TP','L','Sem','OT'];
+    $out = ['total' => 0];
+    foreach ($tipos as $t) {
+        $sum = 0;
+        foreach ($rows as $r) {
+            $sum += num($r["turmas_$t"] ?? 0) * num($r["horas_$t"] ?? 0) * num($r['semanas'] ?? 13) / 13;
+        }
+        $out[$t] = $sum;
+        $out['total'] += $sum;
+    }
+    return $out;
+}
+
 function horasEmFalta(array $necessarias, array $atribuidas): array {
     $out = [];
     foreach (['T','TP','L','Sem','OT','total'] as $k) {

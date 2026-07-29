@@ -236,25 +236,18 @@ $balData = [];
 foreach ($balStmt->fetchAll() as $b) $balData[$b['id']] = $b;
 
 // ── Controlo de horas por UC ──────────────────────────────────
-function calcFaltaUC(array $info, array $docentes): array {
-    foreach (['T','TP','L','Sem','OT'] as $t) {
-        $nec = (float)($info["n_turmas_$t"]??0) * (float)($info["oc_horas_$t"]??0);
-        $atr = 0;
-        foreach ($docentes as $d)
-            $atr += (float)($d["turmas_$t"]??0) * (float)($d["horas_$t"]??0) * (float)($d['semanas']??13) / 13;
-        $out[$t] = ['nec'=>$nec,'atr'=>$atr,'falta'=>$nec-$atr];
-    }
-    return $out;
-}
-function badgeFalta(array $f): string {
+// Formula partilhada com o resto do dsd_app: horasNecessarias()/horasAtribuidasFromRows()
+// em includes/config.php. Aqui fica só a renderização do badge.
+function badgeFalta(array $nec, array $atr): string {
     $partes=[]; $total=0; $has=false;
     foreach (['T','TP','L','Sem','OT'] as $t) {
-        $total += $f[$t]['falta'];
-        if ($f[$t]['nec']<=0 && $f[$t]['atr']<=0) continue;
-        $has=true; $d=$f[$t]['falta'];
-        if (abs($d)<0.01) $partes[]="<span style='color:var(--green)'>$t <i class='fas fa-check'></i></span>";
-        elseif ($d>0)     $partes[]="<span style='color:var(--red)'>$t −".fmt($d,1)."</span>";
-        else              $partes[]="<span style='color:var(--red)'>$t +".fmt(-$d,1)."</span>";
+        $n = $nec[$t] ?? 0; $a = $atr[$t] ?? 0; $falta = $n - $a;
+        $total += $falta;
+        if ($n<=0 && $a<=0) continue;
+        $has=true;
+        if (abs($falta)<0.01) $partes[]="<span style='color:var(--green)'>$t <i class='fas fa-check'></i></span>";
+        elseif ($falta>0)     $partes[]="<span style='color:var(--red)'>$t −".fmt($falta,1)."</span>";
+        else                  $partes[]="<span style='color:var(--red)'>$t +".fmt(-$falta,1)."</span>";
     }
     if (!$has) return '';
     if (abs($total)<0.01) $res="<span style='color:var(--green);font-weight:700'><i class='fas fa-check-circle me-1'></i>OK</span>";
@@ -659,16 +652,9 @@ foreach ($ucsSemSD as $oc) {
    <span style="float:right;display:flex;align-items:center;gap:10px">
      <?php
      $ucDocs = array_filter($rows, function($x) use ($r) { return $x['ocor_id'] === $r['ocor_id']; });
-     $ocInfo = array_combine(['n_turmas_T','n_turmas_TP','n_turmas_L','n_turmas_Sem','n_turmas_OT',
-                              'oc_horas_T','oc_horas_TP','oc_horas_L','oc_horas_Sem','oc_horas_OT'],
-               array_fill(0,10,0));
-     foreach ($ocorrencias as $oo) if ($oo['id']==$r['ocor_id']) {
-         foreach(['T','TP','L','Sem','OT'] as $tt) {
-             $ocInfo['n_turmas_'.$tt]=$oo['n_turmas_'.$tt];
-             $ocInfo['oc_horas_'.$tt]=$oo['horas_'.$tt];
-         }
-     }
-     $badge = badgeFalta(calcFaltaUC($ocInfo, $ucDocs));
+     $ocRow = null;
+     foreach ($ocorrencias as $oo) if ($oo['id']==$r['ocor_id']) { $ocRow = $oo; break; }
+     $badge = $ocRow ? badgeFalta(horasNecessarias($ocRow), horasAtribuidasFromRows($ucDocs)) : '';
      ?>
      <?php if ($badge): ?><span style="font-size:11px"><?= $badge ?></span><?php endif; ?>
      <span style="font-weight:400;font-size:11px;opacity:.7">F SLEf: <?= fmt((float)$r['f_slef'], 2) ?></span>
