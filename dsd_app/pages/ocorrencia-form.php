@@ -369,7 +369,7 @@ $tipos = [
 <?php if ($id): ?>
 <div class="card" id="linhas-servico">
   <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-    <span><i class="fas fa-chalkboard-teacher me-1"></i>Linhas de Serviço</span>
+    <span><i class="fas fa-chalkboard-teacher me-1"></i>Serviço Docente</span>
     <?php if ($linhas): ?>
     <button type="button" class="btn btn-secondary btn-sm" onclick="openCopyModal()">
       <i class="fas fa-clipboard-list me-1"></i>Copiar para UCs partilhadas
@@ -405,13 +405,13 @@ $tipos = [
         <input type="hidden" name="edit_line_id" value="<?= (int)$l['id'] ?>" form="<?= $fid ?>">
         <input type="hidden" name="docente_id" value="<?= (int)$l['docente_id'] ?>" form="<?= $fid ?>">
       </td>
-      <td><input type="number" name="semanas" step="0.5" min="0" max="30" value="<?= esc((string)$l['semanas']) ?>" form="<?= $fid ?>" style="width:55px;text-align:right"></td>
+      <td><input type="number" name="semanas" step="0.5" min="0" max="30" value="<?= esc((string)round((float)$l['semanas'], 2)) ?>" form="<?= $fid ?>" style="width:60px;text-align:right"></td>
       <?php foreach (['T','TP','L','Sem','OT'] as $t): ?>
       <td style="white-space:nowrap">
-        <input type="number" name="turmas_<?= $t ?>" step="0.5" min="0" value="<?= esc((string)$l["turmas_$t"]) ?>" form="<?= $fid ?>" style="width:44px;text-align:right">/<input type="number" name="horas_<?= $t ?>" step="0.5" min="0" value="<?= esc((string)$l["horas_$t"]) ?>" form="<?= $fid ?>" style="width:44px;text-align:right">
+        <input type="number" name="turmas_<?= $t ?>" step="0.5" min="0" value="<?= esc((string)round((float)$l["turmas_$t"], 2)) ?>" form="<?= $fid ?>" style="width:52px;text-align:right"> / <input type="number" name="horas_<?= $t ?>" step="0.5" min="0" value="<?= esc((string)round((float)$l["horas_$t"], 2)) ?>" form="<?= $fid ?>" style="width:52px;text-align:right">
       </td>
       <?php endforeach; ?>
-      <td><input type="number" name="h_tese" step="0.5" min="0" value="<?= esc((string)$l['h_tese']) ?>" form="<?= $fid ?>" style="width:55px;text-align:right"></td>
+      <td><input type="number" name="h_tese" step="0.5" min="0" value="<?= esc((string)round((float)$l['h_tese'], 2)) ?>" form="<?= $fid ?>" style="width:60px;text-align:right"></td>
       <td style="text-align:center"><input type="checkbox" name="dsd_por_docente" form="<?= $fid ?>" <?= $l['dsd_por_docente'] ? 'checked' : '' ?>></td>
       <td style="text-align:center"><input type="checkbox" name="regente" form="<?= $fid ?>" <?= $l['regente'] ? 'checked' : '' ?>></td>
       <td style="white-space:nowrap;text-align:center">
@@ -431,7 +431,7 @@ $tipos = [
   <?php endif; ?>
 
   <div style="border-top:1px solid var(--gray-200);padding-top:14px">
-    <div style="font-weight:600;font-size:13px;margin-bottom:8px"><i class="fas fa-plus me-1"></i>Adicionar linha</div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px"><i class="fas fa-plus me-1"></i>Adicionar Serviço</div>
     <form method="post">
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:8px">
       <div class="form-group" style="margin:0;min-width:150px">
@@ -479,7 +479,7 @@ $tipos = [
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>Adicionar linha</button>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>Adicionar Serviço</button>
       <span id="add-line-calc" style="font-size:12px;color:var(--blue)"></span>
     </div>
     </form>
