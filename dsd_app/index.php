@@ -147,8 +147,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
   <div style="display:flex;gap:10px">
-    <a href="pages/ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
-    <a href="pages/distribuicao.php" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Nova Distribuição</a>
+    <a href="pages/ocorrencias.php" class="btn btn-primary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
     <a href="reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Relatórios</a>
   </div>
 </div>
@@ -321,7 +320,6 @@ require_once __DIR__ . '/includes/header.php';
     <a href="pages/docentes.php" class="btn btn-secondary"><i class="fas fa-chalkboard-teacher me-1"></i>Docentes</a>
     <a href="pages/ucs.php" class="btn btn-secondary"><i class="fas fa-book me-1"></i>Catálogo UCs</a>
     <a href="pages/ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
-    <a href="pages/distribuicao.php" class="btn btn-secondary"><i class="fas fa-clipboard-list me-1"></i>Distribuição</a>
     <a href="pages/planos.php" class="btn btn-secondary"><i class="fas fa-graduation-cap me-1"></i>Planos</a>
     <a href="pages/areas.php" class="btn btn-secondary"><i class="fas fa-flask me-1"></i>Áreas</a>
     <a href="pages/import-csv.php" class="btn btn-secondary"><i class="fas fa-file-upload me-1"></i>Importar CSV</a>

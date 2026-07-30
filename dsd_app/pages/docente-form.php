@@ -69,11 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ")->execute([$newId, $al['id'], $carr_id, $cat_id, $deti, $h_slef, $ref_ecdu, $obs]);
                 flash("Docente adicionado: $nome");
             }
-            if (isset($_GET['back_scroll'])) {
-        header('Location: distribuicao.php?scroll=' . (int)$_GET['back_scroll']);
-    } else {
-        header('Location: docentes.php');
-    } exit;
+            header('Location: docentes.php'); exit;
         } catch (Exception $e) {
             flash('Erro: ' . $e->getMessage(), 'error');
         }

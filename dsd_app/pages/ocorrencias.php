@@ -8,6 +8,7 @@ $db = getDB();
 $al = getAnoLetivoAtivo();
 $fp = $_GET['fp'] ?? $_POST['fp'] ?? '';
 $fu = $_GET['fu'] ?? $_POST['fu'] ?? '';
+$fs = $_GET['fs'] ?? $_POST['fs'] ?? '';
 
 // ── Criar ocorrência ─────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['criar_uc_id'])) {
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['criar_uc_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $db->prepare("DELETE FROM infodeqb_dsd_uc_ocorrencia WHERE id=?")->execute([(int)$_POST['delete_id']]);
     flash('Ocorrência removida.');
-    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu]));
+    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu,'fs'=>$fs]));
     header('Location: ocorrencias.php' . ($qs ? '?'.$qs : '')); exit;
 }
 
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
     foreach ($ids as $did)
         $db->prepare("DELETE FROM infodeqb_dsd_uc_ocorrencia WHERE id=?")->execute([$did]);
     flash(count($ids) . ' ocorrência(s) removida(s).');
-    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu]));
+    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu,'fs'=>$fs]));
     header('Location: ocorrencias.php' . ($qs ? '?'.$qs : '')); exit;
 }
 
@@ -210,6 +211,15 @@ function toggleOcPlano(id) {
         <?php endforeach; ?>
       </select>
     </div>
+    <div class="form-group" style="margin:0;min-width:110px">
+      <label>Semestre</label>
+      <select id="filtro-sem" onchange="filtrarOcor()">
+        <option value="">Todos</option>
+        <option value="1S" <?= $fs==='1S'?'selected':'' ?>>1S</option>
+        <option value="2S" <?= $fs==='2S'?'selected':'' ?>>2S</option>
+        <option value="A" <?= $fs==='A'?'selected':'' ?>>Anual</option>
+      </select>
+    </div>
     <div class="form-group" style="margin:0;flex:1;min-width:200px">
       <label>Pesquisar UC</label>
       <input type="text" id="filtro-uc" placeholder="Nome da UC…" oninput="filtrarOcor()"
@@ -217,6 +227,7 @@ function toggleOcPlano(id) {
     </div>
     <button type="button" class="btn btn-secondary btn-sm"
             onclick="document.getElementById('filtro-plano').value='';
+                     document.getElementById('filtro-sem').value='';
                      document.getElementById('filtro-uc').value='';
                      filtrarOcor()"><i class="fas fa-times me-1"></i>Limpar</button>
     <span style="border-left:1px solid var(--gray-200);margin:0 4px"></span>
@@ -233,6 +244,7 @@ function toggleOcPlano(id) {
   <form method="post" id="bulk-form">
     <input type="hidden" name="fp" id="h-fp" value="<?= esc($fp) ?>">
     <input type="hidden" name="fu" id="h-fu" value="<?= esc($fu) ?>">
+    <input type="hidden" name="fs" id="h-fs" value="<?= esc($fs) ?>">
     <button type="button" class="btn btn-danger btn-sm" onclick="apagarSelecionados()"
             id="btn-apagar" style="display:none"><i class="fas fa-trash me-1"></i>Apagar seleccionados</button>
   </form>
@@ -273,7 +285,7 @@ function toggleOcPlano(id) {
   foreach ($tree as $plano => $sems):
   ?>
   <!-- Plano header -->
-  <tr class="section-plano" data-plano="<?= esc(strtolower($plano)) ?>"
+  <tr class="section-plano" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-200);cursor:pointer"
       onclick="togglePlanoOcor('pl-<?= md5($plano) ?>')">
     <td colspan="13" style="padding:6px 10px;font-weight:700;font-size:13px;color:var(--gray-800)">
@@ -287,7 +299,7 @@ function toggleOcPlano(id) {
   <?php foreach ($sems as $sem => $ocs): ?>
   <!-- Semestre subheader -->
   <?php $semKey = 'sem-'.md5($plano.'-'.$sem); ?>
-  <tr class="section-sem pl-<?= md5($plano) ?>" data-plano="<?= esc(strtolower($plano)) ?>"
+  <tr class="section-sem pl-<?= md5($plano) ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-100);cursor:pointer"
       onclick="toggleSemOcor('<?= $semKey ?>')">
     <td colspan="13" style="padding:4px 10px 4px 24px;font-size:11px;font-weight:600;color:var(--gray-600)">
@@ -313,9 +325,9 @@ function toggleOcPlano(id) {
     }
   ?>
   <tr class="pl-<?= md5($plano) ?> <?= $semKey ?>"
-      data-plano="<?= esc(strtolower($plano)) ?>"
-      data-sem="<?= esc(strtolower($sem)) ?>"
-      data-uc="<?= esc(strtolower($o['uc_nome'])) ?>">
+      data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      data-sem="<?= esc(mb_strtolower($sem, 'UTF-8')) ?>"
+      data-uc="<?= esc(mb_strtolower($o['uc_nome'], 'UTF-8')) ?>">
     <td style="text-align:center;padding-left:24px">
       <input type="checkbox" class="row-chk" value="<?= $o['id'] ?>" onchange="updateSel()">
     </td>
@@ -341,12 +353,13 @@ function toggleOcPlano(id) {
       <?= abs($falta) < 0.01 ? '<i class="fas fa-check-circle"></i>' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
     </td>
     <td style="text-align:center;white-space:nowrap">
-      <a href="ocorrencia-form.php?id=<?= $o['id'] ?>&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fu='.urlencode($fu)) ?>"
+      <a href="ocorrencia-form.php?id=<?= $o['id'] ?>&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fs='.urlencode($fs).'&fu='.urlencode($fu)) ?>"
          class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></a>
       <form method="post" style="display:inline">
         <input type="hidden" name="delete_id" value="<?= $o['id'] ?>">
         <input type="hidden" name="fp" value="<?= esc($fp) ?>">
         <input type="hidden" name="fu" value="<?= esc($fu) ?>">
+        <input type="hidden" name="fs" value="<?= esc($fs) ?>">
         <button class="btn btn-danger btn-xs"
                 data-confirm="Remover esta ocorrência e todas as distribuições associadas?"><i class="fas fa-trash"></i></button>
       </form>
@@ -433,16 +446,19 @@ function expandirSemestres() {
     if (icon) icon.textContent = '▼';
   });
 }
+function filtrarOcor() {
   const plano = document.getElementById('filtro-plano').value.toLowerCase();
+  const sem   = document.getElementById('filtro-sem').value.toLowerCase();
   const uc    = document.getElementById('filtro-uc').value.toLowerCase();
   document.getElementById('h-fp').value = document.getElementById('filtro-plano').value;
+  document.getElementById('h-fs').value = document.getElementById('filtro-sem').value;
   document.getElementById('h-fu').value = document.getElementById('filtro-uc').value;
   let visible = 0;
 
   document.querySelectorAll('#tbl-ocor tbody tr').forEach(tr => {
     if (tr.classList.contains('section-plano') || tr.classList.contains('section-sem')) {
       // Handle section headers based on filter
-      if (!plano && !uc) { tr.style.display = ''; return; }
+      if (!plano && !sem && !uc) { tr.style.display = ''; return; }
       const trPlano = tr.dataset.plano || '';
       const matchPlano = !plano || trPlano === plano;
       tr.style.display = matchPlano ? '' : 'none';
@@ -450,8 +466,9 @@ function expandirSemestres() {
     }
     if (!tr.dataset.uc) return;
     const matchPlano = !plano || (tr.dataset.plano || '') === plano;
+    const matchSem   = !sem   || (tr.dataset.sem || '') === sem;
     const matchUC    = !uc    || (tr.dataset.uc || '').includes(uc);
-    const show = matchPlano && matchUC;
+    const show = matchPlano && matchSem && matchUC;
     tr.style.display = show ? '' : 'none';
     if (show) visible++;
     if (!show) { const c = tr.querySelector('.row-chk'); if (c) c.checked = false; }
@@ -459,7 +476,7 @@ function expandirSemestres() {
 
   const total = <?= count($ocsList) ?>;
   document.getElementById('filtro-count').textContent =
-    (plano || uc) ? visible + ' de ' + total + ' UC(s)' : '';
+    (plano || sem || uc) ? visible + ' de ' + total + ' UC(s)' : '';
   updateSel();
 }
 
@@ -493,7 +510,7 @@ function apagarSelecionados() {
 }
 
 // Apply filter on load if params exist
-if ('<?= esc($fp) ?>' || '<?= esc($fu) ?>') filtrarOcor();
+if ('<?= esc($fp) ?>' || '<?= esc($fs) ?>' || '<?= esc($fu) ?>') filtrarOcor();
 </script>
 
 <!-- Painel lateral de distribuição -->
@@ -522,7 +539,7 @@ function showDist(ocId, ucNome, evt) {
   document.getElementById('dp-title').textContent = ucNome;
   document.getElementById('dp-sub').textContent = 'A carregar distribuição…';
   document.getElementById('dp-edit-link').href = 'ocorrencia-form.php?id=' + ocId +
-    '&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fu='.urlencode($fu)) ?>';
+    '&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fs='.urlencode($fs).'&fu='.urlencode($fu)) ?>';
   document.getElementById('dist-panel').style.display = 'flex';
   document.getElementById('dist-overlay').style.display = 'block';
 
@@ -547,7 +564,7 @@ function showDist(ocId, ucNome, evt) {
         totHs   += r.hs;
         totSlef += r.h_slef;
         html += `<tr>
-          <td>${r.docente}</td>
+          <td><a href="../reports/por-docente.php?docente=${r.docente_id}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gray-400)">${r.docente}</a></td>
           <td style="text-align:center">${r.semanas}</td>
           <td style="text-align:center;font-size:11px;font-family:monospace">${r.turmas}</td>
           <td class="num">${r.hs.toFixed(2)}</td>
@@ -563,7 +580,6 @@ function showDist(ocId, ucNome, evt) {
         <td colspan="2"></td>
       </tr></tbody></table>`;
       html += `<div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-        <a href="distribuicao.php?ocor=${ocId}" class="btn btn-secondary btn-sm"><i class="fas fa-chart-bar me-1"></i>Ver na Distribuição</a>
         <button onclick="editDistFromPanel(${ocId})" class="btn btn-primary btn-sm"><i class="fas fa-edit me-1"></i>Editar Serviço</button>
       </div>`;
       document.getElementById('dp-body').innerHTML = html;
@@ -576,7 +592,7 @@ function showDist(ocId, ucNome, evt) {
 
 function editDistFromPanel(ocId) {
   closeDist();
-  const backUrl = encodeURIComponent('ocorrencias.php?fp=<?= urlencode($fp) ?>&fu=<?= urlencode($fu) ?>');
+  const backUrl = encodeURIComponent('ocorrencias.php?fp=<?= urlencode($fp) ?>&fs=<?= urlencode($fs) ?>&fu=<?= urlencode($fu) ?>');
   window.location.href = 'ocorrencia-form.php?id=' + ocId + '&back_url=' + backUrl + '#linhas-servico';
 }
 

@@ -66,8 +66,6 @@ ob_start();
     <ul class="dsd-subnav-links">
       <li><a href="<?= BASE_URL ?>/"
              class="<?= $_ap === 'home'        ? 'active' : '' ?>">Início</a></li>
-      <li><a href="<?= BASE_URL ?>/pages/distribuicao.php"
-             class="<?= $_ap === 'distribuicao' ? 'active' : '' ?>">Distribuição</a></li>
       <li><a href="<?= BASE_URL ?>/pages/ocorrencias.php"
              class="<?= $_ap === 'ocorrencias'  ? 'active' : '' ?>">Ocorrências</a></li>
       <li class="dsd-subnav-sep"></li>

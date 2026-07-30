@@ -53,7 +53,7 @@ $ocData = $oc->fetch();
 $need = $ocData ? horasNecessarias($ocData)['total'] : 0;
 
 $rows = $db->prepare("
-    SELECT doc.nome AS docente,
+    SELECT doc.id AS docente_id, doc.nome AS docente,
            d.semanas, d.dsd_por_docente AS dsd, d.regente AS reg,
            d.turmas_T, d.horas_T, d.turmas_TP, d.horas_TP,
            d.turmas_L, d.horas_L, d.turmas_Sem, d.horas_Sem, d.turmas_OT, d.horas_OT,
