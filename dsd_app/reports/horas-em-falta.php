@@ -266,7 +266,7 @@ require_once __DIR__ . '/../includes/header.php';
       <?= abs($falta['total']) < 0.01 ? '<i class="fas fa-check-circle"></i>' : (($falta['total'] > 0 ? '−' : '+') . fmt(abs($falta['total']), 1)) ?>
     </td>
     <td style="text-align:center;white-space:nowrap;padding:4px">
-      <a href="../pages/distribuicao.php?ocorrencia=<?= $o['id'] ?>" class="btn btn-primary btn-xs" title="Atribuir docente"><i class="fas fa-plus"></i></a>
+      <a href="../pages/ocorrencia-form.php?id=<?= $o['id'] ?>#linhas-servico" class="btn btn-primary btn-xs" title="Atribuir docente"><i class="fas fa-plus"></i></a>
       <a href="../pages/ocorrencia-form.php?id=<?= $o['id'] ?>" class="btn btn-secondary btn-xs" title="Editar ocorrência"><i class="fas fa-edit"></i></a>
     </td>
   </tr>

@@ -303,7 +303,7 @@ require_once __DIR__ . '/includes/header.php';
         <td class="num"><?= fmt((float)$o['done_total'], 1) ?></td>
         <td class="num" style="color:var(--red);font-weight:700"><?= fmt($falta, 1) ?></td>
         <td style="text-align:right">
-          <a href="pages/distribuicao.php?ocorrencia=<?= $o['id'] ?>" class="btn btn-primary btn-xs"><i class="fas fa-plus me-1"></i>Atribuir</a>
+          <a href="pages/ocorrencia-form.php?id=<?= $o['id'] ?>#linhas-servico" class="btn btn-primary btn-xs"><i class="fas fa-plus me-1"></i>Atribuir</a>
         </td>
       </tr>
     <?php endforeach; ?>

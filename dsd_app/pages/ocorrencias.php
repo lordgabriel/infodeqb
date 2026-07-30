@@ -121,7 +121,7 @@ require_once __DIR__ . '/../includes/header.php';
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"
               title="<?= esc($o['uc_nome']) ?>"><?= esc($o['uc_nome']) ?></span>
         <span style="display:flex;gap:3px;flex-shrink:0;margin-left:6px">
-          <a href="distribuicao.php?edit_uc=<?= (int)$o['id'] ?>"
+          <a href="ocorrencia-form.php?id=<?= (int)$o['id'] ?>#linhas-servico"
              class="btn btn-primary btn-xs">+ SD</a>
           <form method="post" style="display:inline">
             <input type="hidden" name="delete_id" value="<?= (int)$o['id'] ?>">
@@ -576,10 +576,8 @@ function showDist(ocId, ucNome, evt) {
 
 function editDistFromPanel(ocId) {
   closeDist();
-  // Open the distribuicao modal for this UC
-  // We navigate to distribuicao.php with a trigger to open the edit modal
   const backUrl = encodeURIComponent('ocorrencias.php?fp=<?= urlencode($fp) ?>&fu=<?= urlencode($fu) ?>');
-  window.location.href = 'distribuicao.php?edit_uc=' + ocId + '&back_url=' + backUrl;
+  window.location.href = 'ocorrencia-form.php?id=' + ocId + '&back_url=' + backUrl + '#linhas-servico';
 }
 
 function closeDist() {
