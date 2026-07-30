@@ -48,7 +48,7 @@ if (!$_dsdAccess) {
 unset($_dsdAccess);
 
 // ── CSS extra: app.css do dsd_app ────────────────────────────────
-$extraCss = BASE_URL . '/assets/css/app.css';
+$extraCss = BASE_URL . '/assets/css/app.css?v=' . filemtime(dirname(__DIR__) . '/assets/css/app.css');
 
 // ── Ano letivo para o selector ───────────────────────────────────
 $_dsdAnosNav = getDB()->query('SELECT * FROM infodeqb_dsd_ano_letivo ORDER BY id DESC')->fetchAll();
