@@ -354,6 +354,18 @@ $tipos = [
   </table>
   </div>
 
+  <div style="margin-top:10px;padding:8px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:6px;font-size:12px;color:var(--gray-600)">
+    <i class="fas fa-lightbulb me-1"></i>Horas de contacto definidas na UC (referência, não editável aqui):
+    <?php foreach ($tipos as [$k, $label, $ucField]):
+      $hUC = num($ocor[$ucField] ?? 0);
+      if ($hUC <= 0) continue;
+      $hT = num($ocor["horas_$k"] ?? 0);
+      $isDiffUC = abs($hT - $hUC) > 0.001;
+    ?>
+    <span style="margin-left:8px;<?= $isDiffUC ? 'color:var(--orange);font-weight:600' : '' ?>"><?= $k ?>: <?= fmt($hUC, 2) ?>h<?php if ($isDiffUC): ?> <i class="fas fa-exclamation-triangle" title="Esta ocorrência usa <?= fmt($hT, 2) ?>h"></i><?php endif; ?></span>
+    <?php endforeach; ?>
+  </div>
+
   <div class="form-group full" style="margin-top:14px">
     <label>Observações</label>
     <textarea name="observacoes"><?= esc($ocor['observacoes'] ?? '') ?></textarea>
