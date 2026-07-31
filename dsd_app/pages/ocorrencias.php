@@ -46,13 +46,13 @@ $ocs = $db->prepare("
            o.horas_T, o.horas_TP, o.horas_L,
            COALESCE(o.horas_Sem, 0) AS horas_Sem,
            o.horas_OT,
-           u.designacao AS uc_nome, u.codigo, u.semestre,
+           u.designacao AS uc_nome, u.codigo, u.semestre, u.ano,
            p.sigla AS plano_sigla
     FROM infodeqb_dsd_uc_ocorrencia o
     JOIN infodeqb_dsd_uc u ON o.uc_id = u.id
     LEFT JOIN infodeqb_dsd_plano_estudo p ON COALESCE(o.plano_id, u.plano_id) = p.id
     WHERE o.ano_letivo_id = ?
-    ORDER BY p.ordem, u.semestre, u.designacao
+    ORDER BY p.ordem, u.ano, u.semestre, u.designacao
 ");
 $ocs->execute([$al['id']]);
 $ocsList = $ocs->fetchAll();
@@ -233,6 +233,8 @@ function toggleOcPlano(id) {
     <span style="border-left:1px solid var(--gray-200);margin:0 4px"></span>
     <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarTodos()">⊟ Planos</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="expandirTodos()">⊞ Planos</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarAnos()">⊟ Anos</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="expandirAnos()">⊞ Anos</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarSemestres()">⊟ Semestres</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="expandirSemestres()">⊞ Semestres</button>
     <span id="filtro-count" style="font-size:12px;color:var(--gray-500);align-self:center"></span>
@@ -275,34 +277,52 @@ function toggleOcPlano(id) {
   </thead>
   <tbody>
   <?php
-  // Group by plano → semestre
+  // Group by plano → ano curricular → semestre
   $tree = [];
   foreach ($ocsList as $o) {
       $p   = $o['plano_sigla'] ?? '–';
+      $an  = trim((string)($o['ano'] ?? '')) ?: '–';
       $sem = $o['semestre'] ?: 'A';
-      $tree[$p][$sem][] = $o;
+      $tree[$p][$an][$sem][] = $o;
   }
-  foreach ($tree as $plano => $sems):
+  foreach ($tree as $plano => $anos):
+    $plKey = 'pl-'.md5($plano);
+    $totalPlano = 0;
+    foreach ($anos as $sems) foreach ($sems as $ocs) $totalPlano += count($ocs);
   ?>
   <!-- Plano header -->
   <tr class="section-plano" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-200);cursor:pointer"
-      onclick="togglePlanoOcor('pl-<?= md5($plano) ?>')">
+      onclick="togglePlanoOcor('<?= $plKey ?>')">
     <td colspan="13" style="padding:6px 10px;font-weight:700;font-size:13px;color:var(--gray-800)">
-      <span id="icon-pl-<?= md5($plano) ?>">▼</span>
+      <span id="icon-<?= $plKey ?>">▼</span>
       <span class="badge badge-blue" style="margin-left:4px"><?= esc($plano) ?></span>
       <span style="font-weight:400;font-size:11px;margin-left:6px;color:var(--gray-500)">
-        <?= array_sum(array_map('count', $sems)) ?> ocorrência(s)
+        <?= $totalPlano ?> ocorrência(s)
       </span>
+    </td>
+  </tr>
+  <?php foreach ($anos as $ano => $sems):
+    $anoKey = 'an-'.md5($plano.'-'.$ano);
+    $totalAno = array_sum(array_map('count', $sems));
+  ?>
+  <!-- Ano curricular subheader -->
+  <tr class="section-ano <?= $plKey ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      style="background:#eceff1;cursor:pointer"
+      onclick="toggleAnoOcor('<?= $anoKey ?>')">
+    <td colspan="13" style="padding:4px 10px 4px 18px;font-size:11.5px;font-weight:650;color:var(--gray-700)">
+      <span id="icon-<?= $anoKey ?>" style="font-size:10px">▼</span>
+      <?= esc($ano) ?>
+      <span style="font-weight:400">(<?= $totalAno ?>)</span>
     </td>
   </tr>
   <?php foreach ($sems as $sem => $ocs): ?>
   <!-- Semestre subheader -->
-  <?php $semKey = 'sem-'.md5($plano.'-'.$sem); ?>
-  <tr class="section-sem pl-<?= md5($plano) ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+  <?php $semKey = 'sem-'.md5($plano.'-'.$ano.'-'.$sem); ?>
+  <tr class="section-sem <?= $plKey ?> <?= $anoKey ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-100);cursor:pointer"
       onclick="toggleSemOcor('<?= $semKey ?>')">
-    <td colspan="13" style="padding:4px 10px 4px 24px;font-size:11px;font-weight:600;color:var(--gray-600)">
+    <td colspan="13" style="padding:4px 10px 4px 30px;font-size:11px;font-weight:600;color:var(--gray-600)">
       <span id="icon-<?= $semKey ?>" style="font-size:10px">▼</span>
       <?= $sem === 'A' ? 'Anual' : $sem.'º Semestre' ?>
       <span style="font-weight:400">(<?= count($ocs) ?>)</span>
@@ -324,7 +344,7 @@ function toggleOcPlano(id) {
         $tipoVals[$k] = $nT > 0 ? fmt($nT,1).'×'.fmt($hT,1) : '–';
     }
   ?>
-  <tr class="pl-<?= md5($plano) ?> <?= $semKey ?>"
+  <tr class="<?= $plKey ?> <?= $anoKey ?> <?= $semKey ?>"
       data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       data-sem="<?= esc(mb_strtolower($sem, 'UTF-8')) ?>"
       data-uc="<?= esc(mb_strtolower($o['uc_nome'], 'UTF-8')) ?>">
@@ -367,6 +387,7 @@ function toggleOcPlano(id) {
   </tr>
   <?php endforeach; // ocs ?>
   <?php endforeach; // sems ?>
+  <?php endforeach; // anos ?>
   <?php endforeach; // tree ?>
   <?php if (!$ocsList): ?>
   <tr><td colspan="13" style="text-align:center;padding:30px;color:var(--gray-400)">
@@ -398,6 +419,14 @@ function toggleSemOcor(id) {
   if (icon) icon.textContent = visible ? '▶' : '▼';
 }
 
+function toggleAnoOcor(id) {
+  const rows = document.querySelectorAll('.' + id);
+  const icon = document.getElementById('icon-' + id);
+  const visible = rows.length && rows[0].style.display !== 'none';
+  rows.forEach(r => r.style.display = visible ? 'none' : '');
+  if (icon) icon.textContent = visible ? '▶' : '▼';
+}
+
 function colapsarTodos() {
   document.querySelectorAll('.section-plano').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
@@ -416,8 +445,36 @@ function expandirTodos() {
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
-  // Also expand semestres
+  // Also expand anos e semestres
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▼';
+  });
   document.querySelectorAll('.section-sem').forEach(tr => {
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▼';
+  });
+}
+
+function colapsarAnos() {
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = 'none');
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▶';
+  });
+}
+
+function expandirAnos() {
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    if (tr.style.display === 'none') return; // skip if plano está colapsado
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
     document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
@@ -456,7 +513,7 @@ function filtrarOcor() {
   let visible = 0;
 
   document.querySelectorAll('#tbl-ocor tbody tr').forEach(tr => {
-    if (tr.classList.contains('section-plano') || tr.classList.contains('section-sem')) {
+    if (tr.classList.contains('section-plano') || tr.classList.contains('section-ano') || tr.classList.contains('section-sem')) {
       // Handle section headers based on filter
       if (!plano && !sem && !uc) { tr.style.display = ''; return; }
       const trPlano = tr.dataset.plano || '';
