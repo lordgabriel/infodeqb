@@ -359,8 +359,9 @@ function toggleOcPlano(id) {
       <input type="checkbox" class="row-chk" value="<?= $o['id'] ?>" onchange="updateSel()">
     </td>
     <td>
-      <a href="#" onclick="showDist(<?= (int)$o['id'] ?>, <?= htmlspecialchars(json_encode($o['uc_nome']), ENT_QUOTES) ?>, event)"
+      <a href="#" onclick="toggleDistRow(<?= (int)$o['id'] ?>, this);return false;"
          style="font-weight:600;text-decoration:none;color:inherit;border-bottom:1px dotted var(--gray-400)">
+        <span id="exp-icon-<?= (int)$o['id'] ?>" style="font-size:9px;display:inline-block;width:10px">▶</span>
         <?= esc($o['uc_nome']) ?>
       </a>
       <?php if ($o['outros_planos']): ?>
@@ -397,6 +398,14 @@ function toggleOcPlano(id) {
                 data-confirm="Remover esta ocorrência e todas as distribuições associadas?"><i class="fas fa-trash"></i></button>
       </form>
     </td>
+  </tr>
+  <tr id="exp-<?= (int)$o['id'] ?>" class="<?= $plKey ?> <?= $anoKey ?> <?= $semKey ?>"
+      data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      data-sem="<?= esc(mb_strtolower($sem, 'UTF-8')) ?>"
+      data-uc="<?= esc(mb_strtolower($o['uc_nome'], 'UTF-8')) ?>"
+      style="display:none;background:var(--gray-50)">
+    <td></td>
+    <td colspan="12" id="exp-body-<?= (int)$o['id'] ?>" style="padding:10px 14px 14px 24px"></td>
   </tr>
   <?php endforeach; // ocs ?>
   <?php endforeach; // sems ?>
@@ -454,7 +463,7 @@ function expandirTodos() {
   document.querySelectorAll('.section-plano').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
@@ -462,14 +471,14 @@ function expandirTodos() {
   document.querySelectorAll('.section-ano').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
   document.querySelectorAll('.section-sem').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
@@ -490,7 +499,7 @@ function expandirAnos() {
     if (tr.style.display === 'none') return; // skip if plano está colapsado
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
@@ -511,7 +520,7 @@ function expandirSemestres() {
     if (tr.style.display === 'none') return; // skip if plano is collapsed
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
@@ -539,6 +548,11 @@ function filtrarOcor() {
     const matchSem   = !sem   || (tr.dataset.sem || '') === sem;
     const matchUC    = !uc    || (tr.dataset.uc || '').includes(uc);
     const show = matchPlano && matchSem && matchUC;
+    if (tr.id.startsWith('exp-')) {
+      // Linha de expansão: só visível se o filtro deixar passar E o utilizador a tiver aberto
+      tr.style.display = (show && tr.dataset.open === '1') ? '' : 'none';
+      return;
+    }
     tr.style.display = show ? '' : 'none';
     if (show) visible++;
     if (!show) { const c = tr.querySelector('.row-chk'); if (c) c.checked = false; }
@@ -583,49 +597,43 @@ function apagarSelecionados() {
 if ('<?= esc($fp) ?>' || '<?= esc($fs) ?>' || '<?= esc($fu) ?>') filtrarOcor();
 </script>
 
-<!-- Painel lateral de distribuição -->
-<div id="dist-panel" style="display:none;position:fixed;top:0;right:0;width:560px;max-width:95vw;
-     height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);z-index:1000;
-     flex-direction:column;overflow:hidden">
-  <div style="padding:14px 18px;background:var(--rpt-hdr);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-    <div>
-      <div style="font-weight:700;font-size:15px" id="dp-title">Distribuição</div>
-      <div style="font-size:12px;opacity:.8" id="dp-sub"></div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px"><i class="fas fa-edit me-1"></i>Editar Ocorrência</a>
-      <button onclick="closeDist()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 4px">×</button>
-    </div>
-  </div>
-  <div id="dp-body" style="overflow-y:auto;flex:1;padding:16px">
-    <div style="text-align:center;color:var(--gray-400);padding:40px">A carregar…</div>
-  </div>
-</div>
-<div id="dist-overlay" onclick="closeDist()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999"></div>
-
 <script>
-function showDist(ocId, ucNome, evt) {
-  evt.preventDefault();
-  document.getElementById('dp-title').textContent = ucNome;
-  document.getElementById('dp-sub').textContent = 'A carregar distribuição…';
-  document.getElementById('dp-edit-link').href = 'ocorrencia-form.php?id=' + ocId +
-    '&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fs='.urlencode($fs).'&fu='.urlencode($fu)) ?>';
-  document.getElementById('dist-panel').style.display = 'flex';
-  document.getElementById('dist-overlay').style.display = 'block';
+function toggleDistRow(ocId, link) {
+  const tr = document.getElementById('exp-' + ocId);
+  const icon = document.getElementById('exp-icon-' + ocId);
+  if (!tr) return;
+  const opening = tr.style.display === 'none';
+  tr.style.display = opening ? '' : 'none';
+  tr.dataset.open = opening ? '1' : '0';
+  if (icon) icon.textContent = opening ? '▼' : '▶';
+  if (opening && !tr.dataset.loaded) {
+    tr.dataset.loaded = '1';
+    loadDistInline(ocId);
+  }
+}
+
+function fmtN1(v) {
+  return (parseFloat(v) || 0).toFixed(1).replace('.', ',');
+}
+function fmtTipo(t, h) {
+  return (parseFloat(t) || 0) > 0 ? fmtN1(t) + '×' + fmtN1(h) : '–';
+}
+
+function loadDistInline(ocId) {
+  const body = document.getElementById('exp-body-' + ocId);
+  body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:10px">A carregar…</div>';
 
   fetch('ajax-dist.php?ocor_id=' + ocId)
     .then(r => r.json())
     .then(data => {
-      document.getElementById('dp-sub').textContent =
-        data.rows.length + ' linha(s) · Nec: ' + data.need.toFixed(2) + ' h/sem · Atr: ' + data.done.toFixed(2) + ' h/sem';
       if (!data.rows.length) {
-        document.getElementById('dp-body').innerHTML =
-          '<p style="text-align:center;color:var(--gray-400);padding:40px">Sem serviço atribuído.</p>';
+        body.innerHTML = '<p style="color:var(--gray-400);margin:0;padding:6px 0">Sem serviço atribuído.</p>';
         return;
       }
-      let html = '<table class="data-table" style="font-size:12px;width:100%">' +
+      let html = '<table class="data-table" style="font-size:12px;width:100%;margin:0">' +
         '<thead><tr><th>Docente</th><th style="text-align:center">Sem.</th>' +
-        '<th style="text-align:center">T/TP/L/S/OT</th>' +
+        '<th style="text-align:center">T</th><th style="text-align:center">TP</th>' +
+        '<th style="text-align:center">L</th><th style="text-align:center">S</th><th style="text-align:center">OT</th>' +
         '<th style="text-align:right">H/s</th><th style="text-align:right">H SLEf</th>' +
         '<th style="text-align:center">DSD</th><th style="text-align:center">R</th>' +
         '</tr></thead><tbody>';
@@ -635,40 +643,29 @@ function showDist(ocId, ucNome, evt) {
         totSlef += r.h_slef;
         html += `<tr>
           <td><a href="../reports/por-docente.php?docente=${r.docente_id}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gray-400)">${r.docente}</a></td>
-          <td style="text-align:center">${r.semanas}</td>
-          <td style="text-align:center;font-size:11px;font-family:monospace">${r.turmas}</td>
-          <td class="num">${r.hs.toFixed(2)}</td>
-          <td class="num" style="color:var(--blue)">${r.h_slef.toFixed(2)}</td>
+          <td style="text-align:center">${fmtN1(r.semanas)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_T, r.horas_T)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_TP, r.horas_TP)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_L, r.horas_L)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_Sem, r.horas_Sem)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_OT, r.horas_OT)}</td>
+          <td class="num">${fmtN1(r.hs)}</td>
+          <td class="num" style="color:var(--blue)">${fmtN1(r.h_slef)}</td>
           <td style="text-align:center">${r.dsd ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
           <td style="text-align:center">${r.reg ? '<i class="fas fa-star"></i>' : '–'}</td>
         </tr>`;
       });
       html += `<tr style="background:var(--blue-light);font-weight:700">
-        <td colspan="3" style="text-align:right">Total</td>
-        <td class="num">${totHs.toFixed(2)}</td>
-        <td class="num" style="color:var(--blue)">${totSlef.toFixed(2)}</td>
+        <td colspan="7" style="text-align:right">Total</td>
+        <td class="num">${fmtN1(totHs)}</td>
+        <td class="num" style="color:var(--blue)">${fmtN1(totSlef)}</td>
         <td colspan="2"></td>
       </tr></tbody></table>`;
-      html += `<div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="editDistFromPanel(${ocId})" class="btn btn-primary btn-sm"><i class="fas fa-edit me-1"></i>Editar Serviço</button>
-      </div>`;
-      document.getElementById('dp-body').innerHTML = html;
+      body.innerHTML = html;
     })
     .catch(() => {
-      document.getElementById('dp-body').innerHTML =
-        '<p style="color:var(--red);padding:20px">Erro ao carregar distribuição.</p>';
+      body.innerHTML = '<p style="color:var(--red);margin:0;padding:6px 0">Erro ao carregar distribuição.</p>';
     });
-}
-
-function editDistFromPanel(ocId) {
-  closeDist();
-  const backUrl = encodeURIComponent('ocorrencias.php?fp=<?= urlencode($fp) ?>&fs=<?= urlencode($fs) ?>&fu=<?= urlencode($fu) ?>');
-  window.location.href = 'ocorrencia-form.php?id=' + ocId + '&back_url=' + backUrl + '#linhas-servico';
-}
-
-function closeDist() {
-  document.getElementById('dist-panel').style.display = 'none';
-  document.getElementById('dist-overlay').style.display = 'none';
 }
 </script>
 
