@@ -47,6 +47,8 @@ $ocs = $db->prepare("
            COALESCE(o.horas_Sem, 0) AS horas_Sem,
            o.horas_OT,
            u.designacao AS uc_nome, u.codigo, u.semestre, u.ano,
+           u.h_T AS uc_h_T, u.h_TP AS uc_h_TP, u.h_L AS uc_h_L,
+           u.h_Sem AS uc_h_Sem, u.h_OT AS uc_h_OT,
            p.sigla AS plano_sigla
     FROM infodeqb_dsd_uc_ocorrencia o
     JOIN infodeqb_dsd_uc u ON o.uc_id = u.id
@@ -338,10 +340,15 @@ function toggleOcPlano(id) {
     $falta = $necess['total'] - $atribs['total'];
     $corFalta = abs($falta) < 0.01 ? 'var(--green)' : ($falta > 0 ? 'var(--red)' : 'var(--blue)');
     $tipoVals = [];
+    $horasDiferem = [];
     foreach (['T','TP','L','Sem','OT'] as $k) {
-        $nT = (float)$o['n_turmas_'.$k];
-        $hT = (float)$o['horas_'.$k];
+        $nT  = (float)$o['n_turmas_'.$k];
+        $hT  = (float)$o['horas_'.$k];
+        $hUC = (float)($o['uc_h_'.$k] ?? 0);
         $tipoVals[$k] = $nT > 0 ? fmt($nT,1).'×'.fmt($hT,1) : '–';
+        if ($hUC > 0 && abs($hT - $hUC) > 0.001) {
+            $horasDiferem[] = "$k: " . fmt($hT, 2) . "h nesta ocorrência vs " . fmt($hUC, 2) . "h da UC";
+        }
     }
   ?>
   <tr class="<?= $plKey ?> <?= $anoKey ?> <?= $semKey ?>"
@@ -367,7 +374,13 @@ function toggleOcPlano(id) {
     <td class="num" style="font-size:11px"><?= $tipoVals['L'] ?></td>
     <td class="num" style="font-size:11px"><?= $tipoVals['Sem'] ?></td>
     <td class="num" style="font-size:11px"><?= $tipoVals['OT'] ?></td>
-    <td class="num"><strong><?= fmt($necess['total'], 1) ?></strong></td>
+    <td class="num">
+      <?php if ($horasDiferem): ?>
+      <i class="fas fa-exclamation-triangle" style="color:var(--orange);font-size:10px;margin-right:3px"
+         title="Horas de contacto diferentes das definidas na UC:&#10;<?= implode('&#10;', array_map('esc', $horasDiferem)) ?>"></i>
+      <?php endif; ?>
+      <strong><?= fmt($necess['total'], 1) ?></strong>
+    </td>
     <td class="num"><?= fmt($atribs['total'], 1) ?></td>
     <td class="num" style="color:<?= $corFalta ?>;font-weight:600">
       <?= abs($falta) < 0.01 ? '<i class="fas fa-check-circle"></i>' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
@@ -580,7 +593,7 @@ if ('<?= esc($fp) ?>' || '<?= esc($fs) ?>' || '<?= esc($fu) ?>') filtrarOcor();
       <div style="font-size:12px;opacity:.8" id="dp-sub"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px"><i class="fas fa-edit me-1"></i>Editar UC</a>
+      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px"><i class="fas fa-edit me-1"></i>Editar Ocorrência</a>
       <button onclick="closeDist()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 4px">×</button>
     </div>
   </div>
