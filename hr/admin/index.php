@@ -992,9 +992,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
                 echo '<td class="text-nowrap text-center" style="white-space:nowrap">';
                 // Ver detalhe
-                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' . htmlspecialchars($row['codigo']) . '&amp;status=Novo"><i class="far fa-eye fa-xs"></i></a>';
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' . htmlspecialchars($row['codigo']) . '&amp;status=Novo"><i class="far fa-eye fa-sm"></i></a>';
                 // SIGARRA
-                echo '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' . $link . htmlspecialchars($row['codigo']) . '"><i class="fas fa-info fa-xs"></i></a>';
+                echo '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' . $link . htmlspecialchars($row['codigo']) . '"><i class="fas fa-info fa-sm"></i></a>';
                 // Solicitar validações
                 echo '<button type="button" class="btn btn-xs btn-warning me-1" title="Solicitar validações a responsáveis de laboratório"'
                    . ' onclick="adminAcao(\'solicitar_registo\',' . $autoidRow . ')">'
@@ -1084,10 +1084,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-xs"></i></a>'
+                        '"><i class="far fa-eye fa-sm"></i></a>'
                    . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-xs"></i></a>';
+                        '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '<button type="button" class="btn btn-xs btn-success ms-1" title="Ativar registo"'
                    . ' onclick="ativarRegistoPendente(' . (int)$row['autoid'] . ',' . json_encode($row['codigo']) . ')">'
                    . '<i class="fas fa-check fa-xs"></i></button>';
@@ -1168,10 +1168,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-xs"></i></a>'
+                        '"><i class="far fa-eye fa-sm"></i></a>'
                    . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-xs"></i></a></td>';
+                        '"><i class="fas fa-info fa-sm"></i></a></td>';
                 echo '</tr>';
             }
         }
@@ -1269,10 +1269,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-xs"></i></a>'
+                        '"><i class="far fa-eye fa-sm"></i></a>'
                    . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-xs"></i></a>';
+                        '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '</td>';
                 echo '</tr>';
             }
@@ -1358,10 +1358,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-xs"></i></a>'
+                        '"><i class="far fa-eye fa-sm"></i></a>'
                    . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-xs"></i></a>';
+                        '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '</td>';
                 echo '</tr>';
             }
@@ -1488,7 +1488,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             <?= json_encode($ped["dados_json"]) ?>,
             <?= json_encode($ped["dados_anteriores"] ?? "null") ?>,
             <?= json_encode($ped["campos_alterados"] ?? "null") ?>)'>
-          <i class="fas fa-eye fa-xs"></i> Ver
+          <i class="fas fa-eye fa-sm"></i> Ver
         </button>
         <?php if ($precisaVal && $nVal === 0): ?>
           <!-- Ainda não foram solicitadas validações -->
@@ -1640,7 +1640,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             <?= json_encode($ped["dados_json"]) ?>,
             <?= json_encode($ped["dados_anteriores"] ?? "null") ?>,
             "null")'>
-          <i class="fas fa-eye fa-xs"></i>
+          <i class="fas fa-eye fa-sm"></i>
         </button>
       <?php endif; ?>
     </td>

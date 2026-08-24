@@ -275,7 +275,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td class="text-center text-nowrap align-middle">
             <a href="edit.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
                title="Editar" class="btn btn-xs btn-outline-info me-1">
-              <i class="fas fa-edit fa-xs"></i>
+              <i class="fas fa-edit fa-sm"></i>
             </a>
             <button type="button" class="btn btn-xs btn-outline-danger"
                     data-bs-toggle="modal" data-bs-target="#modalDel<?= (int)$row['autoid'] ?>"
