@@ -396,7 +396,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <small class="text-muted ms-1">(cada pessoa = 1 ETI distribuído proporcionalmente pelo %)</small>
   </div>
   <div class="card-body p-0" style="overflow-x:auto">
-    <table class="table table-sm mb-0 iq-heatmap" style="font-size:.8rem">
+    <table class="table table-sm mb-0 iq-heatmap iq-no-stripe" style="font-size:.8rem">
       <thead class="">
         <tr>
           <th style="min-width:160px">Subárea</th>
