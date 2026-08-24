@@ -95,7 +95,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card-header card-header-transparent"><strong>Resumo por gás (no período)</strong></div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
+      <table class="table table-hover table-striped align-middle mb-0">
         <thead class="table-light">
           <tr>
             <th>Gás</th><th>Leituras</th><th>Pressão média</th>

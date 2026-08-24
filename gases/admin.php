@@ -35,7 +35,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
+      <table class="table table-hover table-striped align-middle mb-0">
         <thead class="table-light">
           <tr><th>ID</th><th>Gás</th><th>Símbolo</th><th>Pressão máx.</th><th>Unidade</th></tr>
         </thead>
@@ -63,7 +63,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 table-sm">
+      <table class="table table-hover table-striped align-middle mb-0 table-sm">
         <thead class="table-light">
           <tr>
             <th>Data/Hora</th><th>Gás</th><th>Pressão</th>

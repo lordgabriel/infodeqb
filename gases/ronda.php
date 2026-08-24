@@ -63,7 +63,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card shadow-sm" style="border-radius:var(--iq-r2);">
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-hover table-striped mb-0 align-middle">
           <thead class="table-light">
             <tr>
               <th style="width:2.5rem;"></th>
