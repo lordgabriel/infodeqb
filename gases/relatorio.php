@@ -100,10 +100,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <tr>
             <th>Gás</th><th>Leituras</th><th>Pressão média</th>
             <th>Mín.</th><th>Máx.</th><th>Última leitura</th><th>Trocas</th>
+            <th title="Média de dias entre trocas de garrafa (requer ≥ 2 trocas no período)">Dias/garrafa</th>
           </tr>
         </thead>
         <tbody id="resumo-tbody">
-          <tr><td colspan="7" class="text-center py-4 text-muted">
+          <tr><td colspan="8" class="text-center py-4 text-muted">
             <span class="spinner-border spinner-border-sm me-2"></span>A carregar…
           </td></tr>
         </tbody>
@@ -238,7 +239,7 @@ $(function () {
 
   // ── Carregar dados ─────────────────────────────────────────────
   function loadData(de, ate) {
-    $('#resumo-tbody').html('<tr><td colspan="7" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>A carregar…</td></tr>');
+    $('#resumo-tbody').html('<tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>A carregar…</td></tr>');
     $.getJSON(BASE + '/ajax.php', { acao:'chart_data', de:de, ate:ate }, function(data) {
       if (!data.ok) return;
       rawRows = data.rows;
@@ -297,7 +298,7 @@ $(function () {
       var rows = rawRows.filter(function(r){ return r.gas_id===gid; });
       if (!rows.length) {
         html += '<tr><td><span class="badge bg-'+g.cor_bs+'" style="font-family:monospace;">'+esc(g.symbol)+'</span> '+esc(g.name)+'</td>';
-        html += '<td colspan="6" class="text-muted">Sem dados no período</td></tr>';
+        html += '<td colspan="7" class="text-muted">Sem dados no período</td></tr>';
         return;
       }
       var ps = rows.map(function(r){ return parseFloat(r.pressure); });
@@ -305,6 +306,21 @@ $(function () {
       var trocas = rows.filter(function(r){ return r.is_new_bottle; }).length;
       var ultima = rows[rows.length-1];
       var d = new Date(ultima.timestamp);
+
+      // Duração média: timestamps das trocas ordenados → intervalos entre trocas consecutivas
+      var changeTimes = rows
+        .filter(function(r){ return r.is_new_bottle; })
+        .map(function(r){ return new Date(r.timestamp).getTime(); })
+        .sort(function(a,b){ return a-b; });
+      var diasGarrafaHtml;
+      if (changeTimes.length >= 2) {
+        var totalMs = changeTimes[changeTimes.length-1] - changeTimes[0];
+        var avgDias = totalMs / (changeTimes.length - 1) / 86400000;
+        diasGarrafaHtml = '<strong>'+avgDias.toFixed(1)+'</strong> <span class="text-muted" style="font-size:.8rem;">dias</span>';
+      } else {
+        diasGarrafaHtml = '<span class="text-muted">—</span>';
+      }
+
       html += '<tr>';
       html += '<td><span class="badge bg-'+g.cor_bs+'" style="font-family:monospace;">'+esc(g.symbol)+'</span> '+esc(g.name)+'</td>';
       html += '<td>'+rows.length+'</td>';
@@ -313,9 +329,10 @@ $(function () {
       html += '<td>'+Math.max.apply(null,ps).toFixed(1)+' '+g.unit+'</td>';
       html += '<td style="font-size:.85rem;">'+d.toLocaleDateString('pt-PT')+' '+d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})+'</td>';
       html += '<td>'+(trocas?'<span class="badge bg-success">'+trocas+'</span>':'0')+'</td>';
+      html += '<td>'+diasGarrafaHtml+'</td>';
       html += '</tr>';
     });
-    if (!html) html = '<tr><td colspan="7" class="text-center py-4 text-muted">Sem dados no período seleccionado.</td></tr>';
+    if (!html) html = '<tr><td colspan="8" class="text-center py-4 text-muted">Sem dados no período seleccionado.</td></tr>';
     $('#resumo-tbody').html(html);
   }
 

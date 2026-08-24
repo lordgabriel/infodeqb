@@ -53,6 +53,7 @@ $sBadge = array(
 $sBadge = isset($sBadge[$reg['status']]) ? $sBadge[$reg['status']] : 'badge-secondary';
 
 $pageTitle = 'Detalhe do registo';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

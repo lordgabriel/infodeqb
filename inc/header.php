@@ -154,7 +154,7 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
         <li><a href="<?php echo $_base; ?>/water/index.php"><?php echo t('NAV_WATER_ADMIN'); ?></a></li>
         <?php endif; ?>
         <?php if ($_iqNavGasesAdmin): ?>
-        <li><a href="<?php echo $_base; ?>/gases/">Gases Especiais</a></li>
+        <li><a href="<?php echo $_base; ?>/gases/"><?php echo t('NAV_GASES'); ?></a></li>
         <?php endif; ?>
         <?php endif; ?>
       </ul>
@@ -215,5 +215,5 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 <!-- ══════════════════════════════════════════
      CONTEÚDO PRINCIPAL
      ══════════════════════════════════════════ -->
-<main class="iq-main">
+<main class="iq-main<?= isset($mainClass) ? ' ' . htmlspecialchars($mainClass) : '' ?>">
 

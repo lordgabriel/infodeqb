@@ -635,6 +635,7 @@ function hrAdminInitials($nome) {
 }
 
 $pageTitle = 'Administração — Colaboradores';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
@@ -974,7 +975,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $nomeShow = !empty($row['nome'])
                     ? htmlspecialchars($row['nome'])
                     : '<em class="text-muted">' . htmlspecialchars($row['email']) . '</em>';
-                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $nomeShow . $valBadge . $semPedidoBadge . '</td>';
+                echo '<td>' . $nomeShow . $valBadge . $semPedidoBadge . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';
@@ -1074,7 +1075,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
+                echo '<td>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datacica'] . '</td>';
@@ -1156,7 +1157,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
+                echo '<td>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datafim'] . '</td>';
@@ -1257,7 +1258,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . ($isPend ? ' <span title="Alteração não comunicada ao SIGARRA" style="color:#d08000;font-size:.75rem;">⏳</span>' : '') . '</td>';
+                echo '<td>' . $row['nome'] . ($isPend ? ' <span title="Alteração não comunicada ao SIGARRA" style="color:#d08000;font-size:.75rem;">⏳</span>' : '') . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';
@@ -1345,7 +1346,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '<input type="hidden"  name="codigo[' .
                         $row['autoid'] . ']" value="' . $row['codigo'] .
                         '" ></td>';
-                echo '<td><span class="iq-avatar-sm">' . hrAdminInitials($row['nome']) . '</span>' . $row['nome'] . '</td>';
+                echo '<td>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';

@@ -173,6 +173,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .ticket-card.tk-pending { border-left-color: var(--iq-amber); }
 .ticket-card.tk-done    { border-left-color: #0e9f6e; }
 .ticket-head { display: flex; align-items: center; gap: .75rem; cursor: pointer; background: var(--iq-gray-50); }
+.ticket-chevron { transform: rotate(-90deg); transition: transform .2s; }
+/* Ticket table: nowrap em todas as colunas fixas; UC (3ª col) pode envolver */
+.ticket-body table td,
+.ticket-body table th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-body table td:nth-child(3),
+.ticket-body table th:nth-child(3) { white-space: normal; overflow: visible; text-overflow: clip; }
 .ticket-main { flex: 1; min-width: 0; overflow: hidden; }
 .ticket-docente { font-weight: 650; font-size: .87rem; color: var(--iq-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ticket-meta { font-size: .73rem; color: var(--iq-muted); display: flex; gap: .4rem; align-items: center; margin-top: 1px; }
@@ -386,8 +392,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         </button>
       </div>
       <div class="ml-auto d-flex align-items-end" style="gap:6px">
-        <button type="button" id="btnToggleAll" class="btn btn-outline-secondary btn-sm" data-state="expanded">
-          <i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo
+        <button type="button" id="btnToggleAll" class="btn btn-outline-secondary btn-sm" data-state="collapsed">
+          <i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo
         </button>
         <span class="text-muted small ms-2" id="countVisible"></span>
       </div>
@@ -439,15 +445,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </button>
     </form>
   </div>
-  <div class="collapse show ticket-body" id="<?= $bodyId ?>">
+  <div class="collapse ticket-body" id="<?= $bodyId ?>">
     <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
       <thead class="">
         <tr>
-          <th>Curso</th><th style="width:7em">Ano Letivo</th>
-          <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
-          <th style="width:5em" class="text-center">Caixa</th>
-          <th style="width:5em" class="text-center">Armário</th>
-          <th style="width:5em" class="text-center">Ações</th>
+          <th>Curso</th><th>Ano Letivo</th>
+          <th style="width:99%">Unidade Curricular</th><th>Tipologia</th>
+          <th>Caixa</th>
+          <th>Armário</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -457,9 +463,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td><?= htmlspecialchars($row['ano_letivo']) ?></td>
           <td><?= htmlspecialchars($row['unidade_curricular']) ?></td>
           <td><?= htmlspecialchars($row['tipologia']) ?></td>
-          <td class="text-center"><?= htmlspecialchars($row['num_caixa'] ?? '') ?></td>
-          <td class="text-center"><?= htmlspecialchars($row['num_armario'] ?? '') ?></td>
-          <td class="text-center text-nowrap">
+          <td><?= htmlspecialchars($row['num_caixa'] ?? '') ?></td>
+          <td><?= htmlspecialchars($row['num_armario'] ?? '') ?></td>
+          <td class="text-nowrap">
             <a href="#" class="btn-edit-admin text-info me-1"
                data-bs-toggle="modal" data-bs-target="#modalEditAdmin"
                data-id="<?= (int)$row['autoid'] ?>"

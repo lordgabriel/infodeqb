@@ -488,6 +488,7 @@ if ($podeAlterar && $isAtivo) {
 }
 
 $pageTitle = 'O meu registo';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

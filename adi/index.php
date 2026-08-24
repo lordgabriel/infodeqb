@@ -137,7 +137,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-sm mb-0" id="adiTable">
+      <table class="table table-sm mb-0 iq-no-stripe" id="adiTable">
         <thead>
           <tr>
             <th rowspan="2">Nome</th>

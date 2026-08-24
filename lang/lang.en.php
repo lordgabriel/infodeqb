@@ -91,6 +91,7 @@ $lang['NAV_REAGENTS']       = 'Reagents';
 $lang['NAV_BOOKING']        = 'Resource booking';
 $lang['NAV_WATER_QUALITY']  = 'Water quality';
 $lang['NAV_WATER_ADMIN']    = 'Ultrapure water';
+$lang['NAV_GASES']          = 'Special gases';
 $lang['NAV_TEACHING']       = 'Teaching';
 $lang['NAV_EXAMS']          = 'Exam archive';
 $lang['NAV_MOBILITY']       = 'Mobility EQ';

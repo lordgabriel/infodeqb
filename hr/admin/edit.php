@@ -365,6 +365,7 @@ foreach ($gabRows as $rowgab) {
 if ($gabCurPiso !== '') $gab .= '</div>';
 
 $pageTitle = 'Editar Colaborador';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

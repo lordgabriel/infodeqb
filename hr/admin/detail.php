@@ -82,6 +82,7 @@ unset($_SESSION['val_info']);
 Database::disconnect();
 
 $pageTitle = 'Detalhe do Colaborador';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

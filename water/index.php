@@ -151,6 +151,7 @@ foreach ($resps as $r) {
 Database::disconnect();
 
 $pageTitle = 'Consumos de Água Ultrapura';
+$mainClass = 'iq-water-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 
 // formata número com 2 casas decimais e separador de milhares
@@ -302,7 +303,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
   </form>
 
   <div class="card-body p-0">
-    <table class="table table-sm table-hover mb-0" id="tblConsumos">
+    <table class="table table-hover mb-0" id="tblConsumos">
       <thead class="">
         <tr>
           <th style="width:8em">Data</th>

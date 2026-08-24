@@ -36,6 +36,7 @@ foreach ($rows as $r) {
 }
 
 $pageTitle = 'Lista de Pessoal';
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -164,14 +165,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         $link = (strlen($row['codigo']) > 6)
             ? 'https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico='
             : 'https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=';
-        // Iniciais para avatar
-        $parts    = preg_split('/\s+/', trim($row['nome']));
-        $initials = mb_strtoupper(mb_substr($parts[0], 0, 1) . (count($parts) > 1 ? mb_substr(end($parts), 0, 1) : ''));
       ?>
         <tr>
           <td><?= htmlspecialchars($row['codigo']) ?></td>
           <td class="align-middle">
-            <span class="iq-avatar-sm"><?= htmlspecialchars($initials) ?></span>
             <?= htmlspecialchars($row['nome']) ?>
             <a href="<?= $link . htmlspecialchars($row['codigo']) ?>"
                target="_blank" title="Ver no SIGARRA" class="ml-1 text-muted">
