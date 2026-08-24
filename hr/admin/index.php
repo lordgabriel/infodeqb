@@ -1082,11 +1082,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['status'] . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-xs"></i></a>'
+                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-sm"></i> </a>';
+                        '"><i class="fas fa-info fa-xs"></i></a>';
                 echo '<button type="button" class="btn btn-xs btn-success ms-1" title="Ativar registo"'
                    . ' onclick="ativarRegistoPendente(' . (int)$row['autoid'] . ',' . json_encode($row['codigo']) . ')">'
                    . '<i class="fas fa-check fa-xs"></i></button>';
@@ -1165,12 +1166,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['status'] . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a>
-														<a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-xs"></i></a>'
+                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-sm"></i> </a></td>';
+                        '"><i class="fas fa-info fa-xs"></i></a></td>';
                 echo '</tr>';
             }
         }
@@ -1266,12 +1267,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . formatDate('Y-m-d', $row['dataativo']) . '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm"></i></a>'
-                   . '<a class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-xs"></i></a>'
+                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-sm"></i></a>';
+                        '"><i class="fas fa-info fa-xs"></i></a>';
                 echo '</td>';
                 echo '</tr>';
             }
@@ -1355,12 +1356,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                         '</td>';
                 echo '<td class="text-center">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
-                echo '<a  class="mr-1 ms-1" style="color:#17A2B8" title="Ver registo" href="detail.php?id=' .
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm" ></i></a><a  class="mr-1 ms-1" style="color:#17A2B8" title="SIGARRA" target="_blank" href="' .
+                        '"><i class="far fa-eye fa-xs"></i></a>'
+                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
-                        '"><i class="fas fa-info fa-sm"></i> </a>';
-                echo ' ';
+                        '"><i class="fas fa-info fa-xs"></i></a>';
                 echo '</td>';
                 echo '</tr>';
             }

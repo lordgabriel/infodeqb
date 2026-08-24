@@ -90,6 +90,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <h1 class="mr-auto mb-0">
     <i class="fas fa-user fa-sm me-2 text-muted"></i><?= htmlspecialchars($colab['nome']) ?>
   </h1>
+  <?php
+  $sigarraLink = (strlen($id) > 6)
+    ? 'https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=' . urlencode($id)
+    : 'https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=' . urlencode($id);
+  ?>
+  <a href="<?= $sigarraLink ?>" target="_blank"
+     class="btn btn-sm btn-outline-secondary" title="Ver no SIGARRA">
+    <i class="fas fa-info fa-sm"></i>
+  </a>
   <a href="index.php" class="btn btn-sm btn-outline-secondary">
     <i class="fas fa-arrow-left me-1"></i> Voltar
   </a>
@@ -101,7 +110,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <i class="fas fa-id-card me-2 text-muted"></i>
     <strong class="mr-auto">Dados Pessoais</strong>
     <a href="edituser.php?id=<?= htmlspecialchars($id) ?>"
-       class="btn btn-sm btn-outline-secondary me-2" title="Editar dados pessoais">
+       class="btn btn-sm btn-outline-info me-2" title="Editar dados pessoais">
       <i class="fas fa-edit me-1"></i> Editar
     </a>
     <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
@@ -265,8 +274,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td class="align-middle"><?= htmlspecialchars($row['datafim']) ?></td>
           <td class="text-center text-nowrap align-middle">
             <a href="edit.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
-               title="Editar" class="btn btn-xs btn-outline-secondary">
-              <i class="fas fa-edit"></i>
+               title="Editar" class="btn btn-xs btn-outline-info me-1">
+              <i class="fas fa-edit fa-xs"></i>
             </a>
             <button type="button" class="btn btn-xs btn-outline-danger"
                     data-bs-toggle="modal" data-bs-target="#modalDel<?= (int)$row['autoid'] ?>"
