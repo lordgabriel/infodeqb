@@ -363,12 +363,13 @@ table.dataTable td { font-size: .83rem !important; color: var(--iq-text) !import
   padding: .55rem .75rem;
 }
 .table tr:last-child td { border-bottom: none; }
-.table-hover tbody tr:hover { background: var(--iq-gray-100) !important; }
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th { background: var(--iq-gray-200) !important; }
 /* Striped global — aplica a todas as tabelas excepto bordered, borderless e iq-no-stripe */
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > td,
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > th,
 .table-striped > tbody > tr:nth-child(odd) > td,
-.table-striped > tbody > tr:nth-child(odd) > th { background-color: var(--iq-gray-50) !important; }
+.table-striped > tbody > tr:nth-child(odd) > th { background-color: var(--iq-gray-100) !important; }
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > td,
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > th,
 .table-striped > tbody > tr:nth-child(even) > td,
