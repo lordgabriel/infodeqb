@@ -363,20 +363,30 @@ table.dataTable td { font-size: .83rem !important; color: var(--iq-text) !import
   padding: .55rem .75rem;
 }
 .table tr:last-child td { border-bottom: none; }
+/* Hover — ataca td directamente para sobrepor o box-shadow Bootstrap */
 .table-hover tbody tr:hover td,
-.table-hover tbody tr:hover th { background: var(--iq-gray-200) !important; }
-/* Striped global — aplica a todas as tabelas excepto bordered, borderless e iq-no-stripe */
+.table-hover tbody tr:hover th {
+  background-color: var(--iq-gray-200) !important;
+  --bs-table-bg-state: var(--iq-gray-200);
+}
+/* Striped global — ataca background-color E CSS variable do Bootstrap/DataTables
+   (box-shadow: inset 0 0 0 9999px var(--bs-table-bg-type) sobrepõe background-color) */
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd),
+.table-striped > tbody > tr:nth-child(odd) { --bs-table-bg-type: var(--iq-gray-100); }
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > td,
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > th,
 .table-striped > tbody > tr:nth-child(odd) > td,
 .table-striped > tbody > tr:nth-child(odd) > th { background-color: var(--iq-gray-100) !important; }
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even),
+.table-striped > tbody > tr:nth-child(even) { --bs-table-bg-type: var(--iq-surface); }
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > td,
 .table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > th,
 .table-striped > tbody > tr:nth-child(even) > td,
 .table-striped > tbody > tr:nth-child(even) > th { background-color: var(--iq-surface) !important; }
 /* Linhas de grupo/totais preservam o seu fundo próprio */
+.table > tbody > tr.group,
 .table > tbody > tr.group > td,
-.table > tbody > tr.group > th { background: var(--iq-gray-100) !important; }
+.table > tbody > tr.group > th { background: var(--iq-gray-100) !important; --bs-table-bg-type: var(--iq-gray-100); }
 
 /* Linhas de grupo/totais */
 tr.group, tr.group:hover {
