@@ -76,10 +76,17 @@ if (! empty($_POST)) {
 
         $pdo = Database::connect();
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $autoids   = array_map('intval', array_keys($_POST['selector']));
-        $nEnviados = 0; $nIgnorados = 0;
+        $autoids       = array_map('intval', array_keys($_POST['selector']));
+        $nEnviados     = 0; $nIgnorados = 0;
+        $resultSent    = array();
+        $resultSkipped = array();
 
         foreach ($autoids as $autoid) {
+
+            // Fetch name upfront so we can report it even on early-exit skips
+            $qN = $pdo->prepare("SELECT c.nome FROM infodeqb_rds_registo r JOIN infodeqb_rds_colaborador c ON c.codigo=r.codigo WHERE r.autoid=?");
+            $qN->execute([$autoid]);
+            $nomeColab = $qN->fetchColumn() ?: '#' . $autoid;
 
             if ($_POST['action'] === 'solicitar_validacoes_massa') {
                 $qReg = $pdo->prepare(
@@ -92,20 +99,39 @@ if (! empty($_POST)) {
                 );
                 $qReg->execute([$autoid]);
                 $reg = $qReg->fetch(PDO::FETCH_ASSOC);
-                if (!$reg) { $nIgnorados++; continue; }
+                if (!$reg) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'registo não encontrado ou estado ≠ Novo');
+                    continue;
+                }
 
                 $deqids = getRegistoAcessos($pdo, (int)$autoid);
-                if (empty($deqids)) { $nIgnorados++; continue; }
+                if (empty($deqids)) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'sem espaços de acesso configurados');
+                    continue;
+                }
 
                 // Não voltar a solicitar se já está tudo validado e não há acessos
                 // sem pedido (mesma condição usada para mostrar o botão em detail.php)
-                if (_registoTotalmenteValidado($pdo, $autoid)) { $nIgnorados++; continue; }
+                if (_registoTotalmenteValidado($pdo, $autoid)) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'já totalmente validado');
+                    continue;
+                }
 
-                $nEnviados += _criarValidacoes(
+                $nCriados = _criarValidacoes(
                     $pdo, null, $autoid, $deqids,
                     $reg['colab_nome'], $reg['datainicio'], $reg['datafim'],
                     $reg['colab_codigo'], $reg['resp_trabalho'] ?? ''
                 );
+                $nEnviados += $nCriados;
+                if ($nCriados > 0) {
+                    $resultSent[] = $nomeColab;
+                } else {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'validações já solicitadas anteriormente');
+                }
 
             } else { // pedir_acessos_massa
                 // Só avança se todas as validações estiverem concluídas (ou não houver nenhuma)
@@ -118,7 +144,11 @@ if (! empty($_POST)) {
                 );
                 $qChk->execute([$autoid]);
                 $chk = $qChk->fetch(PDO::FETCH_ASSOC);
-                if ((int)$chk['pendentes'] > 0) { $nIgnorados++; continue; }
+                if ((int)$chk['pendentes'] > 0) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'tem validações pendentes');
+                    continue;
+                }
 
                 // Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
                 $qSemVal = $pdo->prepare(
@@ -133,7 +163,11 @@ if (! empty($_POST)) {
                        )"
                 );
                 $qSemVal->execute([$autoid]);
-                if ((int)$qSemVal->fetchColumn() > 0) { $nIgnorados++; continue; }
+                if ((int)$qSemVal->fetchColumn() > 0) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'tem laboratórios sem validação solicitada');
+                    continue;
+                }
 
                 $qReg = $pdo->prepare(
                     "SELECT r.*, c.nome, c.email,
@@ -144,7 +178,11 @@ if (! empty($_POST)) {
                 );
                 $qReg->execute([$autoid]);
                 $reg = $qReg->fetch(PDO::FETCH_ASSOC);
-                if (!$reg) { $nIgnorados++; continue; }
+                if (!$reg) {
+                    $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'registo não encontrado ou estado ≠ Novo');
+                    continue;
+                }
 
                 $qGabs   = $pdo->query("SELECT gabid, deqid FROM infodeqb_rds_gabinetes");
                 $colVals = array_column($qGabs->fetchAll(PDO::FETCH_ASSOC), 'gabid', 'deqid');
@@ -172,19 +210,24 @@ if (! empty($_POST)) {
                     $pdo->prepare("UPDATE infodeqb_rds_registo SET status='Pendente', datacica=NOW() WHERE autoid=?")
                         ->execute([$autoid]);
                     $nEnviados++;
+                    $resultSent[] = $nomeColab;
                 } catch (Exception $e) {
                     error_log('HR pedir_acessos_massa falhou autoid=' . $autoid . ': ' . $e->getMessage());
                     $nIgnorados++;
+                    $resultSkipped[] = array('nome' => $nomeColab, 'motivo' => 'erro ao enviar email');
                 }
             }
         }
 
         if ($_POST['action'] === 'solicitar_validacoes_massa') {
             $_SESSION['val_info'] = 'Pedidos de validação enviados: ' . $nEnviados . ' email(s).'
-                . ($nIgnorados ? ' ' . $nIgnorados . ' registo(s) sem espaços/responsáveis ignorados.' : '');
+                . ($nIgnorados ? ' ' . $nIgnorados . ' registo(s) ignorados.' : '');
         } else {
             $_SESSION['val_info'] = 'Pedidos enviados ao SIGARRA: ' . $nEnviados . '.'
-                . ($nIgnorados ? ' ' . $nIgnorados . ' registo(s) com validações pendentes ignorados.' : '');
+                . ($nIgnorados ? ' ' . $nIgnorados . ' registo(s) ignorados.' : '');
+        }
+        if (!empty($resultSent) || !empty($resultSkipped)) {
+            $_SESSION['val_result'] = array('sent' => $resultSent, 'skipped' => $resultSkipped);
         }
         header('Location: index.php'); exit;
     }
@@ -680,12 +723,36 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 					</div>
 					<div class="card-body">
 						<!-- page content -->
-						<?php if (!empty($_SESSION['val_info'])): ?>
-				<div class="alert alert-info alert-dismissible fade show mb-3 text-start" role="alert">
-				  <i class="fas fa-info-circle me-1"></i><?= htmlspecialchars($_SESSION['val_info']) ?>
+						<?php
+						$_vr = isset($_SESSION['val_result']) ? $_SESSION['val_result'] : null;
+						if (!empty($_SESSION['val_info'])):
+						  $_vHasSkip = $_vr && !empty($_vr['skipped']);
+						  $_vAlertClass = $_vHasSkip ? 'alert-warning' : 'alert-info';
+						  $_vIcon       = $_vHasSkip ? 'fa-exclamation-triangle' : 'fa-info-circle';
+						?>
+				<div class="alert <?= $_vAlertClass ?> alert-dismissible fade show mb-3 text-start" role="alert">
+				  <i class="fas <?= $_vIcon ?> me-1"></i><?= htmlspecialchars($_SESSION['val_info']) ?>
+				  <?php if ($_vr): ?>
+				  <a class="ms-2" style="font-size:.84em;cursor:pointer" data-bs-toggle="collapse" data-bs-target="#batchResultDetail">ver detalhes</a>
+				  <div class="collapse mt-2" id="batchResultDetail">
+				    <?php if (!empty($_vr['sent'])): ?>
+				    <div class="mb-1" style="font-size:.88em"><strong style="color:#155724">Processados:</strong> <?= htmlspecialchars(implode(', ', $_vr['sent'])) ?></div>
+				    <?php endif; ?>
+				    <?php if (!empty($_vr['skipped'])): ?>
+				    <table class="table table-sm table-bordered mb-0 mt-1 bg-white" style="font-size:.85em">
+				      <thead class="table-secondary"><tr><th>Nome</th><th>Motivo</th></tr></thead>
+				      <tbody>
+				      <?php foreach ($_vr['skipped'] as $_sk): ?>
+				        <tr><td><?= htmlspecialchars($_sk['nome']) ?></td><td><?= htmlspecialchars($_sk['motivo']) ?></td></tr>
+				      <?php endforeach; ?>
+				      </tbody>
+				    </table>
+				    <?php endif; ?>
+				  </div>
+				  <?php endif; ?>
 				  <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 				</div>
-				<?php unset($_SESSION['val_info']); endif; ?>
+				<?php unset($_SESSION['val_info']); unset($_SESSION['val_result']); endif; ?>
 				<?php if (!empty($_SESSION['pedido_err'])): ?>
 				<div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
 				  <i class="fas fa-exclamation-triangle me-1"></i><?= htmlspecialchars($_SESSION['pedido_err']) ?>
@@ -858,7 +925,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
       <?php endif; ?>
     </a>
   </li>
-  <li class="nav-item ms-auto d-flex align-items-center pe-1">
+  <li class="nav-item ms-auto d-flex align-items-center gap-2 pe-1">
+    <a class="btn btn-sm btn-outline-secondary" href="espacos.php">
+      <i class="fas fa-door-open fa-xs me-1"></i>Gerir espaços e responsáveis
+    </a>
     <a class="btn btn-sm btn-success" href="../index.php?admin=1">
       <i class="fas fa-plus fa-xs me-1"></i>Novo Registo (Admin)
     </a>
@@ -1232,6 +1302,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 															</form>
 														</td>
 													</tr>
+													<tr>
 													<th class="text-start"><input type="checkbox" name="selector[]" value=""></th>
 													<th>Código</th>
 													<th>Nome</th>
@@ -1267,7 +1338,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
                 echo '<td>' . $row['datainicio'] . '</td>';
                 echo '<td>' . $row['datafim'] . '</td>';
-                echo '<td>' . formatDate('Y-m-d', $row['dataativo']) . '</td>';
+                $datOrder = ($row['dataativo'] && substr($row['dataativo'], 0, 10) !== '0000-00-00') ? $row['dataativo'] : '0000-00-00 00:00:00';
+                echo '<td data-order="' . $datOrder . '">' . formatDate('Y-m-d', $row['dataativo']) . '</td>';
                 echo '<td class="text-center text-nowrap">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .

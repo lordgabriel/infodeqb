@@ -599,22 +599,24 @@ $tipoLabelsU = array(
         $rAtivo = $reg['status'] === 'Ativo';
         $rBadges = array('Ativo'=>'badge-success','Pendente'=>'badge-warning','Novo'=>'badge-info','Inativo'=>'badge-secondary');
         $rBadge  = isset($rBadges[$reg['status']]) ? $rBadges[$reg['status']] : 'badge-secondary';
-        // Acessos resumo
+        // Acessos — porta norte + nomes dos labs
         $acessoRes = array();
-        if ($reg['acessodeq']) $acessoRes[] = 'DEQ';
-        $nLabs = count(getRegistoAcessos($pdo, (int)$reg['autoid']));
-        if ($nLabs) $acessoRes[] = $nLabs . ' lab' . ($nLabs > 1 ? 's' : '');
+        if ($reg['acessodeq']) $acessoRes[] = 'Porta Norte';
+        $labDeqids = getRegistoAcessos($pdo, (int)$reg['autoid']);
+        foreach ($labDeqids as $did) {
+            if (isset($gabNomesAll[$did])) $acessoRes[] = $gabNomesAll[$did];
+        }
       ?>
       <tr class="<?= $rAtivo ? 'table-success' : '' ?>">
         <td class="align-middle">
           <span class="badge <?= $rBadge ?>"><?= htmlspecialchars($reg['status']) ?></span>
         </td>
         <td class="align-middle"><?= htmlspecialchars($reg['grupo_pro']) ?></td>
-        <td class="align-middle"><?= htmlspecialchars($reg['datainicio']) ?></td>
-        <td class="align-middle"><?= htmlspecialchars($reg['datafim']) ?></td>
+        <td class="align-middle text-nowrap"><?= htmlspecialchars(substr($reg['datainicio'], 0, 10)) ?></td>
+        <td class="align-middle text-nowrap"><?= htmlspecialchars(substr($reg['datafim'], 0, 10)) ?></td>
         <td class="align-middle">
           <?php if ($acessoRes): ?>
-            <small class="text-muted"><?= implode(', ', $acessoRes) ?></small>
+            <small class="text-muted"><?= implode('; ', array_map('htmlspecialchars', $acessoRes)) ?></small>
           <?php else: ?>
             <small class="text-muted">—</small>
           <?php endif; ?>

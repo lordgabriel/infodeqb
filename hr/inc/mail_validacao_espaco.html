@@ -1,7 +1,7 @@
 <!-- EMAIL_SUBTITLE: Pedido de Validação de Acesso -->
 {{HEADER}}
               <p style="margin:0 0 8px 0;font-size:14px;font-family:Arial,sans-serif;">
-                Caro(a) {valornome_resp},
+                Caro(a) {valornome_resp_curto},
               </p>
               <p style="margin:0 0 14px 0;font-size:14px;line-height:21px;font-family:Arial,sans-serif;">
                 Foi submetido um pedido de acesso ao espaço sob a sua responsabilidade. Solicitamos a sua <strong>validação</strong> para que o processo possa prosseguir.
@@ -23,7 +23,7 @@
                   </tr>
                   <tr>
                     <td style="padding:5px 10px;font-weight:bold;color:#2475ba;">Período de acesso</td>
-                    <td style="padding:5px 10px;">{valordatainicio} — {valordatafim}</td>
+                    <td style="padding:5px 10px;">{valordatainicio} - {valordatafim}</td>
                   </tr>
                 </tbody>
               </table>
@@ -32,16 +32,27 @@
                 Por favor clique no botão abaixo para <strong>validar ou rejeitar</strong> este pedido. O link é pessoal e tem validade de 30 dias.
               </p>
 
-              <table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                href="{valorlink}"
+                style="height:40px;v-text-anchor:middle;width:220px;margin-bottom:14px;"
+                arcsize="50%" stroke="f" fillcolor="#2475ba">
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">Responder ao pedido</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 14px 0;">
                 <tr>
-                  <td align="center" style="border-radius:4px;background:#2475ba;">
+                  <td align="center" style="border-radius:20px;background:#2475ba;">
                     <a href="{valorlink}" target="_blank"
-                       style="display:inline-block;padding:9px 22px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:4px;">
+                       style="display:inline-block;padding:10px 26px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:20px;">
                       Responder ao pedido
                     </a>
                   </td>
                 </tr>
               </table>
+              <!--<![endif]-->
 
               <p style="margin:0 0 6px 0;font-size:11px;line-height:17px;font-family:Arial,sans-serif;color:#999;">
                 Se o botão não funcionar, copie e cole este endereço no seu browser:<br>

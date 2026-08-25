@@ -467,7 +467,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="col-md-4 form-group">
         <label><?= $lang['EXTENSION'] ?></label>
-        <input type="text" name="extension" class="form-control" id="extension" <?= $lockEdit ? 'disabled' : '' ?>
+        <input type="text" name="extension" class="form-control" id="extension" autocomplete="off" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fExtensao) ?>">
       </div>
     </div>

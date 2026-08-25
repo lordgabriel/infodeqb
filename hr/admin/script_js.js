@@ -94,11 +94,11 @@ $(document).ready(function () {
                 last: 'Último'
             },
             aria: {
-                sortAscending: ': activer pour trier la colonne par ordre croissant',
-                sortDescending: ': activer pour trier la colonne par ordre décroissant'
+                sortAscending: ': activer pour trier la colonne par ordem croissant',
+                sortDescending: ': activer pour trier la colonne par ordem decrescente'
             }
         },
-        order: [[2, 'asc']],
+        order: [[7, 'desc']],
         columnDefs: [
             {
                 targets: [6],

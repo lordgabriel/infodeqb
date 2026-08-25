@@ -265,8 +265,8 @@ if (! empty($_POST)) {
                 'Your registration was successfully submitted. You can check the registered data below.'
             ),
             'msg_safety'             => $_e(
-                'Por favor <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf" style="color:#cce8ff;font-weight:bold;">descarregue aqui</a> e leia cuidadosamente o desdobrável de segurança.',
-                'Please <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf" style="color:#cce8ff;font-weight:bold;">download here</a> and read carefully the safety booklet.'
+                'Por favor <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf" style="color:#5a3000;font-weight:bold;text-decoration:underline;">descarregue aqui</a> e leia cuidadosamente o desdobrável de segurança.',
+                'Please <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf" style="color:#5a3000;font-weight:bold;text-decoration:underline;">download here</a> and read carefully the safety booklet.'
             ),
             'label_section_personal' => $_e('Dados pessoais', 'Personal details'),
             'label_codigo'           => $_e('Código FEUP:', 'FEUP Code:'),
@@ -538,6 +538,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       <div class="col-md-4 form-group">
         <label><?php echo $lang['EXTENSION']; ?></label>
         <input type="text" name="extension" class="form-control" id="extension"
+               autocomplete="off"
                placeholder="<?php echo $lang['EXTENSION']; ?>"
                value="<?php echo htmlspecialchars(isset($_POST['extension']) ? $_POST['extension'] : ''); ?>">
       </div>

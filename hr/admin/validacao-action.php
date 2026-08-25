@@ -84,7 +84,14 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
             $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
 
             if ($n === 0) {
-                $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+                // Distinguir entre "sem responsável" e "já solicitado"
+                $qPend = $pdo->prepare("SELECT COUNT(*) FROM infodeqb_rds_validacao WHERE registo_id=? AND status='Pendente'");
+                $qPend->execute([$rid]);
+                if ((int)$qPend->fetchColumn() > 0) {
+                    $_SESSION['val_info'] = 'Validações já solicitadas anteriormente — aguarda resposta dos responsáveis.';
+                } else {
+                    $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+                }
             } else {
                 $_SESSION['val_info'] = 'Pedido de validação enviado a ' . $n . ' responsável(is).';
             }

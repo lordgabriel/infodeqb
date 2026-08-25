@@ -47,10 +47,12 @@ Write-Host "[1/3] A fazer dump da BD de producao..." -ForegroundColor Cyan
 $dumpArgs = @(
     "--host=$prodHost",
     "--user=$prodUser",
+    "--default-character-set=utf8mb4",
     "--single-transaction",
     "--skip-add-locks",
     "--skip-lock-tables",
-    "--routines"
+    "--routines",
+    "--result-file=$dumpFile"
 )
 if ($SchemaOnly) {
     $dumpArgs += "--no-data"
@@ -58,7 +60,7 @@ if ($SchemaOnly) {
 $dumpArgs += $prodDb
 
 $env:MYSQL_PWD = $prodPass
-& "$mysqlBin\mysqldump.exe" @dumpArgs | Out-File -FilePath $dumpFile -Encoding UTF8
+& "$mysqlBin\mysqldump.exe" @dumpArgs
 $exitCode = $LASTEXITCODE
 Remove-Item Env:MYSQL_PWD -ErrorAction SilentlyContinue
 
@@ -90,7 +92,8 @@ Write-Host "   OK" -ForegroundColor Green
 Write-Host "[3/3] A importar dump na BD local (pode demorar alguns minutos)..." -ForegroundColor Cyan
 
 if ($localPass -ne "") { $env:MYSQL_PWD = $localPass }
-Get-Content $dumpFile | & "$mysqlBin\mysql.exe" "--host=$localHost" "--user=$localUser" $localDb
+$importCmd = "`"$mysqlBin\mysql.exe`" --host=$localHost --user=$localUser --default-character-set=utf8mb4 $localDb < `"$dumpFile`""
+cmd /c $importCmd
 $rc = $LASTEXITCODE
 Remove-Item Env:MYSQL_PWD -ErrorAction SilentlyContinue
 

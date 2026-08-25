@@ -533,6 +533,30 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
 }
 
 /**
+ * Devolve a forma curta do nome para saudações de email.
+ * Maria/Mário: 1º + 2º + último nome. Outros: 1º nome.
+ */
+function _nomeEmailCurto($nomeCompleto) {
+    $partes = preg_split('/\s+/', trim($nomeCompleto));
+    if (count($partes) <= 1) return $nomeCompleto;
+    $primeiro = mb_strtolower($partes[0], 'UTF-8');
+    if (in_array($primeiro, array('maria', 'mário', 'mario'))) {
+        $preps = array('do', 'da', 'de', 'dos', 'das', 'e');
+        if (count($partes) >= 3) {
+            // Se partes[1] é preposição, incluir também partes[2]
+            if (in_array(mb_strtolower($partes[1], 'UTF-8'), $preps) && isset($partes[2])) {
+                $meio = $partes[1] . ' ' . $partes[2];
+            } else {
+                $meio = $partes[1];
+            }
+            return $partes[0] . ' ' . $meio . ' ' . end($partes);
+        }
+        return $partes[0] . ' ' . $partes[1];
+    }
+    return $partes[0] . ' ' . end($partes);
+}
+
+/**
  * Envia email de validação ao responsável do espaço.
  * $gab deve ter: nomegab (ou gab_nome), resp_codigo, resp_nome
  */
@@ -557,6 +581,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
 
     $info = array(
         'nome_resp'      => isset($gab['resp_nome']) ? $gab['resp_nome'] : '—',
+        'nome_resp_curto'=> isset($gab['resp_nome']) ? _nomeEmailCurto($gab['resp_nome']) : '—',
         'nome_colab'     => $colab_nome,
         'link_colab'     => $linkColab,
         'espaco'         => isset($gab['nomegab']) ? $gab['nomegab'] : (isset($gab['gab_nome']) ? $gab['gab_nome'] : '—'),
