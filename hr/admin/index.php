@@ -275,10 +275,10 @@ if (! empty($_POST)) {
 
 $pdo = Database::connect();
 $sth = $pdo->prepare(
-        'SELECT infodeqb_rds_colaborador.codigo, infodeqb_rds_colaborador.nome, infodeqb_rds_colaborador.email,infodeqb_rds_registo.autoid, infodeqb_rds_registo.datafim, infodeqb_rds_registo.datainicio, infodeqb_rds_registo.codigo,infodeqb_rds_registo.status, infodeqb_rds_grupo.grupo_pro, infodeqb_rds_registo.createdate, infodeqb_rds_registo.datacica, infodeqb_rds_registo.dataativo, infodeqb_rds_registo.datainativo, infodeqb_rds_registo.notif_pendente FROM infodeqb_rds_colaborador INNER JOIN infodeqb_rds_registo ON infodeqb_rds_colaborador.codigo=infodeqb_rds_registo.codigo INNER JOIN infodeqb_rds_grupo ON infodeqb_rds_registo.grupo=infodeqb_rds_grupo.grupoid where infodeqb_rds_colaborador.deleted!=1 AND infodeqb_rds_registo.deleted!=1 AND infodeqb_rds_registo.status= ? ORDER BY infodeqb_rds_registo.createdate ASC');
+        'SELECT infodeqb_rds_colaborador.codigo, infodeqb_rds_colaborador.nome, infodeqb_rds_colaborador.email,infodeqb_rds_registo.autoid, infodeqb_rds_registo.datafim, infodeqb_rds_registo.datainicio, infodeqb_rds_registo.codigo,infodeqb_rds_registo.status, infodeqb_rds_grupo.grupo_pro, infodeqb_rds_registo.createdate, infodeqb_rds_registo.datacica, infodeqb_rds_registo.dataativo, infodeqb_rds_registo.datainativo, infodeqb_rds_registo.notif_pendente FROM infodeqb_rds_colaborador INNER JOIN infodeqb_rds_registo ON infodeqb_rds_colaborador.codigo=infodeqb_rds_registo.codigo INNER JOIN infodeqb_rds_grupo ON infodeqb_rds_registo.grupo=infodeqb_rds_grupo.grupoid where infodeqb_rds_colaborador.deleted!=1 AND infodeqb_rds_registo.deleted!=1 AND infodeqb_rds_registo.status= ? ORDER BY CASE infodeqb_rds_registo.status WHEN \'Novo\' THEN infodeqb_rds_registo.createdate WHEN \'Pendente\' THEN infodeqb_rds_registo.datacica WHEN \'Ativo\' THEN infodeqb_rds_registo.dataativo WHEN \'Inativo\' THEN infodeqb_rds_registo.datainativo ELSE infodeqb_rds_registo.createdate END DESC');
 
 $sth_expire = $pdo->prepare(
-        'SELECT infodeqb_rds_colaborador.codigo, infodeqb_rds_colaborador.nome, infodeqb_rds_colaborador.email, infodeqb_rds_registo.autoid, infodeqb_rds_registo.datafim, infodeqb_rds_registo.datanotificacao, infodeqb_rds_registo.codigo,infodeqb_rds_registo.status, infodeqb_rds_grupo.grupo_pro FROM infodeqb_rds_colaborador INNER JOIN infodeqb_rds_registo ON infodeqb_rds_colaborador.codigo=infodeqb_rds_registo.codigo INNER JOIN infodeqb_rds_grupo ON infodeqb_rds_registo.grupo=infodeqb_rds_grupo.grupoid where infodeqb_rds_colaborador.deleted!=1 AND infodeqb_rds_registo.status= ? AND infodeqb_rds_registo.datafim <= ?  ORDER BY infodeqb_rds_grupo.grupoid, infodeqb_rds_colaborador.nome ASC');
+        'SELECT infodeqb_rds_colaborador.codigo, infodeqb_rds_colaborador.nome, infodeqb_rds_colaborador.email, infodeqb_rds_registo.autoid, infodeqb_rds_registo.datafim, infodeqb_rds_registo.datanotificacao, infodeqb_rds_registo.codigo,infodeqb_rds_registo.status, infodeqb_rds_grupo.grupo_pro FROM infodeqb_rds_colaborador INNER JOIN infodeqb_rds_registo ON infodeqb_rds_colaborador.codigo=infodeqb_rds_registo.codigo INNER JOIN infodeqb_rds_grupo ON infodeqb_rds_registo.grupo=infodeqb_rds_grupo.grupoid where infodeqb_rds_colaborador.deleted!=1 AND infodeqb_rds_registo.status= ? AND infodeqb_rds_registo.datafim <= ?  ORDER BY infodeqb_rds_registo.datafim ASC');
 
 $data = $sth->fetchAll(PDO::FETCH_ASSOC);
 $sth->execute([
@@ -323,7 +323,7 @@ $sth_pedidos = $pdo->prepare(
      FROM infodeqb_rds_pedido p
      LEFT JOIN infodeqb_rds_colaborador c ON c.codigo = p.codigo
      WHERE p.status = 'Pendente' AND (p.origem = 'utilizador' OR p.origem IS NULL)
-     ORDER BY p.criado_em ASC"
+     ORDER BY p.criado_em DESC"
 );
 $sth_pedidos->execute();
 $pedidos      = $sth_pedidos->fetchAll(PDO::FETCH_ASSOC);
@@ -335,7 +335,7 @@ $sth_aguarda = $pdo->prepare(
      FROM infodeqb_rds_pedido p
      LEFT JOIN infodeqb_rds_colaborador c ON c.codigo = p.codigo
      WHERE p.status = 'Aguarda_SIGARRA'
-     ORDER BY p.processado_em ASC"
+     ORDER BY p.processado_em DESC"
 );
 $sth_aguarda->execute();
 $pedidosAguarda      = $sth_aguarda->fetchAll(PDO::FETCH_ASSOC);
@@ -994,7 +994,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 // Ver detalhe
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' . htmlspecialchars($row['codigo']) . '&amp;status=Novo"><i class="far fa-eye fa-sm"></i></a>';
                 // SIGARRA
-                echo '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' . $link . htmlspecialchars($row['codigo']) . '"><i class="fas fa-info fa-sm"></i></a>';
+                echo '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' . $link . htmlspecialchars($row['codigo']) . '"><i class="fas fa-info fa-sm"></i></a>';
                 // Solicitar validações
                 echo '<button type="button" class="btn btn-xs btn-warning me-1" title="Solicitar validações a responsáveis de laboratório"'
                    . ' onclick="adminAcao(\'solicitar_registo\',' . $autoidRow . ')">'
@@ -1006,7 +1006,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                        . '<i class="fas fa-paper-plane fa-xs"></i></button>';
                 } else {
                     $titleAcessos = $semPedido ? 'Labs com responsável sem validação solicitada' : ($temPedidosVal ? 'Validações ainda pendentes ou rejeitadas' : 'Solicite validações primeiro');
-                    echo '<button type="button" class="btn btn-xs btn-outline-success" disabled title="' . htmlspecialchars($titleAcessos) . '">'
+                    echo '<button type="button" class="btn btn-xs btn-outline-success" '
+                       . 'style="opacity:.45;cursor:not-allowed;" '
+                       . 'title="' . htmlspecialchars($titleAcessos) . '" '
+                       . 'onclick="alert(' . json_encode($titleAcessos) . ')">'
                        . '<i class="fas fa-paper-plane fa-xs"></i></button>';
                 }
                 echo '</td>';
@@ -1078,14 +1081,14 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['nome'] . '</td>';
                 echo '<td>' . $row['email'] . '</td>';
                 echo '<td>' . $row['grupo_pro'] . '</td>';
-                echo '<td>' . $row['datacica'] . '</td>';
+                echo '<td>' . ($row['datacica'] ? substr($row['datacica'], 0, 10) : '') . '</td>';
                 echo '<td>' . $row['status'] . '</td>';
-                echo '<td class="text-center">';
+                echo '<td class="text-center text-nowrap">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm"></i></a>'
-                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
+                   . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '<button type="button" class="btn btn-xs btn-success ms-1" title="Ativar registo"'
@@ -1164,12 +1167,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['datafim'] . '</td>';
                 echo '<td>' . $date . '</td>';
                 echo '<td>' . $row['status'] . '</td>';
-                echo '<td class="text-center">';
+                echo '<td class="text-center text-nowrap">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm"></i></a>'
-                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
+                   . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a></td>';
                 echo '</tr>';
@@ -1265,12 +1268,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['datainicio'] . '</td>';
                 echo '<td>' . $row['datafim'] . '</td>';
                 echo '<td>' . formatDate('Y-m-d', $row['dataativo']) . '</td>';
-                echo '<td class="text-center">';
+                echo '<td class="text-center text-nowrap">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm"></i></a>'
-                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
+                   . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '</td>';
@@ -1354,12 +1357,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 echo '<td>' . $row['datafim'] . '</td>';
                 echo '<td>' . formatDate('Y-m-d', $row['datainativo']) .
                         '</td>';
-                echo '<td class="text-center">';
+                echo '<td class="text-center text-nowrap">';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
                         '"><i class="far fa-eye fa-sm"></i></a>'
-                   . '<a class="btn btn-xs btn-outline-secondary me-1" title="SIGARRA" target="_blank" href="' .
+                   . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
                 echo '</td>';

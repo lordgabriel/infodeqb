@@ -1524,6 +1524,9 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .btn-orange:focus    { background-color:#e96b02; border-color:#e96b02; color:#000; }
 .btn-outline-orange  { border-color:#fd7e14; color:#fd7e14; background:transparent; }
 .btn-outline-orange:hover { background-color:#fd7e14; color:#000; }
+.btn-outline-feup        { border-color:#8C2D19; color:#8C2D19; background:transparent; }
+.btn-outline-feup:hover  { background-color:#8C2D19; color:#fff; }
+.btn-outline-feup:hover i { color:#fff; }
 .badge.bg-orange     { background-color:#fd7e14 !important; color:#000; }
 
 /* ─────────────────────────────────────────

@@ -25,33 +25,27 @@ if (empty($_SESSION['ids'])) {
         $sql = 'SELECT * FROM infodeqb_rds_colaborador INNER JOIN infodeqb_rds_registo ON infodeqb_rds_colaborador.codigo=infodeqb_rds_registo.codigo left join infodeqb_rds_responsaveis on infodeqb_rds_registo.responsavel=infodeqb_rds_responsaveis.codigo where infodeqb_rds_colaborador.codigo =' .
                 $value . ' and infodeqb_rds_registo.deleted = 0 and infodeqb_rds_registo.autoid = ' .
                 $key . ' order by infodeqb_rds_registo.datafim DESC';
-        $sql_gab = 'SELECT gabid, deqid FROM infodeqb_rds_gabinetes';
+        // Mapear deqid -> nomegab para mostrar nomes de labs nos emails
+        $sql_gab = 'SELECT nomegab, deqid FROM infodeqb_rds_gabinetes';
         $statement = $pdo->query($sql_gab);
         $gabs = $statement->fetchAll(PDO::FETCH_ASSOC);
-        $column_key = 'deqid';
-        $index_key = 'gabid';
-        $column_values = array_column($gabs, $index_key, $column_key);
+        $column_values = array_column($gabs, 'nomegab', 'deqid');
 
         foreach ($pdo->query($sql) as $row) {
-            $acessosdeq = $row['acessos'];
-            // Usar tabela relacional para obter deqids
+            // Usar tabela relacional para obter deqids do registo
             $regDeqids = getRegistoAcessos($pdo, (int)$row['autoid']);
             $arrayacessosid = array_flip($regDeqids);
-            $result = array_intersect_key($column_values, $arrayacessosid);
-            $result = array_unique($result);
-            $result = implode(";", $result);
-            $result = str_replace('|', ';', $result);
+            $labNames = array_intersect_key($column_values, $arrayacessosid);
+            $labNames = array_unique($labNames);
+            $result = implode('; ', $labNames);
 
             $info = array(
-                    'codigo' => $row['codigo'],
-                    'nome' => $row['nome'],
-                    'mail' => $row['email'],
-                    'fim' => $row['datafim'],
+                    'codigo'      => $row['codigo'],
+                    'nome'        => $row['nome'],
+                    'mail'        => $row['email'],
+                    'fim'         => $row['datafim'],
                     'responsavel' => ($row['responsavel'] == 0 ? $row['outroresponsavel'] : $row['respespaco']),
-                    'acessos' => ($row['acessodeq'] == 1 ? 'Porta Norte; ' : '') .
-                    $result,
-                    'acessosdeqid' => ($row['acessodeq'] == 1 ? 'Porta Norte; ' : '') .
-                    $acessosdeq
+                    'acessos'     => ($row['acessodeq'] == 1 ? 'Porta Norte; ' : '') . $result,
             );
         }
 

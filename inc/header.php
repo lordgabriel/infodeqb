@@ -212,6 +212,28 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 
 <?php if (!empty($subNav)) echo $subNav; ?>
 
+<?php
+$_isLocalhost = defined('HTTP_DIR') && strpos(HTTP_DIR, 'localhost') !== false;
+$_testMode    = $_isLocalhost || (defined('MAIL_TEST_MODE') && MAIL_TEST_MODE === true);
+if ($_testMode && ($isAdmin ?? false)):
+    $_testLabel    = $_isLocalhost ? 'DEV / LOCALHOST' : 'PRODUÇÃO — MODO TESTE';
+    $_testRecip    = (defined('MAIL_TEST_RECIPIENTS') && !empty(MAIL_TEST_RECIPIENTS))
+                        ? implode(', ', MAIL_TEST_RECIPIENTS)
+                        : 'up356946@up.pt';
+    $_adminUrl     = HTTP_DIR . '/infodeqb/admin-sections.php#mail-config';
+?>
+<div style="background:#7c2615;color:#fff;font-size:.78rem;padding:5px 16px;display:flex;align-items:center;gap:10px;line-height:1.3">
+  <i class="fas fa-exclamation-triangle" style="flex-shrink:0"></i>
+  <span>
+    <strong><?= $_testLabel ?></strong> — emails interceptados e enviados para:
+    <strong><?= htmlspecialchars($_testRecip) ?></strong>
+  </span>
+  <a href="<?= $_adminUrl ?>" style="color:#ffd;font-size:.75rem;margin-left:auto;white-space:nowrap;text-decoration:underline">
+    Como desactivar &rsaquo;
+  </a>
+</div>
+<?php endif; ?>
+
 <!-- ══════════════════════════════════════════
      CONTEÚDO PRINCIPAL
      ══════════════════════════════════════════ -->

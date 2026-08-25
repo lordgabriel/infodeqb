@@ -96,7 +96,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     : 'https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=' . urlencode($id);
   ?>
   <a href="<?= $sigarraLink ?>" target="_blank"
-     class="btn btn-sm btn-outline-secondary" title="Ver no SIGARRA">
+     class="btn btn-sm btn-outline-feup" title="Ver no SIGARRA">
     <i class="fas fa-info fa-sm"></i>
   </a>
   <a href="index.php" class="btn btn-sm btn-outline-secondary">

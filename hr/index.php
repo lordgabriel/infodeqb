@@ -240,20 +240,49 @@ if (! empty($_POST)) {
 
     // ── 2. Enviar email de confirmação (fora da transaction) ───────
     {
+        $_L = $language; // 'pt' ou 'en'
+        $_e = function($pt, $en) use ($_L) { return ($_L === 'en') ? $en : $pt; };
+
         $info = array(
             'codigo'    => $codigo,
             'nome'      => $nomeEmail,
             'mail'      => $email,
-            'altmail'   => $emailalt,
-            'telefone'  => $telefone,
-            'grupo'     => $cat,
-            'categoria' => $catNome,
-            'inicio'    => $datainicio,
-            'fim'       => $datafim,
-            'responsavel' => $resp,
-            'acessodeq' => $x,
-            'acessos'   => $result,
-            'altemail'  => $emailalt
+            'altmail'   => $emailalt ?: '-',
+            'telefone'  => $telefone ?: '-',
+            'grupo'     => $cat ?: '-',
+            'categoria' => $catNome ?: '-',
+            'inicio'    => $datainicio ?: '-',
+            'fim'       => $datafim ?: '-',
+            'responsavel' => $resp ?: '-',
+            'acessodeq' => $x ?: '-',
+            'acessos'   => $result ?: '-',
+            'altemail'  => $emailalt ?: '-',
+            // i18n — placeholders no mail_register.html
+            'subtitle'               => $_e('Registo Efetuado com Sucesso', 'Registration Completed Successfully'),
+            'greeting'               => $_e('Caro(a) ' . $nomeEmail . ',', 'Dear ' . $nomeEmail . ','),
+            'msg_intro'              => $_e(
+                'O seu registo foi submetido com sucesso. Pode consultar abaixo os dados registados.',
+                'Your registration was successfully submitted. You can check the registered data below.'
+            ),
+            'msg_safety'             => $_e(
+                'Por favor <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf" style="color:#cce8ff;font-weight:bold;">descarregue aqui</a> e leia cuidadosamente o desdobrável de segurança.',
+                'Please <a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf" style="color:#cce8ff;font-weight:bold;">download here</a> and read carefully the safety booklet.'
+            ),
+            'label_section_personal' => $_e('Dados pessoais', 'Personal details'),
+            'label_codigo'           => $_e('Código FEUP:', 'FEUP Code:'),
+            'label_nome'             => $_e('Nome:', 'Name:'),
+            'label_email'            => $_e('E-mail:', 'E-mail:'),
+            'label_altemail'         => $_e('E-mail alternativo:', 'Alternate e-mail:'),
+            'label_telefone'         => $_e('Contacto telefónico:', 'Phone:'),
+            'label_section_registo'  => $_e('Registo', 'Registration'),
+            'label_grupo'            => $_e('Grupo profissional:', 'Professional group:'),
+            'label_categoria'        => $_e('Categoria:', 'Category:'),
+            'label_inicio'           => $_e('Data início:', 'Start date:'),
+            'label_fim'              => $_e('Data fim:', 'End date:'),
+            'label_responsavel'      => $_e('Responsável do trabalho:', 'Work supervisor:'),
+            'label_section_acessos'  => $_e('Acessos', 'Access'),
+            'label_porta_norte'      => $_e('Acesso porta norte:', 'North door access:'),
+            'label_outros'           => $_e('Outros acessos:', 'Other accesses:'),
         );
         $body    = format_email($info, 'mail_register.html');
         $subject = $lang['SUBJECT'];

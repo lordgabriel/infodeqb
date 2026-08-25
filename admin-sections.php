@@ -171,4 +171,73 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endforeach; ?>
 </div>
 
+<?php
+/* ── Configuração de email / modo teste ──────────────────────────── */
+$_isLocalhost = defined('HTTP_DIR') && strpos(HTTP_DIR, 'localhost') !== false;
+$_testMode    = $_isLocalhost || (defined('MAIL_TEST_MODE') && MAIL_TEST_MODE === true);
+$_testRecip   = (defined('MAIL_TEST_RECIPIENTS') && !empty(MAIL_TEST_RECIPIENTS))
+                    ? implode(', ', MAIL_TEST_RECIPIENTS)
+                    : '(não definido)';
+$_configFile  = '/deqbwww.php';
+?>
+<div class="mt-4 mb-2" id="mail-config">
+  <h5 class="mb-3" style="font-size:.95rem;font-weight:600">
+    <i class="fas fa-envelope me-2 text-muted"></i>Configuração de email
+  </h5>
+
+  <div class="card shadow-sm">
+    <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+      <?php if ($_testMode): ?>
+        <span class="badge" style="background:#7c2615">MODO TESTE ACTIVO</span>
+      <?php else: ?>
+        <span class="badge bg-success">MODO PRODUÇÃO — emails reais</span>
+      <?php endif; ?>
+      <small class="text-muted ms-1">Estado actual</small>
+    </div>
+    <div class="card-body" style="font-size:.84rem">
+
+      <?php if ($_testMode): ?>
+      <p class="mb-2">
+        Os emails <strong>não chegam aos destinatários reais</strong>.
+        São interceptados e enviados para:
+        <code><?= htmlspecialchars($_testRecip) ?></code>
+      </p>
+      <p class="mb-0 text-muted">
+        O corpo do email é também guardado em <code>hr/email_dev/</code> e registado em <code>hr/email_dev.log</code>.
+      </p>
+      <?php else: ?>
+      <p class="mb-0">Os emails são enviados directamente aos destinatários reais.</p>
+      <?php endif; ?>
+
+      <hr class="my-3">
+
+      <p class="mb-1"><strong>Para alterar o modo</strong>, editar o ficheiro <code><?= $_configFile ?></code> no servidor:</p>
+      <table class="table table-sm table-bordered mb-2" style="font-size:.82rem;max-width:560px">
+        <thead class="table-light"><tr><th>Situação</th><th>Definições em <code>deqbwww.php</code></th></tr></thead>
+        <tbody>
+          <tr>
+            <td>🔴 <strong>Modo teste</strong> (emails interceptados)</td>
+            <td><code>define('MAIL_TEST_MODE', true);</code></td>
+          </tr>
+          <tr>
+            <td>🟢 <strong>Modo produção</strong> (emails reais)</td>
+            <td><code>define('MAIL_TEST_MODE', false);</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="mb-1"><strong>Destinatários de teste</strong> — array na mesma linha:</p>
+      <pre class="mb-0" style="font-size:.8rem;background:#f8f9fa;padding:8px 12px;border-radius:4px;border:1px solid #dee2e6">define('MAIL_TEST_RECIPIENTS', [
+    'fmartins@fe.up.pt',
+    'jfeyo@fe.up.pt',
+    'deqbdir@fe.up.pt',
+]);</pre>
+      <p class="mt-2 mb-0 text-muted" style="font-size:.78rem">
+        <i class="fas fa-info-circle me-1"></i>
+        Em localhost o modo teste está <strong>sempre activo</strong> independentemente do valor de <code>MAIL_TEST_MODE</code>
+        (detectado por <code>HTTP_DIR</code> conter "localhost").
+      </p>
+    </div>
+  </div>
+</div>
+
 <?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>

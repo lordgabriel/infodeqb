@@ -5,18 +5,18 @@ Aplicação PHP + MySQL para gerir múltiplos módulos do DEQB. Corre em XAMPP (
 
 ## Stack
 - **Backend:** PHP 8.2 (XAMPP localhost), PHP 7 em produção — evitar `fn()`, `match()`, `?->`, named arguments, union types
-- **BD:** MySQL/MariaDB — base `deqfeuppt` (localhost e produção)
+- **BD:** MySQL/MariaDB — base `feupptdeqb` em `webdb.fe.up.pt` (tanto localhost como produção; `deqbwww.php` aponta sempre para esse servidor remoto)
 - **Frontend:** Bootstrap 5.3.3 (CDN jsdelivr, ver `inc/header.php`), FontAwesome 5.11.2 + v4-shims (CDN), jQuery 3.7.1 (CDN), DataTables 1.13.8 tema bootstrap5 (CDN), Alpine.js 3.14.3 (CDN), Google Fonts Inter — grande parte da marcação ainda usa convenções BS4/BS3 mantidas via shims em `css/infodeq.css` (ver aviso #6)
 - **Servidor local:** XAMPP `C:\xampp\htdocs\infodeqb`
 - **Produção:** `deq.fe.up.pt` — pasta a definir (ver migração)
 
 ## Ficheiro de configuração principal
 `C:\xampp\htdocs\deqbwww.php` (foi renomeado de `deqwww_teste.php` — existe stub de compatibilidade)
-- Define classe `Database` (PDO para `feupptdeqb`)
+- Define classe `Database` (PDO para `feupptdeqb` em `webdb.fe.up.pt` — sempre remoto, mesmo em localhost)
 - `HTTP_DIR = 'http://localhost'`
 - `ROOT_DIR = $_SERVER['DOCUMENT_ROOT']`
-- `MAIL_TEST_MODE = false` — colocar `true` em produção para testes
-- `MAIL_TEST_RECIPIENTS = ['up356946@up.pt']`
+- `MAIL_TEST_MODE = true` (activo; destinatários em `MAIL_TEST_RECIPIENTS`)
+- `MAIL_TEST_RECIPIENTS = ['fmartins@fe.up.pt', 'jfeyo@fe.up.pt', 'deqbdir@fe.up.pt']`
 
 ## Sessão PHP e língua
 `session.php` — incluído por todas as páginas:
@@ -90,7 +90,7 @@ infodeqb/
 ### Tabelas por módulo
 | Prefixo | Módulo |
 |---|---|
-| `rds_` | HR (colaboradores, registos, pedidos, grupos, etc.) |
+| `infodeqb_rds_` | HR (colaboradores, registos, pedidos, grupos, etc.) |
 | `water_`, `waterqc_` | Água (consumos, qualidade, responsáveis, utilizadores) |
 | `equipmentdeq`, `infodeq_labs_ensino`, `Infodeqb_lab_responsibles`, `equipmentdeq_access` | Equipamentos |
 | `exam_archive` | Exames |
@@ -102,7 +102,7 @@ infodeqb/
 | `infodeqb_section_admins` | Admins de secção (via UI) |
 | `water_users.ativo` | Soft-delete utilizadores água |
 
-**`dsd_deqb`** — BD separada para DSD (em produção mover para `deqfeuppt`)
+**`dsd_deqb`** — BD separada para DSD (em produção ainda separada)
 - Ligação em `dsd_app/includes/config.php`
 
 ## Módulo HR
@@ -111,10 +111,14 @@ infodeqb/
 - **Detalhe:** `hr/meu-registo-detalhe.php`
 - **Admin:** `hr/admin/index.php` (tabs: Novos, Pendentes, A expirar, Ativos, Inativos, Pedidos)
 - **Deep-links tabs:** `hr/admin/index.php?tab=pills-new|pills-pendent|pills-expire|pills-active`
+- **Detalhe admin:** `hr/admin/detail.php?id=<codigo>` — cabeçalho tem botão SIGARRA (`btn-outline-feup`)
 - **Email:** `hr/inc/functions.php` → `send_email()` com suporte a `MAIL_TEST_MODE`
 - **Lang HR:** `hr/lang/lang.pt.php` e `hr/lang/lang.en.php` (têm `?>` no fim — normal, são incluídos depois do header)
 - **Telefone:** campo com indicativo + número (select país + input), armazenado como `+351 912345678`
 - **Helpers telefone:** `hr/inc/functions.php` → `parsePhone()`, `combinePhone()`, `phoneFromPost()`, `renderPhoneInput()`
+- **SIGARRA link:** `(strlen($codigo) > 6) ? "fest_geral.cursos_list?pv_num_unico=" : "func_geral.formview?p_codigo="` — estudantes têm código > 6 chars
+- **Botões de acção nas tabelas:** `btn btn-xs btn-outline-info` (ver registo/editar), `btn btn-xs btn-outline-feup` (SIGARRA), `btn btn-xs btn-outline-danger` (eliminar); ícones `fa-sm`
+- **Migração HR (ago 2026):** dados migrados de `deqfeuppt` (mysqldump local) para `feupptdeqb` via `sql/migrate_hr_prod.sql`; usar `SET NAMES utf8mb4` (não latin1) para evitar double-encoding de caracteres portugueses
 
 ## Módulo Água
 - **Qualidade:** `water/waterqc.php` — gráficos Chart.js v4, filtro período estilo HA (pills + setas navegação + datas personalizadas)
@@ -183,6 +187,8 @@ Módulos condicionais no menu/dashboard:
 - `iq-modules`, `iq-module` — grelha de módulos
 - `iq-tool-card` — cards de ferramentas (backup, etc.)
 - `.alert` — tem `display:flex` no design system; usar `style="display:block"` para texto alinhado à esquerda
+- `.btn-outline-feup` — cor oficial FEUP `#8C2D19` (PANTONE 484, vermelho); hover: fundo vermelho + ícone branco; usar para links SIGARRA
+- `--iq-blue: #0b6e73` — cor primária da app (teal-verde, não azul apesar do nome); `.btn-primary` usa esta cor
 
 ## Avisos / Armadilhas
 1. **BOM em ficheiros PHP** — causa barra branca no topo; usar PowerShell para remover: `[System.IO.File]::ReadAllBytes()` + verificar `bytes[0..2] == EF BB BF`

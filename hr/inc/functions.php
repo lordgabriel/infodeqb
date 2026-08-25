@@ -571,7 +571,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
         send_email(
             array($respEmail),
             $body,
-            'Acessos DEQB: Pedido de validação de acesso — ' . $colab_nome,
+            'Acessos DEQB: Pedido de validacao de acesso - ' . $colab_nome,
             array('deqdir@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -650,12 +650,29 @@ function getGrupoCategoriasMap(PDO $pdo): array {
 }
 
 function _emailNovoRegisto($nome, $email, $codigo, $datainicio, $datafim, $tipo = 'Novo registo') {
+    $L = (substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'pt', 0, 2) === 'en') ? 'en' : 'pt';
+    $e = function($pt, $en) use ($L) { return ($L === 'en') ? $en : $pt; };
     $info = array(
-        'nome'   => $nome,
-        'codigo' => $codigo,
-        'inicio' => $datainicio,
-        'fim'    => $datafim,
-        'tipo'   => $tipo,
+        'nome'          => $nome,
+        'codigo'        => $codigo,
+        'inicio'        => $datainicio ?: '-',
+        'fim'           => $datafim ?: '-',
+        'tipo'          => $tipo ?: '-',
+        'subtitle'      => $e('Pedido de Registo Submetido', 'Registration Request Submitted'),
+        'msg_intro'     => $e(
+            'O seu pedido de registo foi submetido com sucesso e aguarda aprovação pelo secretariado.',
+            'Your registration request was successfully submitted and is pending approval by the secretariat.'
+        ),
+        'label_section' => $e('Dados do Pedido', 'Request Details'),
+        'label_nome'    => $e('Nome', 'Name'),
+        'label_codigo'  => $e('Código FEUP', 'FEUP Code'),
+        'label_inicio'  => $e('Data início', 'Start date'),
+        'label_fim'     => $e('Data fim', 'End date'),
+        'label_tipo'    => $e('Tipo', 'Type'),
+        'msg_footer'    => $e(
+            'Será notificado por email quando o pedido for processado.',
+            'You will be notified by email when the request is processed.'
+        ),
     );
     $body = format_email($info, 'mail_novo_registo.html');
     try {
@@ -711,7 +728,7 @@ function _notificarRejeicaoValidacao($val, $colab_nome) {
         send_email(
             array('deqdir@fe.up.pt'),
             $body,
-            'Acessos DEQB: Validação rejeitada — ' . $colab_nome,
+            'Acessos DEQB: Validacao rejeitada - ' . $colab_nome,
             array('fmartins@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -813,7 +830,7 @@ function _emailSigarra($pdo, $ped, $d) {
         'alteracoes'  => $alteracoes ?: '<p style="color:#555;font-family:Arial,sans-serif;">Sem alterações de detalhe disponíveis.</p>',
     );
     $body    = format_email($info, 'mail_alteracao_sigarra.html');
-    $subject = 'Acessos DEQB: Atualização de acessos — ' . $reg['nome'];
+    $subject = 'Acessos DEQB: Atualizacao de acessos - ' . $reg['nome'];
     try {
         send_email(
             array('sigarra@fe.up.pt'),
