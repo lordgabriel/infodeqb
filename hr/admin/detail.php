@@ -75,13 +75,46 @@ if (!empty($registos)) {
     }
 }
 
+// Pedidos Aguarda_SIGARRA por registo (para botão "SIGARRA confirmou")
+$pedAguardaPorRegisto = array();
+if (!empty($registos)) {
+    if (empty($rids)) {
+        $rids = array_map('intval', array_column($registos, 'autoid'));
+        $phs  = implode(',', array_fill(0, count($rids), '?'));
+    }
+    $qPedAg = $pdo->prepare(
+        "SELECT id, registo_id FROM infodeqb_rds_pedido
+         WHERE registo_id IN ($phs) AND status = 'Aguarda_SIGARRA'
+         ORDER BY criado_em DESC"
+    );
+    $qPedAg->execute($rids);
+    foreach ($qPedAg->fetchAll(PDO::FETCH_ASSOC) as $pa) {
+        if (!isset($pedAguardaPorRegisto[$pa['registo_id']])) {
+            $pedAguardaPorRegisto[$pa['registo_id']] = (int)$pa['id'];
+        }
+    }
+}
+
+// Histórico de pedidos por registo
+$histPorRegisto = array();
+if (!empty($rids)) {
+    $qHist = $pdo->prepare(
+        "SELECT id, registo_id, tipo, origem, status, criado_em, processado_em, processado_por, notas_admin
+         FROM infodeqb_rds_pedido WHERE registo_id IN ($phs) ORDER BY criado_em DESC"
+    );
+    $qHist->execute($rids);
+    foreach ($qHist->fetchAll(PDO::FETCH_ASSOC) as $ph) {
+        $histPorRegisto[(int)$ph['registo_id']][] = $ph;
+    }
+}
+
 // Flash messages de validação
 $valInfo = isset($_SESSION['val_info']) ? $_SESSION['val_info'] : null;
 unset($_SESSION['val_info']);
 
 Database::disconnect();
 
-$pageTitle = 'Detalhe do Colaborador';
+$pageTitle = t('HR_ADMIN_DETAIL');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
@@ -201,6 +234,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           );
           $sBadge = isset($sBadgeMap[$row['status']]) ? $sBadgeMap[$row['status']] : 'badge-secondary';
 
+          // Histórico de pedidos para este registo
+          $histReg = isset($histPorRegisto[(int)$row['autoid']]) ? $histPorRegisto[(int)$row['autoid']] : array();
+
           // Validações para este registo
           $rVals     = isset($valPorRegisto[$row['autoid']]) ? $valPorRegisto[$row['autoid']] : array();
           $rNVal     = count($rVals);
@@ -274,13 +310,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td class="align-middle"><?= htmlspecialchars($row['datafim']) ?></td>
           <td class="text-center text-nowrap align-middle">
             <a href="edit.php?id=<?= $row['codigo'] ?>&id1=<?= $row['autoid'] ?>"
-               title="Editar" class="btn btn-xs btn-outline-info me-1">
-              <i class="fas fa-edit fa-sm"></i>
+               title="Editar" class="btn btn-xs btn-outline-primary me-1">
+              <i class="fas fa-edit fa-xs"></i>
             </a>
             <button type="button" class="btn btn-xs btn-outline-danger"
                     data-bs-toggle="modal" data-bs-target="#modalDel<?= (int)$row['autoid'] ?>"
                     title="Apagar">
-              <i class="fas fa-trash-alt"></i>
+              <i class="fas fa-trash fa-xs"></i>
             </button>
           </td>
         </tr>
@@ -289,8 +325,59 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <td colspan="8" style="padding:0 16px 8px 16px;border-top:none;background:#fffdf0;">
             <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff8d6;border-left:3px solid #f0a500;border-radius:0 4px 4px 0;font-size:.84rem;">
               <span style="font-size:1rem;">⏳</span>
-              <span><strong>Alteração não comunicada ao SIGARRA.</strong>
-                Este registo foi modificado — valide os acessos (se necessário) e depois notifique o SIGARRA na secção abaixo.</span>
+              <span class="mr-auto"><strong>Alteração não comunicada ao SIGARRA.</strong>
+                Este registo foi modificado — se implicar alteração de acessos notifique o SIGARRA abaixo; caso contrário aceite silenciosamente.</span>
+              <div style="display:flex;gap:6px;margin-left:auto">
+                <form method="post" action="validacao-action.php" style="margin:0">
+                  <input type="hidden" name="val_acao"   value="rejeitar_alteracao">
+                  <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                  <input type="hidden" name="redirect"   value="detail.php?id=<?= urlencode($id) ?>">
+                  <button type="submit" class="btn btn-xs btn-outline-danger"
+                          onclick="return confirm('Rejeitar alteração e repor estado anterior?\nOs dados do registo serão repostos ao que eram antes da edição.')">
+                    <i class="fas fa-times me-1"></i>Rejeitar e repor
+                  </button>
+                </form>
+                <form method="post" action="validacao-action.php" style="margin:0">
+                  <input type="hidden" name="val_acao"   value="aceitar_silencioso">
+                  <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                  <input type="hidden" name="redirect"   value="detail.php?id=<?= urlencode($id) ?>">
+                  <button type="submit" class="btn btn-xs btn-outline-secondary"
+                          onclick="return confirm('Aceitar alteração sem notificar o SIGARRA?\n(Use apenas para correções que não alteram acessos físicos.)')">
+                    <i class="fas fa-check me-1"></i>Aceitar sem notificar
+                  </button>
+                </form>
+                <?php if ($row['status'] === 'Ativo'): ?>
+                <form method="post" action="validacao-action.php" style="margin:0">
+                  <input type="hidden" name="val_acao"   value="notif_sigarra">
+                  <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                  <input type="hidden" name="redirect"   value="detail.php?id=<?= urlencode($id) ?>">
+                  <button type="submit" class="btn btn-xs btn-warning"
+                          onclick="return confirm('Aceitar alteração e notificar o SIGARRA?')">
+                    <i class="fas fa-paper-plane me-1"></i>Aceitar e notificar SIGARRA
+                  </button>
+                </form>
+                <?php endif; ?>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <?php endif; ?>
+        <?php if (isset($pedAguardaPorRegisto[$row['autoid']])): ?>
+        <tr>
+          <td colspan="8" style="padding:0 16px 8px 16px;border-top:none;background:#f0fdf4;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#dcfce7;border-left:3px solid #16a34a;border-radius:0 4px 4px 0;font-size:.84rem;">
+              <span style="font-size:1rem;">📨</span>
+              <span class="mr-auto"><strong>Aguarda confirmação do SIGARRA.</strong>
+                Email enviado — quando o SIGARRA processar, marque como concluído para desbloquear o utilizador.</span>
+              <form method="post" action="validacao-action.php" style="margin:0;margin-left:auto">
+                <input type="hidden" name="val_acao"   value="concluir_sigarra">
+                <input type="hidden" name="pedido_id"  value="<?= (int)$pedAguardaPorRegisto[$row['autoid']] ?>">
+                <input type="hidden" name="redirect"   value="detail.php?id=<?= urlencode($id) ?>">
+                <button type="submit" class="btn btn-xs btn-success"
+                        onclick="return confirm('Marcar como concluído e notificar o utilizador por email?')">
+                  <i class="fas fa-check me-1"></i>SIGARRA confirmou
+                </button>
+              </form>
             </div>
           </td>
         </tr>
@@ -423,18 +510,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
             <!-- Botão principal: muda conforme estado das validações e tipo de registo -->
             <?php if ($rTodosOk && !$temSemPedido): ?>
-              <?php if (!empty($row['notif_pendente']) && $row['status'] === 'Ativo'): ?>
-              <form method="post" action="validacao-action.php">
-                <input type="hidden" name="val_acao"   value="notif_sigarra">
-                <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
-                <input type="hidden" name="redirect"
-                       value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
-                <button class="btn btn-xs btn-warning"
-                        onclick="return confirm('Enviar notificação de alteração ao SIGARRA?')">
-                  <i class="fas fa-paper-plane fa-xs me-1"></i>Notificar SIGARRA
-                </button>
-              </form>
-              <?php else: ?>
+              <?php if (empty($row['notif_pendente']) || $row['status'] !== 'Ativo'): ?>
               <form method="post" action="validacao-action.php">
                 <input type="hidden" name="val_acao"   value="solicitar_acessos">
                 <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
@@ -459,6 +535,57 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               </button>
             </form>
             <?php endif; ?>
+          </td>
+        </tr>
+        <?php endif; ?>
+        <?php if (!empty($histReg)): ?>
+        <tr>
+          <td colspan="8" style="padding:0 0 6px 0;border-top:none;background:#fafafa;">
+            <details style="margin:0 8px 0 8px;">
+              <summary style="cursor:pointer;font-size:.78rem;color:#888;padding:3px 0;user-select:none;">
+                📋 Histórico (<?= count($histReg) ?> entrada<?= count($histReg) !== 1 ? 's' : '' ?>)
+              </summary>
+              <?php
+              $tipoLabel = array('alteracao_sigarra' => 'Alteração SIGARRA');
+              $origemLabel = array('secretariado' => 'Secretariado', 'utilizador' => 'Utilizador');
+              $histStatusBadge = array(
+                  'Pendente'       => 'warning',
+                  'Aguarda_SIGARRA'=> 'info',
+                  'Aprovado'       => 'success',
+                  'Concluido'      => 'success',
+                  'Rejeitado'      => 'danger',
+              );
+              ?>
+              <table class="table table-sm table-bordered mb-0" style="font-size:.78rem;margin-top:4px;">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:130px">Data</th>
+                    <th style="width:120px">Tipo</th>
+                    <th style="width:90px">Origem</th>
+                    <th style="width:100px">Estado</th>
+                    <th style="width:130px">Processado em</th>
+                    <th style="width:90px">Por</th>
+                    <th>Notas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($histReg as $hp): ?>
+                  <tr>
+                    <td><?= htmlspecialchars(substr($hp['criado_em'], 0, 16)) ?></td>
+                    <td><?= htmlspecialchars(isset($tipoLabel[$hp['tipo']]) ? $tipoLabel[$hp['tipo']] : $hp['tipo']) ?></td>
+                    <td><?= htmlspecialchars(isset($origemLabel[$hp['origem']]) ? $origemLabel[$hp['origem']] : $hp['origem']) ?></td>
+                    <td>
+                      <?php $hb = isset($histStatusBadge[$hp['status']]) ? $histStatusBadge[$hp['status']] : 'secondary'; ?>
+                      <span class="badge badge-<?= $hb ?>" style="font-size:.75rem;"><?= htmlspecialchars($hp['status']) ?></span>
+                    </td>
+                    <td><?= $hp['processado_em'] ? htmlspecialchars(substr($hp['processado_em'], 0, 16)) : '—' ?></td>
+                    <td><?= $hp['processado_por'] ? htmlspecialchars($hp['processado_por']) : '—' ?></td>
+                    <td><?= $hp['notas_admin'] ? htmlspecialchars($hp['notas_admin']) : '<span class="text-muted">—</span>' ?></td>
+                  </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </details>
           </td>
         </tr>
         <?php endif; ?>

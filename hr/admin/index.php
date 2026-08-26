@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/infodeqb/session.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/infodeqb/hr/common.php';
@@ -153,8 +153,8 @@ if (! empty($_POST)) {
                 // Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
                 $qSemVal = $pdo->prepare(
                     "SELECT COUNT(*)
-                     FROM infodeqb_rds_registo_acessos ra
-                     JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
+                     FROM infodeqb_rds_gabinetes g
+                     JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
                      WHERE ra.registo_id = ?
                        AND g.responsavel IS NOT NULL AND g.responsavel != 0
                        AND NOT EXISTS (
@@ -383,6 +383,9 @@ $sth_aguarda = $pdo->prepare(
 $sth_aguarda->execute();
 $pedidosAguarda      = $sth_aguarda->fetchAll(PDO::FETCH_ASSOC);
 $pedidosAguardaCount = count($pedidosAguarda);
+$aguardaRegistoIds   = array_values(array_unique(array_filter(
+    array_map('intval', array_column($pedidosAguarda, 'registo_id'))
+)));
 
 // Registos "Novo" onde existe pelo menos um lab cujo responsável
 // não tem nenhum pedido de validação real (exclui "Isento auto-validado")
@@ -392,10 +395,9 @@ $qSemPedido = $pdo->query(
      WHERE r.status = 'Novo' AND r.deleted = 0
        AND EXISTS (
            SELECT 1
-           FROM infodeqb_rds_registo_acessos ra
-           JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
-           WHERE ra.registo_id = r.autoid
-             AND g.responsavel IS NOT NULL AND g.responsavel != 0
+           FROM infodeqb_rds_gabinetes g
+           JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id AND ra.registo_id = r.autoid
+           WHERE g.responsavel IS NOT NULL AND g.responsavel != 0
              AND g.responsavel != 246398
              AND NOT EXISTS (
                  SELECT 1 FROM infodeqb_rds_validacao v
@@ -424,9 +426,14 @@ if (!empty($pedidos)) {
 
 // ── Dados para o filtro por laboratório ──────────────────────────────
 $labsMap = array();  // registo_id → [lab_ids]
-foreach ($pdo->query('SELECT registo_id, lab_id FROM infodeqb_rds_registo_acessos')
-              ->fetchAll(PDO::FETCH_ASSOC) as $_lr) {
-    $labsMap[(int)$_lr['registo_id']][] = $_lr['lab_id'];
+foreach ($pdo->query(
+    'SELECT ra.registo_id, g.deqid
+     FROM infodeqb_rds_registo_acessos ra
+     JOIN infodeqb_rds_gabinetes g ON g.id = ra.lab_id
+     JOIN infodeqb_rds_registo r ON r.autoid = ra.registo_id
+     WHERE r.deleted = 0'
+)->fetchAll(PDO::FETCH_ASSOC) as $_lr) {
+    $labsMap[(int)$_lr['registo_id']][] = $_lr['deqid'];
 }
 $gabFilterByPiso = array(); // piso → [ {deqid, nomegab} ]
 $labIdToNameMap  = array(); // deqid → nomegab
@@ -677,7 +684,7 @@ function hrAdminInitials($nome) {
     return mb_strtoupper(mb_substr($parts[0], 0, 1) . (count($parts) > 1 ? mb_substr(end($parts), 0, 1) : mb_substr($parts[0], 1, 1)));
 }
 
-$pageTitle = 'Administração — Colaboradores';
+$pageTitle = t('HR_ADMIN_TITLE');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
@@ -739,7 +746,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 				    <div class="mb-1" style="font-size:.88em"><strong style="color:#155724">Processados:</strong> <?= htmlspecialchars(implode(', ', $_vr['sent'])) ?></div>
 				    <?php endif; ?>
 				    <?php if (!empty($_vr['skipped'])): ?>
-				    <table class="table table-sm table-bordered mb-0 mt-1 bg-white" style="font-size:.85em">
+				    <table class="table table-sm table-hover mb-0 mt-1 bg-white" style="font-size:.85em">
 				      <thead class="table-secondary"><tr><th>Nome</th><th>Motivo</th></tr></thead>
 				      <tbody>
 				      <?php foreach ($_vr['skipped'] as $_sk): ?>
@@ -906,6 +913,13 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
           ⏳ <?= $notifPendCount ?>
         </span>
       <?php endif; ?>
+      <?php if ($pedidosAguardaCount > 0): ?>
+        <span class="tab-badge" id="badge-aguarda-sig"
+              style="background:#dbeafe;color:#1d4ed8;cursor:pointer;"
+              title="Clique para ver só os registos a aguardar resposta do SIGARRA">
+          📨 <?= $pedidosAguardaCount ?>
+        </span>
+      <?php endif; ?>
     </a>
   </li>
   <li class="nav-item">
@@ -991,10 +1005,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
              WHERE r.status = 'Novo' AND r.deleted = 0
                AND EXISTS (
                    SELECT 1
-                   FROM infodeqb_rds_registo_acessos ra
-                   JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
-                   WHERE ra.registo_id = r.autoid
-                     AND g.responsavel IS NOT NULL AND g.responsavel != 0
+                   FROM infodeqb_rds_gabinetes g
+                   JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id AND ra.registo_id = r.autoid
+                   WHERE g.responsavel IS NOT NULL AND g.responsavel != 0
                      AND g.responsavel != 246398
                      AND NOT EXISTS (
                          SELECT 1 FROM infodeqb_rds_validacao v
@@ -1062,7 +1075,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
                 echo '<td class="text-nowrap text-center" style="white-space:nowrap">';
                 // Ver detalhe
-                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' . htmlspecialchars($row['codigo']) . '&amp;status=Novo"><i class="far fa-eye fa-sm"></i></a>';
+                echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' . htmlspecialchars($row['codigo']) . '&amp;status=Novo"><i class="far fa-eye fa-xs"></i></a>';
                 // SIGARRA
                 echo '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' . $link . htmlspecialchars($row['codigo']) . '"><i class="fas fa-info fa-sm"></i></a>';
                 // Solicitar validações
@@ -1157,7 +1170,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm"></i></a>'
+                        '"><i class="far fa-eye fa-xs"></i></a>'
                    . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
@@ -1241,7 +1254,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm"></i></a>'
+                        '"><i class="far fa-eye fa-xs"></i></a>'
                    . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a></td>';
@@ -1294,6 +1307,11 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                     ⏳ Ver <span id="notif-count"><?= $notifPendCount ?></span> pendente<?php echo $notifPendCount > 1 ? 's' : ''; ?>
                   </button>
                   <?php endif; ?>
+                  <?php if ($pedidosAguardaCount > 0): ?>
+                  <button type="button" id="btn-filter-aguarda" class="btn btn-sm btn-outline-primary me-2" title="Ver só registos a aguardar resposta do SIGARRA">
+                    📨 Ver <span id="aguarda-count"><?= $pedidosAguardaCount ?></span> a aguardar SIGARRA
+                  </button>
+                  <?php endif; ?>
 															<form action="index.php" method="post" id="export-form" style="display:inline-block;">
 																<input type="submit"
 																	class="btn btn-info  btn-sm text-white"
@@ -1321,10 +1339,13 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 'Ativo'
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $isPend = !empty($row['notif_pendente']);
-                $trStyle = $isPend ? ' style="background:#fffdf0;"' : '';
+                $isPend    = !empty($row['notif_pendente']);
+                $isAguarda = in_array((int)$row['autoid'], $aguardaRegistoIds, true);
+                $trStyle   = $isPend    ? ' style="background:#fffdf0;"'
+                           : ($isAguarda ? ' style="background:#eff6ff;"' : '');
                 echo '<tr data-row-id="' . $row['codigo'] . '"'
-                    . ($isPend ? ' data-notif-pend="1"' : '')
+                    . ($isPend    ? ' data-notif-pend="1"'  : '')
+                    . ($isAguarda ? ' data-aguarda-sig="1"' : '')
                     . $getLabsAttr($row['autoid'])
                     . $trStyle . '>';
                 echo '<td class="text-start"><input name="selector[' .
@@ -1344,7 +1365,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm"></i></a>'
+                        '"><i class="far fa-eye fa-xs"></i></a>'
                    . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
@@ -1382,7 +1403,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 											  onsubmit="return confirm('Eliminar definitivamente ' + <?= (int)$inativosAntigosCount ?> + ' registo(s) inativo(s) há mais de 2 anos? Esta ação não pode ser revertida.')">
 											<input type="hidden" name="eliminar_inativos_antigos" value="1">
 											<button type="submit" class="btn btn-sm btn-outline-danger">
-												<i class="fas fa-trash-alt me-1"></i> Eliminar registos inativos há +2 anos
+												<i class="fas fa-trash me-1"></i> Eliminar registos inativos há +2 anos
 												<span class="badge badge-danger ms-1"><?= $inativosAntigosCount ?></span>
 											</button>
 										</form>
@@ -1433,7 +1454,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 $link = (strlen($row['codigo']) > 6) ? "https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico=" : "https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=";
                 echo '<a class="btn btn-xs btn-outline-info me-1" title="Ver registo" href="detail.php?id=' .
                         $row['codigo'] .
-                        '"><i class="far fa-eye fa-sm"></i></a>'
+                        '"><i class="far fa-eye fa-xs"></i></a>'
                    . '<a class="btn btn-xs btn-outline-feup me-1" title="SIGARRA" target="_blank" href="' .
                         $link . $row['codigo'] .
                         '"><i class="fas fa-info fa-sm"></i></a>';
@@ -1613,7 +1634,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
             <span class="badge badge-warning ms-1">A aguardar resposta</span>
           <?php endif; ?>
         </small>
-        <table class="table table-xs table-bordered mb-1" style="font-size:.8rem;background:#fff;">
+        <table class="table table-xs table-hover mb-1" style="font-size:.8rem;background:#fff;">
           <thead class="">
             <tr>
               <th>Espaço</th><th>Responsável</th><th><?= t('STATUS') ?></th><th>Nota</th><th style="width:1%"><?= t('ACTIONS') ?></th>
@@ -1764,7 +1785,7 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
   if (d.datafim_novo !== undefined) {
     hasSpecific = true;
     html += '<h6 class="mb-2">Alteração de Data de Fim</h6>';
-    html += '<table class="table table-sm table-bordered mb-3">';
+    html += '<table class="table table-sm table-hover mb-3">';
     html += '<thead class=""><tr><th>Data anterior</th><th>Nova data</th></tr></thead>';
     html += '<tbody><tr>';
     html += '<td class="text-muted">' + esc(d.datafim_antigo || '—') + '</td>';
@@ -1776,14 +1797,14 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
   if (d.labs_adicionados !== undefined || d.labs_removidos !== undefined) {
     hasSpecific = true;
     html += '<h6 class="mb-2">Acesso DEQ</h6>';
-    html += '<table class="table table-sm table-bordered mb-3">';
+    html += '<table class="table table-sm table-hover mb-3">';
     html += '<thead class=""><tr><th>Antes</th><th>Depois</th></tr></thead><tbody><tr>';
     html += '<td>' + (ant ? (ant.acessodeq ? 'Sim' : 'Não') : '—') + '</td>';
     html += '<td>' + (d.acessodeq ? 'Sim' : 'Não') + '</td>';
     html += '</tr></tbody></table>';
 
     html += '<h6 class="mb-2">Laboratórios / Gabinetes</h6>';
-    html += '<table class="table table-sm table-bordered mb-3">';
+    html += '<table class="table table-sm table-hover mb-3">';
     html += '<thead class=""><tr><th style="width:50%">Adicionados</th><th>Removidos</th></tr></thead><tbody><tr>';
 
     var add = (d.labs_adicionados_nomes || d.labs_adicionados || []);
@@ -1829,7 +1850,7 @@ function verPedido(id, jsonNovo, jsonAnt, jsonCampos) {
             + '</tr>';
     }
     var cols = ant ? 3 : 2;
-    html += '<table class="table table-sm table-bordered mb-0">'
+    html += '<table class="table table-sm table-hover mb-0">'
           + '<thead class=""><tr>'
           + '<th>Campo</th>' + (ant ? '<th>Antes</th>' : '') + '<th>Valor</th>'
           + '</tr></thead><tbody>' + rows + '</tbody></table>';
@@ -2029,6 +2050,49 @@ window._labIdToName = <?= json_encode($labIdToNameMap, JSON_UNESCAPED_UNICODE) ?
     document.addEventListener('DOMContentLoaded', function () {
       setTimeout(activateAndFilter, 200);
     });
+  }
+
+  // ── Filtro "Aguarda SIGARRA" no tab Ativos ────────────────────────────────
+  var btnFilterAg  = document.getElementById('btn-filter-aguarda');
+  var badgeAg      = document.getElementById('badge-aguarda-sig');
+  var _filteredAg  = false;
+  var _btnAgHtmlOn = btnFilterAg ? btnFilterAg.innerHTML : '';
+
+  $(document).ready(function () {
+    if (window.jQuery && $.fn.dataTable) {
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (!_filteredAg || settings.nTable.id !== 'active') return true;
+        var aoRow = settings.aoData ? settings.aoData[dataIndex] : null;
+        var nTr   = aoRow ? aoRow.nTr : null;
+        return !!(nTr && nTr.getAttribute('data-aguarda-sig') === '1');
+      });
+    }
+  });
+
+  function applyFilterAg(on) {
+    _filteredAg = on;
+    if (on) {
+      if (btnFilterAg) { btnFilterAg.classList.replace('btn-outline-primary', 'btn-primary'); btnFilterAg.innerHTML = '✕ Limpar filtro'; }
+    } else {
+      if (btnFilterAg) { btnFilterAg.classList.replace('btn-primary', 'btn-outline-primary'); btnFilterAg.innerHTML = _btnAgHtmlOn; }
+    }
+    if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#active')) {
+      $('#active').DataTable().draw();
+    }
+  }
+
+  function activateAndFilterAg() {
+    if (activeTab && typeof bootstrap !== 'undefined') {
+      bootstrap.Tab.getOrCreateInstance(activeTab).show();
+    } else if (activeTab) { activeTab.click(); }
+    setTimeout(function () { applyFilterAg(true); }, 80);
+  }
+
+  if (btnFilterAg) {
+    btnFilterAg.addEventListener('click', function (e) { e.stopPropagation(); applyFilterAg(!_filteredAg); });
+  }
+  if (badgeAg) {
+    badgeAg.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); activateAndFilterAg(); });
   }
 }());
 </script>

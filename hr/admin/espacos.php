@@ -50,7 +50,7 @@ if (!empty($_POST['action'])) {
     // Eliminar espaço
     if ($action === 'delete_gab') {
         $id = (int)($_POST['id'] ?? 0);
-        $q  = $pdo->prepare("SELECT COUNT(*) FROM infodeqb_rds_registo_acessos WHERE lab_id=(SELECT deqid FROM infodeqb_rds_gabinetes WHERE id=?)");
+        $q = $pdo->prepare("SELECT COUNT(*) FROM infodeqb_rds_registo_acessos WHERE lab_id=?");
         $q->execute([$id]);
         if ((int)$q->fetchColumn() > 0) {
             $msg = 'Não é possível eliminar — este espaço tem registos de acesso associados.'; $msgType = 'danger';
@@ -122,7 +122,7 @@ $activeTab = $_GET['tab'] ?? 'gab';
 $flashMsg  = $_GET['msg'] ?? '';
 $flashType = $_GET['t']   ?? 'success';
 
-$pageTitle = 'Espaços e Responsáveis';
+$pageTitle = t('HR_ADMIN_SPACES');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
@@ -215,16 +215,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         if ($g['edificio'] !== $curEdif):
           $curEdif = $g['edificio'];
     ?>
-    <tr class="gab-group-header" data-edificio="<?= htmlspecialchars($g['edificio']) ?>"
+    <tr class="gab-group-header iq-tbl-group-1" data-edificio="<?= htmlspecialchars($g['edificio']) ?>"
         data-piso="<?= htmlspecialchars($g['piso']) ?>">
-      <td colspan="7" style="background:#2475ba;color:#fff;font-weight:600;padding:4px 8px;font-size:.8rem;">
+      <td colspan="7">
         <i class="fas fa-building fa-xs me-1"></i><?= htmlspecialchars($g['edificio']) ?>
       </td>
     </tr>
     <?php endif; $curPiso = $g['piso']; ?>
-    <tr class="gab-group-header" data-edificio="<?= htmlspecialchars($g['edificio']) ?>"
+    <tr class="gab-group-header iq-tbl-group-2" data-edificio="<?= htmlspecialchars($g['edificio']) ?>"
         data-piso="<?= htmlspecialchars($g['piso']) ?>">
-      <td colspan="7" style="background:#dde6f0;color:#2c3e50;font-weight:600;padding:3px 16px;font-size:.78rem;">
+      <td colspan="7">
         <i class="fas fa-layer-group fa-xs me-1"></i><?= htmlspecialchars($g['piso']) ?>
       </td>
     </tr>

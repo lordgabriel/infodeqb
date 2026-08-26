@@ -30,8 +30,9 @@ function endsWith ($haystack, $needle)
  */
 function getRegistoAcessos(PDO $pdo, int $registoId): array {
     $s = $pdo->prepare(
-        'SELECT lab_id FROM infodeqb_rds_registo_acessos
-         WHERE registo_id = ? ORDER BY lab_id ASC'
+        'SELECT g.deqid FROM infodeqb_rds_gabinetes g
+         JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
+         WHERE ra.registo_id = ?'
     );
     $s->execute([$registoId]);
     return $s->fetchAll(PDO::FETCH_COLUMN);
@@ -44,19 +45,19 @@ function getRegistoAcessos(PDO $pdo, int $registoId): array {
 function setRegistoAcessos(PDO $pdo, int $registoId, array $labIds, array $gabMap = []): void {
     $labIds = array_values(array_unique(array_filter(array_map('trim', $labIds))));
 
-    // Nova tabela relacional
-    $pdo->prepare('DELETE FROM infodeqb_rds_registo_acessos WHERE registo_id = ?')
-        ->execute([$registoId]);
+    // Actualizar tabela relacional (fonte primária)
+    $pdo->prepare('DELETE FROM infodeqb_rds_registo_acessos WHERE registo_id = ?')->execute([$registoId]);
     if (!empty($labIds)) {
-        $stmt = $pdo->prepare(
-            'INSERT IGNORE INTO infodeqb_rds_registo_acessos (registo_id, lab_id) VALUES (?,?)'
-        );
-        foreach ($labIds as $labId) {
-            $stmt->execute([$registoId, $labId]);
+        $ph   = implode(',', array_fill(0, count($labIds), '?'));
+        $gabs = $pdo->prepare("SELECT id FROM infodeqb_rds_gabinetes WHERE deqid IN ($ph)");
+        $gabs->execute($labIds);
+        $ins  = $pdo->prepare('INSERT INTO infodeqb_rds_registo_acessos (registo_id, lab_id) VALUES (?, ?)');
+        foreach ($gabs->fetchAll(PDO::FETCH_COLUMN) as $labId) {
+            $ins->execute([$registoId, $labId]);
         }
     }
 
-    // Compatibilidade: manter acessosid + acessos no registo (legado)
+    // Actualizar cache de texto
     $acessosid = implode('; ', $labIds);
     $nomes = [];
     foreach ($labIds as $id) {
@@ -400,17 +401,19 @@ function _registoTotalmenteValidado($pdo, $registo_id) {
     $deqidsComPedido = array_unique($deqidsComPedido);
 
     // Acessos actuais do registo com responsável definido e ainda sem pedido
-    $qAcessos = $pdo->prepare(
-        "SELECT ra.lab_id, g.responsavel
-         FROM infodeqb_rds_registo_acessos ra
-         JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
-         WHERE ra.registo_id = ?
-           AND g.responsavel IS NOT NULL AND g.responsavel != 0
-           AND g.responsavel != 246398"
-    );
-    $qAcessos->execute([$registo_id]);
-    foreach ($qAcessos->fetchAll(PDO::FETCH_ASSOC) as $_a) {
-        if (!in_array(trim((string)$_a['lab_id']), $deqidsComPedido)) return false;
+    $deqids = getRegistoAcessos($pdo, $registo_id);
+    if (!empty($deqids)) {
+        $ph = implode(',', array_fill(0, count($deqids), '?'));
+        $qG = $pdo->prepare(
+            "SELECT deqid FROM infodeqb_rds_gabinetes
+             WHERE deqid IN ($ph)
+               AND responsavel IS NOT NULL AND responsavel != 0
+               AND responsavel != 246398"
+        );
+        $qG->execute($deqids);
+        foreach ($qG->fetchAll(PDO::FETCH_COLUMN) as $_deqid) {
+            if (!in_array(trim((string)$_deqid), $deqidsComPedido)) return false;
+        }
     }
 
     return true;

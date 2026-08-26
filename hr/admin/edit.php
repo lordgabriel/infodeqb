@@ -56,7 +56,14 @@ $statusValidos = ['Novo','Pendente','Ativo','Inativo'];
 
 // Registo Pendente: o SIGARRA já foi contactado — só permitir ao admin
 // alterar o estado, para evitar incongruências com o pedido em curso.
-$lockEdit = ($data['status'] === 'Pendente');
+// notif_pendente: alteração ainda por registar — bloquear até o admin resolver.
+$lockNotif = !empty($data['notif_pendente']) && $data['status'] === 'Ativo';
+$qAg = $pdo->prepare(
+    "SELECT id FROM infodeqb_rds_pedido WHERE registo_id=? AND status='Aguarda_SIGARRA' LIMIT 1"
+);
+$qAg->execute([$id1]);
+$lockAguarda = (bool)$qAg->fetchColumn();
+$lockEdit    = ($data['status'] === 'Pendente') || $lockNotif || $lockAguarda;
 
 if (!empty($_POST) && $lockEdit) {
 
@@ -199,13 +206,33 @@ if (!empty($_POST) && $lockEdit) {
                 }
             }
 
-            // Actualizar tabela relacional de acessos
-            if (isset($_POST['acessos'])) {
-                $labsPost = array_values(array_unique(array_filter(
-                    array_map('trim', (array)$_POST['acessos'])
-                )));
-                $gabMapAdmin = getGabMap($pdo);
-                setRegistoAcessos($pdo, (int)$id1, $labsPost, $gabMapAdmin);
+            // Actualizar tabela relacional de acessos (sempre — array vazio limpa todos)
+            $labsPost = array_values(array_unique(array_filter(
+                array_map('trim', (array)($_POST['acessos'] ?? array()))
+            )));
+            $gabMapAdmin = getGabMap($pdo);
+            setRegistoAcessos($pdo, (int)$id1, $labsPost, $gabMapAdmin);
+
+            // Apagar validações cujos labs já não fazem parte do registo (qualquer status)
+            $qPV = $pdo->prepare(
+                "SELECT id, deq_id, labs_json FROM infodeqb_rds_validacao WHERE registo_id=?"
+            );
+            $qPV->execute([(int)$id1]);
+            foreach ($qPV->fetchAll(PDO::FETCH_ASSOC) as $pv) {
+                $pvDeqids = array();
+                $pvLabs = json_decode($pv['labs_json'], true);
+                if (is_array($pvLabs)) {
+                    foreach ($pvLabs as $l) {
+                        if (!empty($l['deq_id'])) $pvDeqids[] = (string)$l['deq_id'];
+                    }
+                } elseif (!empty($pv['deq_id'])) {
+                    $pvDeqids[] = (string)$pv['deq_id'];
+                }
+                // Apagar se nenhum lab desta validação existe no novo conjunto
+                if (!empty($pvDeqids) && empty(array_intersect($pvDeqids, $labsPost))) {
+                    $pdo->prepare("DELETE FROM infodeqb_rds_validacao WHERE id=?")
+                        ->execute([$pv['id']]);
+                }
             }
 
             // Detetar alterações relevantes num registo Ativo
@@ -219,7 +246,7 @@ if (!empty($_POST) && $lockEdit) {
                 $mudouDatas = ($datafim    !== $datafimAntigo)
                            || ($datainicio !== $data['datainicio']);
                 $labsAntigos = array_filter(array_map('trim', preg_split('/[\s;,]+/', $data['acessosid'] ?? '')));
-                $labsNovos   = isset($_POST['acessos']) ? array_values(array_unique(array_filter(array_map('trim', (array)$_POST['acessos'])))) : $labsAntigos;
+                $labsNovos   = $labsPost;
                 $mudouLabs   = $_normLabs(implode(';', $labsNovos)) !== $_normLabs(implode(';', $labsAntigos))
                             || ((int)$acessodeq_post !== (int)$data['acessodeq']);
 
@@ -282,9 +309,11 @@ if (!empty($_POST) && $lockEdit) {
                         'labs_removidos_nomes'   => $labsRemNomes,
                     ), JSON_UNESCAPED_UNICODE);
                     $dadosAnt = json_encode(array(
-                        'datafim'  => $datafimAntigo,
-                        'acessosid'=> $data['acessosid'] ?? '',
-                        'acessodeq'=> (int)$data['acessodeq'],
+                        'datainicio'=> $data['datainicio'] ?? '',
+                        'datafim'   => $datafimAntigo,
+                        'acessosid' => $data['acessosid'] ?? '',
+                        'acessos'   => $data['acessos'] ?? '',
+                        'acessodeq' => (int)$data['acessodeq'],
                     ), JSON_UNESCAPED_UNICODE);
 
                     $pdo->prepare(
@@ -364,7 +393,7 @@ foreach ($gabRows as $rowgab) {
 }
 if ($gabCurPiso !== '') $gab .= '</div>';
 
-$pageTitle = 'Editar Colaborador';
+$pageTitle = t('HR_ADMIN_EDIT');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
@@ -381,18 +410,36 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php unset($_SESSION['val_info']); endif; ?>
 
-<?php if ($lockEdit): ?>
-<div class="alert alert-warning" role="alert">
-  <i class="fas fa-exclamation-triangle me-1"></i>
-  <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido.
-  Para evitar inconsistências, os dados ficam bloqueados; a única alteração permitida é o <strong>Estado</strong>.
-</div>
-<?php endif; ?>
-
 <form action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
       method="post" class="iq-form-2col-wrap">
   <input type="hidden" name="id1"   value="<?= htmlspecialchars($id1) ?>">
   <input type="hidden" name="id"    value="<?= htmlspecialchars($id) ?>">
+
+  <?php if ($lockAguarda): ?>
+  <div class="alert alert-info d-flex align-items-start" role="alert" style="gap:.75rem;margin-bottom:1rem">
+    <i class="fas fa-paper-plane mt-1" style="flex-shrink:0"></i>
+    <div>
+      <strong>Edição bloqueada — aguarda confirmação do SIGARRA.</strong><br>
+      <span style="font-size:.9rem">Foi enviada notificação ao SIGARRA sobre alteração neste registo. Os dados ficam bloqueados até o SIGARRA confirmar.
+      <a href="detail.php?id=<?= urlencode($id) ?>">Ver detalhe do colaborador</a>.</span>
+    </div>
+  </div>
+  <?php elseif ($lockNotif): ?>
+  <div class="alert alert-warning d-flex align-items-start" role="alert" style="gap:.75rem;margin-bottom:1rem">
+    <i class="fas fa-exclamation-triangle mt-1" style="flex-shrink:0"></i>
+    <div>
+      <strong>Edição bloqueada — alteração por registar.</strong><br>
+      <span style="font-size:.9rem">Este registo foi modificado mas a alteração ainda não foi comunicada ao SIGARRA nem aceite silenciosamente.
+      <a href="detail.php?id=<?= urlencode($id) ?>">Volte ao detalhe do colaborador</a> e resolva antes de editar novamente.</span>
+    </div>
+  </div>
+  <?php elseif ($lockEdit): ?>
+  <div class="alert alert-warning" role="alert" style="margin-bottom:1rem">
+    <i class="fas fa-exclamation-triangle me-1"></i>
+    <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido.
+    Para evitar inconsistências, os dados ficam bloqueados; a única alteração permitida é o <strong>Estado</strong>.
+  </div>
+  <?php endif; ?>
 
   <div class="iq-form-2col">
 
@@ -547,7 +594,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="col-md-auto form-group mb-0">
         <label class="d-block"><?= $lang['STATUS'] ?></label>
         <div class="d-flex align-items-center" style="gap:8px">
-          <select name="status" class="form-control form-control-sm" style="width:auto">
+          <select name="status" class="form-control form-control-sm" style="width:auto" <?= ($lockNotif || $lockAguarda) ? 'disabled' : '' ?>>
             <?php
             $sBadges = ['Novo'=>'badge-info','Pendente'=>'badge-warning','Ativo'=>'badge-success','Inativo'=>'badge-secondary'];
             foreach ($statusValidos as $st):
