@@ -3,7 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include ROOT_DIR . '/infodeqb/session.php';
 require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 
-$_servdocLocalAdmins = [];
+$_servdocLocalAdmins = $_SESSION['_iq_section_admins']['servdoc'] ?? [];
 $isServdocAdmin = $isAdmin || in_array($_iqCurrentUser, $_servdocLocalAdmins);
 
 $pdo = Database::connect();
@@ -17,9 +17,12 @@ $stmtDoc->execute([$emailuser]);
 $docente = $stmtDoc->fetch(PDO::FETCH_ASSOC);
 
 if (!$isServdocAdmin && !$docente) {
-    header('Location: ' . HTTP_DIR . '/infodeqb/error.php');
+    header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit;
 }
+
+$_servdocStateFile = ROOT_DIR . '/infodeqb/servdoc/.form_state';
+$servdocFormClosed = (is_file($_servdocStateFile) && trim(file_get_contents($_servdocStateFile)) === 'closed');
 
 $idDocente = $docente ? (int)$docente['Codigo'] : null;
 $nomeDoc   = $docente ? $docente['Nome']   : '';
@@ -64,6 +67,24 @@ $todasUcs = $pdo->query('SELECT * FROM infodeqb_ucs_deqb ORDER BY area ASC, uc A
 $flashMsg  = '';
 $flashType = 'success';
 
+// Admin unlock: abre form para utilizador específico (não requer $idDocente)
+if (!empty($_POST) && $isServdocAdmin && ($_POST['_acao'] ?? '') === 'admin_unlock_user') {
+    $targetId = (int)($_POST['admin_target_id'] ?? 0);
+    if ($targetId) {
+        $stmtChk = $pdo->prepare(
+            'SELECT id FROM infodeqb_servdoc_edit_request WHERE id_docente=? AND editado_em IS NULL AND aprovado=1'
+        );
+        $stmtChk->execute(array($targetId));
+        if (!$stmtChk->fetch()) {
+            $pdo->prepare(
+                'INSERT INTO infodeqb_servdoc_edit_request (id_docente, motivo, aprovado, aprovado_em) VALUES (?,?,1,NOW())'
+            )->execute(array($targetId, 'Abertura directa pelo administrador'));
+        }
+    }
+    $_SESSION['_servdoc_flash'] = array('Formulário aberto para o docente.', 'success');
+    header('Location: index.php'); exit;
+}
+
 // Admin edit: processar antes do bloco normal (não requer $idDocente)
 if (!empty($_POST) && $isServdocAdmin && ($_POST['_acao'] ?? '') === 'admin_editar') {
     $targetId  = (int)($_POST['admin_target_id'] ?? 0);
@@ -85,10 +106,10 @@ if (!empty($_POST) && $isServdocAdmin && ($_POST['_acao'] ?? '') === 'admin_edit
         $pdo->prepare('UPDATE infodeqb_servdoc_edit_request SET editado_em=NOW() WHERE id_docente=? AND editado_em IS NULL')
             ->execute(array($targetId));
         $pdo->commit();
-        $_SESSION['_servdoc_flash'] = array('Preferências de ' . $targetNome . ' actualizadas.', 'success');
+        $_SESSION['_servdoc_flash'] = array(t('SERVDOC_PREFS_SAVED'), 'success');
     } catch (Exception $e) {
         $pdo->rollBack();
-        $_SESSION['_servdoc_flash'] = array('Erro ao guardar.', 'danger');
+        $_SESSION['_servdoc_flash'] = array(t('ERROR_SAVE'), 'danger');
     }
     header('Location: index.php'); exit;
 }
@@ -96,9 +117,13 @@ if (!empty($_POST) && $isServdocAdmin && ($_POST['_acao'] ?? '') === 'admin_edit
 if (!empty($_POST) && $idDocente) {
     $acao = $_POST['_acao'] ?? '';
 
-    if ($acao === 'submeter' || $acao === 'editar') {
+    if ($servdocFormClosed && !$isServdocAdmin && !$podeEditar
+        && in_array($acao, array('submeter', 'editar'))) {
+        $flashMsg  = 'Submissões encerradas. Não é possível guardar alterações neste momento.';
+        $flashType = 'danger';
+    } elseif ($acao === 'submeter' || $acao === 'editar') {
         if ($acao === 'editar' && !$podeEditar) {
-            $flashMsg = 'Edição não autorizada.'; $flashType = 'danger';
+            $flashMsg = t('SERVDOC_NOT_AUTH'); $flashType = 'danger';
         } else {
             $filterOut = array('_acao','dataTable_length','Submeter','codigo','nome');
             $filteredArr = array_diff_key($_POST, array_flip($filterOut));
@@ -109,7 +134,7 @@ if (!empty($_POST) && $idDocente) {
                 $elementos[] = array($idDocente, $key, $v, $emailuser, $nomeDoc);
             }
             if (empty($elementos)) {
-                $flashMsg = 'Seleccione pelo menos uma UC antes de submeter.';
+                $flashMsg = t('SERVDOC_MIN_UC');
                 $flashType = 'warning';
             } else {
                 try {
@@ -127,44 +152,68 @@ if (!empty($_POST) && $idDocente) {
                         )->execute(array($pedidoEdicao['id']));
                     }
                     $pdo->commit();
-                    $_SESSION['_servdoc_flash'] = array('Preferências guardadas com sucesso.', 'success');
+                    $_SESSION['_servdoc_flash'] = array(t('SERVDOC_PREFS_SAVED'), 'success');
                     header('Location: index.php'); exit;
                 } catch (Exception $e) {
                     $pdo->rollBack();
-                    $flashMsg = 'Erro ao guardar preferências.'; $flashType = 'danger';
+                    $flashMsg = t('SERVDOC_ERROR_SAVE'); $flashType = 'danger';
                 }
             }
         }
 
-    } elseif ($acao === 'solicitar_edicao' && $temPrefs && !$pedidoEdicao) {
+    } elseif ($acao === 'solicitar_edicao' && !$pedidoEdicao) {
         try {
             $pdo->prepare(
                 'INSERT INTO infodeqb_servdoc_edit_request (id_docente, motivo) VALUES (?,?)'
             )->execute(array($idDocente, trim($_POST['motivo'] ?? '')));
-            $_SESSION['_servdoc_flash'] = array('Pedido enviado. Será notificado quando a edição for aprovada.', 'success');
+            $_SESSION['_servdoc_flash'] = array(t('SERVDOC_REQ_SENT'), 'success');
+            $_sdTipo = $temPrefs ? 'edição' : 'inserção';
+            $_sdNome = isset($docente['Nome']) ? $docente['Nome'] : $emailuser;
+            try {
+                require_once ROOT_DIR . '/infodeqb/vendor/PHPmailer/src/Exception.php';
+                require_once ROOT_DIR . '/infodeqb/vendor/PHPmailer/src/PHPMailer.php';
+                require_once ROOT_DIR . '/infodeqb/vendor/PHPmailer/src/SMTP.php';
+                $_sdMail = new \PHPMailer\PHPMailer\PHPMailer(true);
+                $_sdMail->IsSMTP();
+                $_sdMail->Host       = 'mail.up.pt';
+                $_sdMail->SMTPAuth   = true;
+                $_sdMail->Username   = mailUsername;
+                $_sdMail->Password   = mailUserPassword;
+                $_sdMail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                $_sdMail->Port       = 587;
+                $_sdMail->CharSet    = 'UTF-8';
+                $_sdFrom = defined('MAIL_FROM') && MAIL_FROM ? MAIL_FROM : mailUsername;
+                $_sdMail->setFrom($_sdFrom, 'InfoDEQB — DEQB/FEUP');
+                $_sdMail->Sender = mailUsername;
+                $_sdMail->addAddress('deqbdir@fe.up.pt');
+                $_sdMail->Subject = 'Serviço Docente — pedido de ' . $_sdTipo . ': ' . $_sdNome;
+                $_sdMail->Body    = "O docente {$_sdNome} ({$emailuser}) solicitou {$_sdTipo} de preferências no Serviço Docente.\n\n"
+                                  . 'Aceda ao painel para aprovar: ' . HTTP_DIR . '/infodeqb/servdoc/index.php';
+                $_sdMail->send();
+            } catch (Exception $e) { /* email falhou — pedido já guardado na BD */ }
         } catch (Exception $e) {
-            $_SESSION['_servdoc_flash'] = array('Erro ao enviar pedido.', 'danger');
+            $_SESSION['_servdoc_flash'] = array(t('SERVDOC_REQ_ERR'), 'danger');
         }
         header('Location: index.php'); exit;
 
     } elseif ($acao === 'cancelar_pedido' && $pedidoPendente) {
         $pdo->prepare('DELETE FROM infodeqb_servdoc_edit_request WHERE id = ? AND aprovado = 0')
             ->execute(array($pedidoEdicao['id']));
-        $_SESSION['_servdoc_flash'] = array('Pedido de edição cancelado.', 'info');
+        $_SESSION['_servdoc_flash'] = array(t('SERVDOC_REQ_CANCELLED'), 'info');
         header('Location: index.php'); exit;
 
     } elseif ($acao === 'aprovar_edicao' && $isServdocAdmin) {
         $reqId = (int)($_POST['req_id'] ?? 0);
         $pdo->prepare('UPDATE infodeqb_servdoc_edit_request SET aprovado=1, aprovado_em=NOW() WHERE id=?')
             ->execute(array($reqId));
-        $_SESSION['_servdoc_flash'] = array('Edição aprovada.', 'success');
+        $_SESSION['_servdoc_flash'] = array(t('SERVDOC_APPROVED'), 'success');
         header('Location: index.php'); exit;
 
     } elseif ($acao === 'revogar_edicao' && $isServdocAdmin) {
         $reqId = (int)($_POST['req_id'] ?? 0);
         $pdo->prepare('DELETE FROM infodeqb_servdoc_edit_request WHERE id = ? AND editado_em IS NULL')
             ->execute(array($reqId));
-        $_SESSION['_servdoc_flash'] = array('Aprovação revogada.', 'info');
+        $_SESSION['_servdoc_flash'] = array(t('SERVDOC_REVOKED_MSG'), 'info');
         header('Location: index.php'); exit;
     }
 }
@@ -297,7 +346,8 @@ if ($isServdocAdmin) {
 }
 
 Database::disconnect();
-$pageTitle = 'Preferência Serviço Docente';
+$pageTitle = t('SERVDOC_PAGE_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 
 // ── Helper: renderizar formulário de preferências ─────────────────
@@ -339,7 +389,7 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
           <!-- Cabeçalhos ordenáveis -->
           <tr class="">
             <th>Unidade Curricular</th>
-            <th style="width:11em">Área Científica</th>
+            <th style="width:10em;white-space:nowrap">Área Científica</th>
             <th style="width:0;display:none">_area_raw</th>
             <th style="width:7em" class="text-center">Preferência</th>
           </tr>
@@ -385,7 +435,7 @@ function renderForm($todasUcs, $prefIndex, $acao, $modoEdicao) {
                 <?= $c ?> &middot; <?= htmlspecialchars($row['ocorrencia']) ?>
               </small>
             </td>
-            <td class="align-middle" style="font-size:.78rem"><?= htmlspecialchars($row['area']) ?></td>
+            <td class="align-middle" style="font-size:.78rem;white-space:nowrap"><?= htmlspecialchars($row['area']) ?></td>
             <td style="display:none"><?= htmlspecialchars($row['area']) ?></td>
             <td class="align-middle">
               <div class="rank-btns">
@@ -527,8 +577,7 @@ $(document).ready(function () {
 <?php if ($flashMsg): ?>
 <div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3"
      role="alert" style="font-size:.85rem">
-  <i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='info'?'info-circle':'exclamation-circle') ?> me-2"></i>
-  <?= htmlspecialchars($flashMsg) ?>
+  <span><i class="fas fa-<?= $flashType==='success'?'check-circle':($flashType==='info'?'info-circle':'exclamation-circle') ?> me-2"></i><?= htmlspecialchars($flashMsg) ?></span>
   <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
 </div>
 <?php endif; ?>
@@ -578,7 +627,7 @@ function renderFormAdmin($todasUcs, $prefIndex, $targetId, $targetNome) {
         <thead>
           <tr class="">
             <th>Unidade Curricular</th>
-            <th style="width:11em">Área Científica</th>
+            <th style="width:10em;white-space:nowrap">Área Científica</th>
             <th style="width:0;display:none">_area_raw</th>
             <th style="width:7em" class="text-center">Preferência</th>
           </tr>
@@ -594,7 +643,7 @@ function renderFormAdmin($todasUcs, $prefIndex, $targetId, $targetNome) {
             $sel = isset($prefIndex[$row['codigo']]) ? $prefIndex[$row['codigo']] : 0; ?>
           <tr>
             <td class="align-middle"><span style="font-size:.84rem"><?= htmlspecialchars($row['uc']) ?></span><small class="text-muted d-block" style="font-size:.72rem"><?= $c ?> · <?= htmlspecialchars($row['ocorrencia']) ?></small></td>
-            <td class="align-middle" style="font-size:.78rem"><?= htmlspecialchars($row['area']) ?></td>
+            <td class="align-middle" style="font-size:.78rem;white-space:nowrap"><?= htmlspecialchars($row['area']) ?></td>
             <td style="display:none"><?= htmlspecialchars($row['area']) ?></td>
             <td class="align-middle"><div class="rank-btns"><?php for ($i=1;$i<=5;$i++): ?><input type="radio" class="uc-radio" id="<?= $c ?>_<?= $i ?>" name="<?= $c ?>" value="<?= $i ?>" <?= $sel===$i?'checked':'' ?>><label class="rank-lbl" for="<?= $c ?>_<?= $i ?>"><?= $i ?></label><?php endfor; ?></div></td>
           </tr>
@@ -917,7 +966,14 @@ $(document).ready(function () {
               </form>
               <?php endif; ?>
             <?php else: ?>
-            <span class="text-muted">—</span>
+            <form method="post" class="d-inline">
+              <input type="hidden" name="_acao" value="admin_unlock_user">
+              <input type="hidden" name="admin_target_id" value="<?= (int)$d['Codigo'] ?>">
+              <button type="submit" class="btn btn-outline-primary btn-xs"
+                      title="Abrir formulário para este docente">
+                <i class="fas fa-door-open fa-xs me-1"></i>Abrir
+              </button>
+            </form>
             <?php endif; ?>
           </td>
         </tr>
@@ -1177,6 +1233,15 @@ $(document).ready(function () {
 <?php else: ?>
 <?php /* ═══════ VISTA UTILIZADOR ══════════════════════════════════ */ ?>
 
+<?php if ($servdocFormClosed && !$podeEditar): ?>
+<div class="alert alert-warning mb-4" role="alert" style="font-size:.88rem">
+  <div>
+    <div><i class="fas fa-lock me-2"></i><strong>Submissões encerradas</strong></div>
+    <div style="margin-top:4px">O formulário está temporariamente encerrado. Contacte Luís Martins (<a href="mailto:fmartins@fe.up.pt">fmartins@fe.up.pt</a>) para mais informações.</div>
+  </div>
+</div>
+<?php endif; ?>
+
 <?php /* ── Identificação ─────────────────────────────────────────── */ ?>
 <div class="card shadow-sm mb-3">
   <div class="card-body py-2">
@@ -1188,29 +1253,28 @@ $(document).ready(function () {
   </div>
 </div>
 
-<?php if (!$temPrefs || $modoEdicao): ?>
+<?php
+$_showForm = (!$servdocFormClosed || $podeEditar) && (!$temPrefs || $modoEdicao);
+if ($_showForm):
+?>
 <?php /* ── Formulário (primeira vez ou edição aprovada) ─────────── */ ?>
 <?php if ($modoEdicao): ?>
 <div class="alert alert-info py-2 mb-3" style="font-size:.84rem">
-  <i class="fas fa-edit me-1"></i>
-  Edição aprovada — pode actualizar as suas preferências. As preferências anteriores serão substituídas.
+  <span><i class="fas fa-edit me-1"></i>Edição aprovada — pode actualizar as suas preferências. As preferências anteriores serão substituídas.</span>
 </div>
 <?php else: ?>
 <div class="alert alert-secondary py-2 mb-3" style="font-size:.84rem">
-  <i class="fas fa-info-circle me-1"></i>
-  Indique, para o <strong>máximo de 10 UCs</strong>, a sua preferência de 1 (menor) a 5 (maior).
+  <span><i class="fas fa-info-circle me-1"></i>Indique, para o <strong>máximo de 10 UCs</strong>, a sua preferência de 1 (menor) a 5 (maior).</span>
 </div>
 <?php endif; ?>
 <?php renderForm($todasUcs, $prefIndex, $modoEdicao ? 'editar' : 'submeter', $modoEdicao); ?>
 
 <?php else: ?>
-<?php /* ── Ver preferências submetidas ──────────────────────────── */ ?>
+<?php /* ── Vista unificada: prefs submetidas OU sem resposta ─────── */ ?>
 
-<?php /* Estado do pedido de edição */ ?>
 <?php if ($podeEditar): ?>
-<div class="alert alert-success py-2 mb-3 d-flex align-items-center" style="font-size:.84rem">
-  <i class="fas fa-unlock-alt me-2"></i>
-  <span class="mr-auto">Edição <strong>aprovada</strong> pelo secretariado. Pode actualizar as suas preferências.</span>
+<div class="alert alert-success py-2 mb-3" style="font-size:.84rem">
+  <span class="mr-auto"><i class="fas fa-unlock-alt me-2"></i>Formulário <strong>aberto</strong> pelo secretariado. Pode <?= $temPrefs ? 'actualizar as suas preferências' : 'submeter as suas preferências' ?>.</span>
   <a href="index.php?editar=1" class="btn btn-success btn-sm ms-3">
     <i class="fas fa-edit me-1"></i><?= t('SERVDOC_EDIT_NOW') ?>
   </a>
@@ -1219,7 +1283,7 @@ $(document).ready(function () {
 <div class="alert alert-warning py-2 mb-3 d-flex align-items-center" style="font-size:.84rem">
   <i class="fas fa-clock me-2"></i>
   <span class="mr-auto">
-    Pedido de edição enviado em <?= substr($pedidoEdicao['pedido_em'], 0, 16) ?>. Aguarda aprovação.
+    Pedido enviado em <?= substr($pedidoEdicao['pedido_em'], 0, 16) ?>. Aguarda aprovação.
   </span>
   <form method="post" class="ml-3 mb-0">
     <input type="hidden" name="_acao" value="cancelar_pedido">
@@ -1230,12 +1294,19 @@ $(document).ready(function () {
 </div>
 <?php else: ?>
 <div class="d-flex align-items-center mb-3" style="gap:10px">
+  <?php if ($temPrefs): ?>
   <span class="badge badge-success py-1 px-2" style="font-size:.8rem">
     <i class="fas fa-check me-1"></i>Preferências submetidas
   </span>
+  <?php else: ?>
+  <span class="badge badge-secondary py-1 px-2" style="font-size:.8rem">
+    <i class="fas fa-minus me-1"></i>Sem resposta
+  </span>
+  <?php endif; ?>
   <button class="btn btn-outline-secondary btn-sm ms-auto"
           data-bs-toggle="modal" data-bs-target="#modalSolicitarEdicao">
-    <i class="fas fa-edit me-1"></i><?= t('SERVDOC_EDIT_REQ') ?>
+    <i class="fas fa-<?= $temPrefs ? 'edit' : 'plus' ?> me-1"></i>
+    <?= $temPrefs ? t('SERVDOC_EDIT_REQ') : 'Solicitar inserção' ?>
   </button>
 </div>
 <?php endif; ?>
@@ -1286,7 +1357,7 @@ $(document).ready(function () {
       <form method="post">
         <input type="hidden" name="_acao" value="solicitar_edicao">
         <div class="modal-header">
-          <h5 class="modal-title">Solicitar edição de preferências</h5>
+          <h5 class="modal-title"><?= $temPrefs ? 'Solicitar edição de preferências' : 'Solicitar inserção de preferências' ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">

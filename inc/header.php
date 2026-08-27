@@ -36,12 +36,49 @@ if (!isset($isAdmin)) {
     require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 }
 // Admin de cada módulo (para visibilidade das entradas Admin no menu)
-$_iqNavHrAdmin    = $isAdmin || in_array($_iqCurrentUser ?? '', [
-    'up247821@up.pt','up448105@up.pt','up444525@up.pt',
-    'up239595@up.pt','up232433@up.pt','up701282@up.pt',
-]);
+$_iqNavHrAdmin    = $isAdmin || in_array($_iqCurrentUser ?? '', $_iqAdminsHr ?? []);
+$_iqNavHrList     = $_iqNavHrAdmin || in_array($_iqCurrentUser ?? '', $_iqAdminsHrList ?? []);
 $_iqNavWaterAdmin = $isAdmin || in_array($_iqCurrentUser ?? '', ['up248679@up.pt']);
-$_iqNavExamAdmin  = $isAdmin; // ajustar quando os admins de exames forem definidos
+$_iqNavExamAdmin    = $isAdmin;
+$_iqNavMobileAdmin  = $isAdmin || in_array($_iqCurrentUser ?? '', $_iqAdminsMobile ?? []);
+
+// Visibilidade do menu Departamento — cache em sessão (query única por sessão)
+if ($isAdmin) {
+    $_iqNavHasDept = true;
+} elseif (isset($_SESSION['_iq_nav_dept'])) {
+    $_iqNavHasDept = (bool)$_SESSION['_iq_nav_dept'];
+} else {
+    $_iqNavHasDept = false;
+    try {
+        $_iqNavEmail = $_SESSION['user'] ?? '';
+        $_iqNavCode  = (int)preg_replace('/\D/', '', $_SESSION['Code'] ?? $_iqNavEmail);
+        $_iqNavPdo   = Database::connect();
+        $_iqNavStmt  = $_iqNavPdo->prepare(
+            'SELECT 1 FROM infodeqb_inv_deqb WHERE email=? LIMIT 1'
+        );
+        $_iqNavStmt->execute([$_iqNavEmail]);
+        if (!$_iqNavStmt->fetch()) {
+            $_iqNavStmt = $_iqNavPdo->prepare(
+                'SELECT 1 FROM infodeqb_docentes_investigadores_perm WHERE codigo=? LIMIT 1'
+            );
+            $_iqNavStmt->execute([$_iqNavCode]);
+            if (!$_iqNavStmt->fetch()) {
+                $_iqNavStmt = $_iqNavPdo->prepare(
+                    'SELECT 1 FROM infodeqb_espacos_elementos_deq WHERE feup_id=? LIMIT 1'
+                );
+                $_iqNavStmt->execute([$_iqNavCode]);
+                $_iqNavHasDept = (bool)$_iqNavStmt->fetch();
+            } else {
+                $_iqNavHasDept = true;
+            }
+        } else {
+            $_iqNavHasDept = true;
+        }
+    } catch (Exception $_iqNavEx) {
+        $_iqNavHasDept = true; // fail open
+    }
+    $_SESSION['_iq_nav_dept'] = $_iqNavHasDept;
+}
 
 // Iniciais do utilizador para o avatar
 $_displayName = $_SESSION['DisplayName'] ?? $_SESSION['CommonName'] ?? '';
@@ -128,7 +165,9 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
       <a href="#"><?php echo t('NAV_STAFF'); ?> <i class="fas fa-chevron-down fa-xs" style="opacity:.6;margin-left:2px"></i></a>
       <ul class="iq-tn-menu">
         <li><a href="<?php echo $_base; ?>/hr/meu-registo.php"><?php echo t('NAV_MY_RECORD'); ?></a></li>
+        <?php if ($_iqNavHrList): ?>
         <li><a href="<?php echo $_base; ?>/hr/list.php"><?php echo t('NAV_STAFF_LIST'); ?></a></li>
+        <?php endif; ?>
         <?php if ($_iqNavHrAdmin): ?>
         <li class="iq-tn-sep"></li>
         <span class="iq-tn-grp"><?php echo t('NAV_ADMIN'); ?></span>
@@ -165,24 +204,24 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
       <a href="#"><?php echo t('NAV_TEACHING'); ?> <i class="fas fa-chevron-down fa-xs" style="opacity:.6;margin-left:2px"></i></a>
       <ul class="iq-tn-menu">
         <li><a href="<?php echo $_base; ?>/exams"><?php echo t('NAV_EXAMS'); ?></a></li>
+        <?php if ($_iqNavMobileAdmin): ?>
         <li><a href="<?php echo $_base; ?>/mobile/"><?php echo t('NAV_MOBILITY'); ?></a></li>
+        <?php endif; ?>
       </ul>
     </li>
 
     <!-- Department -->
+    <?php if ($_iqNavHasDept): ?>
     <li class="iq-tn-has-menu">
       <a href="#"><?php echo t('NAV_DEPT'); ?> <i class="fas fa-chevron-down fa-xs" style="opacity:.6;margin-left:2px"></i></a>
       <ul class="iq-tn-menu">
         <li><a href="<?php echo $_base; ?>/areas/"><?php echo t('NAV_AREAS'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/servdoc/"><?php echo t('NAV_SERVDOC'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/adi/"><?php echo t('NAV_SPACES'); ?></a></li>
-        <?php if ($isAdmin): ?>
-        <li class="iq-tn-sep"></li>
-        <span class="iq-tn-grp"><?php echo t('NAV_ADMIN'); ?></span>
         <li><a href="<?php echo $_base; ?>/dsd_app/"><?php echo t('NAV_DSD'); ?></a></li>
-        <?php endif; ?>
       </ul>
     </li>
+    <?php endif; ?>
 
   </ul>
 

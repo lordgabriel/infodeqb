@@ -3,17 +3,37 @@ require $_SERVER['DOCUMENT_ROOT'].'/deqbwww.php';
 include ROOT_DIR.'/infodeqb/session.php';
 
 if (!isset($_SESSION['user']) || empty($_SESSION['user'])) {
-    header('Location: '.HTTP_DIR.'/infodeqb/error.php');
+    header('Location: '.HTTP_DIR.'/infodeqb/denied.php');
     exit();
+}
+
+require_once ROOT_DIR . '/infodeqb/inc/admins.php';
+
+// Verificar acesso ao módulo de áreas (docente do DEQB ou admin global)
+if (!$isAdmin) {
+    $_pAreas = Database::connect();
+    $_sAreas = $_pAreas->prepare('SELECT id FROM infodeqb_docentes_investigadores_perm WHERE codigo = ?');
+    $_sAreas->execute([preg_replace('/\D/', '', $_iqCurrentUser)]);
+    if (!$_sAreas->fetch()) {
+        header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
+        exit();
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
     try {
         // Criar conexão PDO
         $pdo = Database::connect();
-        
+
         // Receber dados do formulário
         $codigo_inquirido = filter_input(INPUT_POST, 'codigo_inquirido', FILTER_SANITIZE_STRING);
+
+        // Não-admins só podem submeter para o seu próprio código
+        $_myCode = preg_replace('/\D/', '', $_iqCurrentUser);
+        if (!$isAdmin && $codigo_inquirido !== $_myCode) {
+            header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
+            exit();
+        }
         $valores = $_POST['valores'];
         
         // Excluir valores anteriores

@@ -35,7 +35,8 @@ foreach ($equipamentos as $eq) {
 }
 ksort($porLab);
 
-$pageTitle = 'Equipamentos';
+$pageTitle  = t('EQUIP_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -89,26 +90,25 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 <div class="lab-group mb-4" data-lab="<?= htmlspecialchars($labNome) ?>">
   <div class="d-flex align-items-center mb-0 px-3 py-2 rounded-top"
-       style="background:var(--iq-blue-light)">
-    <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:var(--iq-blue)">
+       style="background:var(--iq-accent)">
+    <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:#fff">
       <i class="fas fa-flask fa-xs me-1"></i><?= htmlspecialchars($labNome) ?>
     </h6>
-    <span class="badge" style="background:var(--iq-blue);color:#fff"><?= count($eqs) ?></span>
     <?php if ($podeAdicionarAqui): ?>
     <a href="edit_equipment.php?lab=<?= urlencode($labId) ?>"
-       title="Adicionar equipamento a este laboratório"
-       class="ml-2" style="color:var(--iq-blue)">
-      <i class="fas fa-plus-square fa-xs"></i>
+       title="<?= t('EQUIP_ADD_TO_LAB') ?>"
+       class="btn btn-xs ms-2" style="border:1px solid rgba(255,255,255,.6);color:#fff">
+      <i class="fas fa-plus fa-xs"></i>
     </a>
     <?php endif; ?>
   </div>
   <div class="card shadow-sm" style="border-top:none;border-radius:0 0 .375rem .375rem">
     <div class="card-body p-0">
-      <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
-        <thead class="">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
           <tr>
-            <th style="width:20em">Equipamento</th>
-            <th style="width:14em">Marca / Modelo</th>
+            <th style="width:20em"><?= t('EQUIP_NAME') ?></th>
+            <th style="width:14em"><?= t('EQUIP_BRAND') ?> / <?= t('EQUIP_MODEL') ?></th>
             <th class="text-center" style="width:5em">Ano</th>
             <th class="text-center" style="width:4em"><?= t('EQUIP_QTY') ?></th>
             <th style="width:4em" class="text-center"><?= t('ACTIONS') ?></th>
@@ -133,7 +133,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
             </td>
             <td class="align-middle text-center">
               <a href="equipment_details.php?id=<?= (int)$eq['equipment_id'] ?>"
-                title="Ver detalhe">
+                title="<?= t('EQUIP_VIEW_DETAIL') ?>">
                 <i class="fas fa-eye fa-s"></i>
               </a>
              <a href="edit_equipment.php?id=<?= (int)$eq['equipment_id'] ?>"

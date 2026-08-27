@@ -34,7 +34,8 @@ $validado = $_SESSION['user'];
 
     }
 
-$pageTitle = 'Eliminar Registo — Mobilidade';
+$pageTitle = t('MOBILE_DELETE_REQUEST');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 

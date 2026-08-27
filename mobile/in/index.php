@@ -44,7 +44,8 @@ $nTotal = count($registos);
 
 Database::disconnect();
 
-$pageTitle = 'Mobilidade IN';
+$pageTitle = t('MOBILE_IN_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

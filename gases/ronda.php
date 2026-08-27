@@ -26,7 +26,8 @@ foreach ($gases as $gid => $g) {
     }
 }
 
-$pageTitle = $gasAtual ? 'Registar ' . $gasAtual['name'] : 'Nova Ronda — Gases Especiais';
+$pageTitle = $gasAtual ? 'Registar ' . $gasAtual['name'] : t('GASES_RONDA_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -63,8 +64,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card shadow-sm" style="border-radius:var(--iq-r2);">
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover table-striped mb-0 align-middle">
-          <thead class="table-light">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead>
             <tr>
               <th style="width:2.5rem;"></th>
               <th>Gás</th>

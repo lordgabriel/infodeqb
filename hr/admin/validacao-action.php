@@ -466,7 +466,7 @@ elseif ($acao === 'concluir_sigarra' && !empty($_POST['pedido_id'])) {
 
     if ($ped && $ped['registo_id']) {
         $regRow = $pdo->prepare(
-            'SELECT r.datafim, r.acessodeq, r.acessos, c.nome, c.email
+            'SELECT r.datafim, r.acessodeq, r.acessos, r.status, r.proxy_email, c.nome, c.email
              FROM infodeqb_rds_registo r
              JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
              WHERE r.autoid = ?'
@@ -483,9 +483,13 @@ elseif ($acao === 'concluir_sigarra' && !empty($_POST['pedido_id'])) {
                 'fim'     => $reg['datafim'],
             );
             $body = format_email($info, 'mail_alteracao_concluida.html');
+            // Se o registo foi criado por proxy e ainda não está Activo, notificar o registador
+            $notifTo = (!empty($reg['proxy_email']) && $reg['status'] !== 'Activo')
+                       ? $reg['proxy_email']
+                       : $reg['email'];
             try {
                 send_email(
-                    array($reg['email']),
+                    array($notifTo),
                     $body,
                     'Acessos DEQB: Acessos atualizados',
                     array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')

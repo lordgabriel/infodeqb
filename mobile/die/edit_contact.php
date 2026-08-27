@@ -65,7 +65,8 @@ if($_SERVER['REQUEST_METHOD']=='POST') {
     }
 }
 
-$pageTitle = 'Editar Contacto';
+$pageTitle = t('MOBILE_EDIT_CONTACT');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 

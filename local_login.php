@@ -83,16 +83,16 @@ $base = HTTP_DIR . '/infodeqb';
       outline: none; transition: border-color .15s, box-shadow .15s;
     }
     .form-control:focus {
-      border-color: #0b6e73;
-      box-shadow: 0 0 0 3px rgba(11,110,115,.12);
+      border-color: #2475ba;
+      box-shadow: 0 0 0 3px rgba(36,117,186,.12);
     }
     .btn-login {
-      width: 100%; padding: .55rem; background: #0b6e73; color: #fff;
+      width: 100%; padding: .55rem; background: #2475ba; color: #fff;
       font-size: .85rem; font-weight: 600; font-family: inherit;
       border: none; border-radius: 6px; cursor: pointer; margin-top: .5rem;
       transition: background .15s, box-shadow .15s;
     }
-    .btn-login:hover { background: #084d51; box-shadow: 0 4px 10px rgba(11,110,115,.28); }
+    .btn-login:hover { background: #1a5a94; box-shadow: 0 4px 10px rgba(36,117,186,.28); }
     .error-msg {
       background: #fef2f2; border: 1px solid #fca5a5; border-left: 3px solid #ef4444;
       color: #991b1b; font-size: .78rem; padding: .5rem .8rem;

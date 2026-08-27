@@ -36,10 +36,12 @@ $respespaco = null;
 $validar = true;
 $status = 'Novo';
 
-// ── Modo Admin: criar registo em nome de outro colaborador ──────────────
+// ── Modos especiais do formulário ────────────────────────────────────────
 require_once ROOT_DIR . '/infodeqb/inc/admins.php'; // define $isAdmin, $_iqAdminsHr, $_iqCurrentUser
 $_isHrAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr);
 $adminMode  = $_isHrAdmin && isset($_GET['admin']) && $_GET['admin'] == '1';
+// Proxy: qualquer utilizador autenticado pode registar um terceiro
+$proxyMode  = !$adminMode && isset($_GET['proxy']) && $_GET['proxy'] == '1';
 
 // SQL statements
 $sqlresp = 'SELECT * FROM infodeqb_rds_responsaveis where not Codigo=0 order by respespaco';
@@ -50,7 +52,7 @@ $sqlinuser = "INSERT INTO infodeqb_rds_colaborador (codigo,nome,email,emailalt,t
               VALUES (?,?,?,?,?,?)
               ON DUPLICATE KEY UPDATE nome=VALUES(nome), email=VALUES(email),
                 emailalt=VALUES(emailalt), telefone=VALUES(telefone), deleted=0";
-$sqlinregister = "INSERT INTO infodeqb_rds_registo (codigo,datainicio,datafim,responsavel,outroresponsavel,acessodeq,grupo,categoria,acessos,acessosid,curso, createdate,dataregisto, status, unidade, local_trabalho, extensao) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+$sqlinregister = "INSERT INTO infodeqb_rds_registo (codigo,datainicio,datafim,responsavel,outroresponsavel,acessodeq,grupo,categoria,acessos,acessosid,curso,createdate,dataregisto,status,unidade,local_trabalho,extensao,proxy_codigo,proxy_email) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 // DB Connection
 $pdo = Database::connect();
@@ -74,14 +76,22 @@ if (!empty($_POST)) {
 }
 
 if (! empty($_POST)) {
-    if ($adminMode) {
-        // Modo admin: código, nome e email são indicados pelo administrador
+    // Dados do registado e do registador (proxy)
+    $proxy_codigo = null;
+    $proxy_email  = null;
+    if ($adminMode || $proxyMode) {
+        // código/nome/email do registado vêm do POST
         $codigo    = preg_replace('/[^0-9]/', '', $_POST['codigo'] ?? '');
         $nome      = trim($_POST['nome'] ?? '');
         $email     = trim($_POST['email'] ?? '');
-        $nomeEmail = $nome; // sem sessão Shibboleth da pessoa em causa
+        $nomeEmail = $nome;
+        if ($proxyMode) {
+            // quem está a submeter recebe as notificações
+            $proxy_codigo = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
+            $proxy_email  = $_SESSION['user'] ?? '';
+        }
     } else {
-        // codigo, nome e email vêm sempre da sessão Shibboleth — nunca do POST
+        // código/nome/email vêm sempre da sessão Shibboleth — nunca do POST
         $codigo    = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
         $nome      = $_SESSION['CommonName'] ?? '';
         $email     = $_SESSION['user'] ?? '';
@@ -208,7 +218,8 @@ if (! empty($_POST)) {
             $acessodeq, $grupo, $categoria,
             $_SESSION['result'], $_SESSION['deqid'],
             $curso, $createdate, $timestamp, $status,
-            $unidade, $posto, $extension
+            $unidade, $posto, $extension,
+            $proxy_codigo, $proxy_email
         ));
         $novoRegId = (int)$pdo->lastInsertId();
 
@@ -230,7 +241,7 @@ if (! empty($_POST)) {
         $pdo->rollBack();
         if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
             $codigoError = $lang['ERR_DUPLICATE_CODE'];
-            $erroduplicado = ' <blockquote class="message text-danger"> Código já existente </blockquote>';
+            $erroduplicado = ' <blockquote class="message text-danger">' . $lang['ERR_DUPLICATE_CODE'] . '</blockquote>';
         } else {
             echo "<br>Erro ao guardar registo: " . htmlspecialchars($e->getMessage());
         }
@@ -286,7 +297,6 @@ if (! empty($_POST)) {
         );
         $body    = format_email($info, 'mail_register.html');
         $subject = $lang['SUBJECT'];
-        $to      = array($info['mail']);
 
         $deq_bcc_ids = array(
             'E301MFP','E301AMTS','E302JMO','E302AMTS','E302JDF',
@@ -302,6 +312,9 @@ if (! empty($_POST)) {
                 if ($p !== '') $selected_deqids[] = $p;
             }
         }
+
+        // Em proxy mode as notificações vão para quem submeteu (não para o registado)
+        $to = $proxyMode ? array($proxy_email) : array($info['mail']);
 
         $cc_list  = array('deqdir@fe.up.pt', 'fmartins@fe.up.pt');
         $bcc_list = array();
@@ -376,36 +389,43 @@ foreach ($pdo->query($sqlcategoria, PDO::FETCH_ASSOC) as $rowcat) {
     }
 }
 
-// Constrói checkboxlist de laboratórios/gabinetes
+// Constrói checkboxlist de laboratórios/gabinetes (accordion por edifício)
 $gabRows = $pdo->query($sqlgab)->fetchAll(PDO::FETCH_ASSOC);
-$gabChecks  = '';
-$gabCurPiso = '';
-$gabCurEdificio = '';
-$selectedAcessos = isset($_POST['acessos']) ? (array)$_POST['acessos'] : [];
-foreach ($gabRows as $rowgab) {
-    if ($rowgab['piso'] !== $gabCurPiso || $rowgab['edificio'] !== $gabCurEdificio) {
-        if ($gabCurPiso !== '') $gabChecks .= '</div>';
-        $label = '';
-        if ($rowgab['edificio'] !== $gabCurEdificio && stripos($rowgab['piso'], 'Edifício') === false) {
-            $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rowgab['edificio']) . '</span>';
+$selectedAcessos = isset($_POST['acessos']) ? (array)$_POST['acessos'] : array();
+$gabByEdificio = array();
+foreach ($gabRows as $rowgab) { $gabByEdificio[$rowgab['edificio']][] = $rowgab; }
+$gabChecks = '';
+foreach ($gabByEdificio as $edificio => $edRows) {
+    $edId  = 'lab-ed-' . preg_replace('/[^a-z0-9]/i', '', $edificio);
+    $edSel = 0;
+    foreach ($edRows as $r) { if (in_array($r['deqid'], $selectedAcessos)) $edSel++; }
+    $open     = $edSel > 0 ? ' show' : '';
+    $expanded = $edSel > 0 ? 'true' : 'false';
+    $badge    = '<span class="iq-lab-sel-count"' . ($edSel > 0 ? '' : ' style="display:none"') . '>' . ($edSel > 0 ? $edSel : '') . '</span>';
+    $gabChecks .= '<div class="iq-lab-building">'
+        . '<button type="button" class="iq-lab-building-header" data-bs-toggle="collapse" data-bs-target="#' . $edId . '" aria-expanded="' . $expanded . '">'
+        . '<span>' . t('BUILDING') . ' ' . htmlspecialchars($edificio) . '</span>' . $badge
+        . '<i class="fas fa-chevron-down ms-auto"></i></button>'
+        . '<div class="collapse' . $open . '" id="' . $edId . '">';
+    $curPiso = '';
+    foreach ($edRows as $rowgab) {
+        if ($rowgab['piso'] !== $curPiso) {
+            if ($curPiso !== '') $gabChecks .= '</div>';
+            $gabChecks .= '<div class="iq-checkgroup"><span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+            $curPiso = $rowgab['piso'];
         }
-        $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
-        $gabChecks .= '<div class="iq-checkgroup">' . $label;
-        $gabCurPiso = $rowgab['piso'];
-        $gabCurEdificio = $rowgab['edificio'];
+        $checked = in_array($rowgab['deqid'], $selectedAcessos) ? ' checked' : '';
+        $gabChecks .= '<label><input type="checkbox" name="acessos[]" value="' . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> ' . htmlspecialchars($rowgab['nomegab']) . '</label>';
     }
-    $checked = in_array($rowgab['deqid'], $selectedAcessos) ? ' checked' : '';
-    $gabChecks .= '<label><input type="checkbox" name="acessos[]" value="'
-        . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> '
-        . htmlspecialchars($rowgab['nomegab']) . '</label>';
+    if ($curPiso !== '') $gabChecks .= '</div>';
+    $gabChecks .= '</div></div>';
 }
-if ($gabCurPiso !== '') $gabChecks .= '</div>';
 
 // Código numérico do utilizador (para auto-preencher o campo 'codigo')
 $_sessionCodeNum = preg_replace('/[^0-9]/', '', $_SESSION['Code'] ?? '');
 
 // Valores a apresentar nos campos Código/Nome/Email
-if ($adminMode) {
+if ($adminMode || $proxyMode) {
     $dispCodigo = isset($_POST['codigo']) ? $_POST['codigo'] : trim($_GET['codigo'] ?? '');
     $dispNome   = isset($_POST['nome'])   ? $_POST['nome']   : trim($_GET['nome']   ?? '');
     $dispEmail  = isset($_POST['email'])  ? $_POST['email']  : trim($_GET['email']  ?? '');
@@ -415,7 +435,13 @@ if ($adminMode) {
     $dispEmail  = $_SESSION['user'] ?? '';
 }
 
-$pageTitle = $adminMode ? 'Novo Registo (Admin)' : 'Registo de Colaborador';
+if ($adminMode) {
+    $pageTitle = t('HR_PAGE_TITLE_ADMIN');
+} elseif ($proxyMode) {
+    $pageTitle = t('HR_PAGE_TITLE_PROXY');
+} else {
+    $pageTitle = t('NAV_MY_RECORD');
+}
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
@@ -424,14 +450,18 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 <div id="dom-target2" style="display:none"><?php echo htmlspecialchars($option_cat); ?></div>
 
 <div class="iq-page-header">
-  <h1>Registo de colaborador</h1>
+  <h1><?= t('NAV_MY_RECORD') ?></h1>
 </div>
 
 <?php if ($adminMode): ?>
 <div class="alert alert-info" role="alert">
   <i class="fas fa-user-shield me-1"></i>
-  <strong>Modo Administrador</strong> — este registo vai ser criado em nome de outro colaborador.
-  Preencha o Código UP, Nome e Email da pessoa em causa.
+  <strong><?= t('HR_ADMIN_MODE_TITLE') ?></strong> — <?= t('HR_ADMIN_MODE_MSG') ?>
+</div>
+<?php elseif ($proxyMode): ?>
+<div class="alert alert-warning" role="alert">
+  <i class="fas fa-user-friends me-2"></i>
+  <strong><?= t('HR_PROXY_MODE_TITLE') ?></strong> — <?= t('HR_PROXY_MODE_MSG') ?>
 </div>
 <?php endif; ?>
 
@@ -439,7 +469,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 // Gerar token de submissão único para esta sessão de formulário
 $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 ?>
-<form class="iq-form-2col-wrap" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . ($adminMode ? '?admin=1' : ''); ?>" method="post">
+<form class="iq-form-2col-wrap" action="<?php
+    $qs = $adminMode ? '?admin=1' : ($proxyMode ? '?proxy=1' : '');
+    echo htmlspecialchars($_SERVER['PHP_SELF']) . $qs;
+?>" method="post">
   <input type="hidden" name="_submit_token" value="<?= htmlspecialchars($_SESSION['_hr_submit_token']) ?>">
 
   <?php if (isset($erroduplicado)): ?>
@@ -453,31 +486,31 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 
   <!-- ── Dados Pessoais ── -->
   <div class="iq-form-section">
-    <div class="iq-form-section-title">Dados Pessoais</div>
+    <div class="iq-form-section-title"><?= t('HR_SECTION_PERSONAL') ?></div>
     <div class="row">
       <div class="col-md-4 form-group<?php echo $adminMode ? ' mb-1' : ''; ?>">
         <label><?php echo $lang['FEUP_CODE']; ?></label>
         <input name="codigo" type="text" required maxlength="9" pattern="^(\d{6}|\d{9})$"
-               class="form-control" id="code" <?php echo $adminMode ? '' : 'readonly'; ?>
+               class="form-control" id="code" <?php echo ($adminMode || $proxyMode) ? '' : 'readonly'; ?>
                value="<?php echo htmlspecialchars($dispCodigo); ?>">
       </div>
     </div>
     <?php if ($adminMode): ?>
     <div class="row">
       <div class="col-12">
-        <div class="form-text mt-0 mb-2" style="font-size:.78rem;">Código institucional da pessoa (up…). Ao sair do campo, o nome/email são preenchidos automaticamente se já existir.</div>
+        <div class="form-text mt-0 mb-2" style="font-size:.78rem;"><?= t('HR_ADMIN_CODE_HINT') ?></div>
       </div>
     </div>
     <?php endif; ?>
     <div class="form-group">
       <label><?php echo $lang['NAME']; ?></label>
-      <input type="text" name="nome" class="form-control" id="name" required <?php echo $adminMode ? '' : 'readonly'; ?>
+      <input type="text" name="nome" class="form-control" id="name" required <?php echo ($adminMode || $proxyMode) ? '' : 'readonly'; ?>
              value="<?php echo htmlspecialchars($dispNome); ?>">
     </div>
     <div class="row">
       <div class="col-md-6 form-group">
         <label><?php echo $lang['EMAIL']; ?></label>
-        <input type="email" name="email" class="form-control" required id="email" <?php echo $adminMode ? '' : 'readonly'; ?>
+        <input type="email" name="email" class="form-control" required id="email" <?php echo ($adminMode || $proxyMode) ? '' : 'readonly'; ?>
                value="<?php echo htmlspecialchars($dispEmail); ?>">
       </div>
       <div class="col-md-6 form-group">
@@ -504,7 +537,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 
   <!-- ── Período e Afiliação ── -->
   <div class="iq-form-section">
-    <div class="iq-form-section-title">Período e Afiliação</div>
+    <div class="iq-form-section-title"><?= t('HR_SECTION_PERIOD') ?></div>
     <div class="row">
       <div class="col-md-3 form-group">
         <label><?php echo $lang['BEGIN_DATE']; ?></label>
@@ -519,7 +552,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
       <div class="col-md-4 form-group">
         <label><?php echo $lang['UNIT']; ?></label>
         <select name="unidade" class="form-control" id="unidade" required>
-          <option selected disabled value="">Escolha uma opção</option>
+          <option selected disabled value=""><?= $lang['OPTION'] ?></option>
           <option <?php if (isset($unidade) && $unidade=="CEFT")      echo "selected"; ?>>CEFT</option>
           <option <?php if (isset($unidade) && $unidade=="LEPABE")    echo "selected"; ?>>LEPABE</option>
           <option <?php if (isset($unidade) && $unidade=="LSRE-LCM") echo "selected"; ?>>LSRE-LCM</option>
@@ -552,7 +585,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 
   <!-- ── Classificação ── -->
   <div class="iq-form-section">
-    <div class="iq-form-section-title">Classificação</div>
+    <div class="iq-form-section-title"><?= t('HR_SECTION_CLASS') ?></div>
     <div class="row">
       <div class="col-md-5 form-group">
         <label><?php echo $lang['PROGROUP']; ?></label>
@@ -605,7 +638,7 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 
   <!-- ── Acessos (cresce para preencher o espaço restante) ── -->
   <div class="iq-form-section iq-form-section-fill">
-    <div class="iq-form-section-title">Acessos</div>
+    <div class="iq-form-section-title"><?= t('HR_SECTION_ACCESS') ?></div>
 
     <div class="iq-form-inline" style="gap:1rem;align-items:center;">
       <label style="margin-bottom:0;font-weight:500;"><?php echo $lang['DEQ_ACCESS']; ?></label>
@@ -642,6 +675,10 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 </form>
 
 <script>
+var _hrLang = {
+    noneSelected: <?= json_encode(t('NONE_SELECTED')) ?>,
+    errDate: <?= json_encode(t('ERR_DATE')) ?>
+};
 // ── Mapeamento grupo → categorias (carregado da BD) ──────────────
 var grupoCategorias    = <?= json_encode($grupoCatMap, JSON_UNESCAPED_UNICODE) ?>;
 var gruposSemCategoria = [2, 3, 4, 6, 7];
@@ -670,6 +707,19 @@ function filtrarCategorias(grupoId) {
     if (sel.options.length > 0) sel.selectedIndex = 0;
 }
 
+// ── Badges de selecção por edifício ──────────────────────────────
+function atualizarLabBadges(listId) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    list.querySelectorAll('.iq-lab-building').forEach(function(bldg) {
+        var n = bldg.querySelectorAll('input[type=checkbox]:checked').length;
+        var badge = bldg.querySelector('.iq-lab-sel-count');
+        if (!badge) return;
+        badge.textContent = n > 0 ? n : '';
+        badge.style.display = n > 0 ? '' : 'none';
+    });
+}
+
 // ── Preview de labs seleccionados ────────────────────────────────
 function atualizarPreviewLabs(listId, previewId) {
     var list = document.getElementById(listId);
@@ -677,7 +727,7 @@ function atualizarPreviewLabs(listId, previewId) {
     if (!list || !prev) return;
     var checks = list.querySelectorAll('input[type=checkbox]:checked');
     if (checks.length === 0) {
-        prev.innerHTML = '<span style="font-size:12px;color:#999">Nenhum selecionado</span>';
+        prev.innerHTML = '<span style="font-size:12px;color:#999">' + _hrLang.noneSelected + '</span>';
     } else {
         var html = '';
         checks.forEach(function(c) {
@@ -709,13 +759,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selGrupo.value) filtrarCategorias(parseInt(selGrupo.value));
     }
 
-    // ── Preview de labs ───────────────────────────────────────────
+    // ── Preview de labs + badges accordion ───────────────────────
     var labList = document.getElementById('acessos-list');
     if (labList) {
         labList.addEventListener('change', function () {
             atualizarPreviewLabs('acessos-list', 'labs-preview-main');
+            atualizarLabBadges('acessos-list');
         });
         atualizarPreviewLabs('acessos-list', 'labs-preview-main');
+        atualizarLabBadges('acessos-list');
     }
 
     // ── Código UP: filtra grupos para estudantes (9 dígitos) ──────
@@ -754,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (inpInicio && inpFim) {
         function validarDatasIdx() {
             if (inpInicio.value && inpFim.value && inpFim.value < inpInicio.value) {
-                inpFim.setCustomValidity('A data de fim não pode ser anterior à data de início.');
+                inpFim.setCustomValidity(_hrLang.errDate);
             } else {
                 inpFim.setCustomValidity('');
             }

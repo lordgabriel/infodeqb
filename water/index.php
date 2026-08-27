@@ -29,7 +29,7 @@ if (!empty($_POST)) {
                 (int)$_POST['userid'],
                 (float)str_replace(',', '.', $_POST['qtd']),
             ]);
-            $flashMsg = 'Registo inserido com sucesso.';
+            $flashMsg = t('SUCCESS_SAVED');
             // Redireciona para o ano da data inserida
             $_SESSION['_water_flash'] = [$flashMsg, 'success'];
             header('Location: index.php?ano=' . (int)substr($_POST['data'], 0, 4));
@@ -45,22 +45,22 @@ if (!empty($_POST)) {
                 (float)str_replace(',', '.', $_POST['editqtd']),
                 (int)$_POST['editid'],
             ]);
-            $flashMsg = 'Registo actualizado.';
+            $flashMsg = t('SUCCESS_UPDATED');
 
         } elseif ($acao === 'apagar') {
             $pdo->prepare('DELETE FROM infodeqb_water_ultrapure_record WHERE autoid=?')
                 ->execute([(int)$_POST['deleteid']]);
-            $flashMsg = 'Registo apagado.';
+            $flashMsg = t('SUCCESS_DELETED');
 
         } elseif ($acao === 'novo_resp') {
             $pdo->prepare('INSERT INTO infodeqb_water_resp (nome) VALUES (?)')
                 ->execute([trim($_POST['nome_resp'])]);
-            $flashMsg = 'Responsável adicionado.';
+            $flashMsg = t('SUCCESS_ADDED');
 
         } elseif ($acao === 'novo_user') {
             $pdo->prepare('INSERT INTO infodeqb_water_users (user, idresp) VALUES (?,?)')
                 ->execute([trim($_POST['nome_user']), (int)$_POST['idresp_user']]);
-            $flashMsg = 'Utilizador adicionado.';
+            $flashMsg = t('SUCCESS_ADDED');
         }
 
     } catch (Exception $e) {
@@ -150,8 +150,8 @@ foreach ($resps as $r) {
 
 Database::disconnect();
 
-$pageTitle = 'Consumos de Água Ultrapura';
-$mainClass = 'iq-water-page';
+$pageTitle = t('WATER_CONSUMPTION');
+$mainClass = 'iq-hr-page iq-water-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 
 // formata número com 2 casas decimais e separador de milhares
@@ -321,7 +321,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
           <td class="align-middle"><?= htmlspecialchars($rec['user_nome']) ?></td>
           <td class="align-middle text-end"><?= number_format((float)$rec['quantity'], 2, ',', ' ') ?></td>
           <td class="align-middle text-center text-nowrap">
-            <a href="#" class="btn-edit text-info me-1"
+            <a href="#" class="btn-edit btn btn-xs btn-outline-primary me-1"
                data-id="<?= (int)$rec['autoid'] ?>"
                data-data="<?= htmlspecialchars($rec['data']) ?>"
                data-resp="<?= (int)$rec['resp_id'] ?>"
@@ -331,7 +331,7 @@ function fmtL($v) { return number_format((float)$v, 2, ',', ' ') . ' L'; }
                data-bs-toggle="modal" data-bs-target="#modalEditar">
               <i class="fas fa-edit fa-xs"></i>
             </a>
-            <a href="#" class="btn-delete text-danger"
+            <a href="#" class="btn-delete btn btn-xs btn-outline-danger"
                data-id="<?= (int)$rec['autoid'] ?>"
                data-info="<?= htmlspecialchars($rec['data'] . ' — ' . $rec['user_nome'] . ' — ' . $rec['quantity'] . ' L') ?>"
                title="Apagar"

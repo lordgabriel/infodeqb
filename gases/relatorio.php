@@ -9,7 +9,8 @@ $isGasAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsGases);
 if (!$isGasAdmin) { header('Location: ' . HTTP_DIR . '/infodeqb/denied.php'); exit; }
 
 $gases = GASES_DEF;
-$pageTitle = 'Relatórios — Gases Especiais';
+$pageTitle = t('GASES_REPORT_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -95,8 +96,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card-header card-header-transparent"><strong>Resumo por gás (no período)</strong></div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover table-striped align-middle mb-0">
-        <thead class="table-light">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
           <tr>
             <th>Gás</th><th>Leituras</th><th>Pressão média</th>
             <th>Mín.</th><th>Máx.</th><th>Última leitura</th><th>Trocas</th>

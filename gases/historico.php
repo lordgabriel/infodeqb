@@ -13,7 +13,8 @@ $gasId    = preg_replace('/[^a-z0-9]/', '', $_GET['gas_id'] ?? array_key_first($
 $gasAtual = $gases[$gasId] ?? reset($gases);
 if (!isset($gases[$gasId])) { $gasId = array_key_first($gases); }
 
-$pageTitle = 'Histórico — Gases Especiais';
+$pageTitle = t('GASES_HISTORY_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -74,8 +75,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover table-striped align-middle mb-0">
-        <thead class="table-light">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
           <tr>
             <th>Data/Hora</th>
             <th>Pressão</th>
@@ -216,7 +217,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       html += '<td class="text-muted" style="font-size:.82rem;">' + esc(r.user_name) + '</td>';
       if (IS_ADMIN) {
         html += '<td class="text-end">';
-        html += '<button class="btn btn-xs btn-outline-secondary me-1" onclick=\'openEdit(' + JSON.stringify(r) + ')\'><i class="fas fa-pencil-alt fa-xs"></i></button>';
+        html += '<button class="btn btn-xs btn-outline-primary me-1" onclick=\'openEdit(' + JSON.stringify(r) + ')\'><i class="fas fa-edit fa-xs"></i></button>';
         html += '<button class="btn btn-xs btn-outline-danger" onclick="confirmDelete(\'' + r.id.replace(/'/g,"\\'") + '\')"><i class="fas fa-trash fa-xs"></i></button>';
         html += '</td>';
       }

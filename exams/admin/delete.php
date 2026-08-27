@@ -28,7 +28,7 @@ if (!empty($_POST)) {
     exit;
 }
 
-$pageTitle = 'Eliminar Exame — Administração';
+$pageTitle = t('EXAM_ADMIN_DELETE_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

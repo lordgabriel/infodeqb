@@ -9,14 +9,14 @@ $isGasAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsGases);
 if (!$isGasAdmin) { header('Location: ' . HTTP_DIR . '/infodeqb/denied.php'); exit; }
 
 $gases = GASES_DEF;
-$pageTitle = 'Gases Especiais';
-
+$pageTitle = t('GASES_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header">
   <div>
-    <h1 class="iq-page-title"><i class="fas fa-wind me-2 text-primary"></i>Gases Especiais</h1>
+    <h1 class="iq-page-title"><i class="fas fa-wind me-2 text-primary"></i><?= t('GASES_TITLE') ?></h1>
     <p class="iq-page-sub">Monitorização de pressão de garrafas de gás</p>
   </div>
   <div class="d-flex gap-2 ms-auto">

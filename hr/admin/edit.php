@@ -370,28 +370,35 @@ $fAcessodeq = isset($_POST['acessodeq'])        ? $_POST['acessodeq']       : $d
 $fAcessos = !empty($_POST) && isset($_POST['acessos'])
     ? (array)$_POST['acessos']
     : getRegistoAcessos($pdo, (int)$id1);
+$gabByEdificio = array();
+foreach ($gabRows as $rowgab) { $gabByEdificio[$rowgab['edificio']][] = $rowgab; }
 $gab = '';
-$gabCurPiso = '';
-$gabCurEdificio = '';
-foreach ($gabRows as $rowgab) {
-    if ($rowgab['piso'] !== $gabCurPiso || $rowgab['edificio'] !== $gabCurEdificio) {
-        if ($gabCurPiso !== '') $gab .= '</div>';
-        $label = '';
-        if ($rowgab['edificio'] !== $gabCurEdificio && stripos($rowgab['piso'], 'Edifício') === false) {
-            $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rowgab['edificio']) . '</span>';
-        }
-        $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
-        $gab .= '<div class="iq-checkgroup">' . $label;
-        $gabCurPiso = $rowgab['piso'];
-        $gabCurEdificio = $rowgab['edificio'];
-    }
-    $checked = in_array($rowgab['deqid'], $fAcessos) ? ' checked' : '';
+foreach ($gabByEdificio as $edificio => $edRows) {
+    $edId  = 'lab-ed-' . preg_replace('/[^a-z0-9]/i', '', $edificio);
+    $edSel = 0;
+    foreach ($edRows as $r) { if (in_array($r['deqid'], $fAcessos)) $edSel++; }
+    $open     = $edSel > 0 ? ' show' : '';
+    $expanded = $edSel > 0 ? 'true' : 'false';
+    $badge    = '<span class="iq-lab-sel-count"' . ($edSel > 0 ? '' : ' style="display:none"') . '>' . ($edSel > 0 ? $edSel : '') . '</span>';
+    $gab .= '<div class="iq-lab-building">'
+        . '<button type="button" class="iq-lab-building-header" data-bs-toggle="collapse" data-bs-target="#' . $edId . '" aria-expanded="' . $expanded . '">'
+        . '<span>' . t('BUILDING') . ' ' . htmlspecialchars($edificio) . '</span>' . $badge
+        . '<i class="fas fa-chevron-down ms-auto"></i></button>'
+        . '<div class="collapse' . $open . '" id="' . $edId . '">';
+    $curPiso = '';
     $disAttr = $lockEdit ? ' disabled' : '';
-    $gab .= '<label><input type="checkbox" name="acessos[]" value="'
-          . htmlspecialchars($rowgab['deqid']) . '"' . $checked . $disAttr . '> '
-          . htmlspecialchars($rowgab['nomegab']) . '</label>';
+    foreach ($edRows as $rowgab) {
+        if ($rowgab['piso'] !== $curPiso) {
+            if ($curPiso !== '') $gab .= '</div>';
+            $gab .= '<div class="iq-checkgroup"><span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+            $curPiso = $rowgab['piso'];
+        }
+        $checked = in_array($rowgab['deqid'], $fAcessos) ? ' checked' : '';
+        $gab .= '<label><input type="checkbox" name="acessos[]" value="' . htmlspecialchars($rowgab['deqid']) . '"' . $checked . $disAttr . '> ' . htmlspecialchars($rowgab['nomegab']) . '</label>';
+    }
+    if ($curPiso !== '') $gab .= '</div>';
+    $gab .= '</div></div>';
 }
-if ($gabCurPiso !== '') $gab .= '</div>';
 
 $pageTitle = t('HR_ADMIN_EDIT');
 $mainClass = 'iq-hr-page';
@@ -687,6 +694,17 @@ function filtrarCategorias(grupoId, preservarAtual) {
 }
 
 // ── Preview de labs seleccionados ────────────────────────────────
+function atualizarLabBadges(listId) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    list.querySelectorAll('.iq-lab-building').forEach(function(bldg) {
+        var n = bldg.querySelectorAll('input[type=checkbox]:checked').length;
+        var badge = bldg.querySelector('.iq-lab-sel-count');
+        if (!badge) return;
+        badge.textContent = n > 0 ? n : '';
+        badge.style.display = n > 0 ? '' : 'none';
+    });
+}
 function atualizarPreviewLabs(listId, previewId) {
     var list = document.getElementById(listId);
     var prev = document.getElementById(previewId);
@@ -767,13 +785,15 @@ document.addEventListener('DOMContentLoaded', function () {
         inpFim.addEventListener('change',    function () { inpInicio.max = this.value; });
     }
 
-    // ── Preview de labs (edit) ────────────────────────────────────
+    // ── Preview de labs + badges accordion (edit) ────────────────
     var labList = document.getElementById('acessos-list');
     if (labList) {
         labList.addEventListener('change', function () {
             atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
+            atualizarLabBadges('acessos-list');
         });
         atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
+        atualizarLabBadges('acessos-list');
     }
 });
 </script>

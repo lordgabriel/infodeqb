@@ -6,7 +6,7 @@ require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 $isMobileAdmin = $isAdmin || in_array($_iqCurrentUser, $_iqAdminsMobile);
 
 if (!$isMobileAdmin) {
-    header('Location: ' . (defined('HTTP_DIR') ? HTTP_DIR : '') . '/infodeqb/');
+    header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit;
 }
 
@@ -42,7 +42,8 @@ $diePaises  = (int)$pdo->query('SELECT COUNT(DISTINCT pais) FROM infodeqb_compan
 
 Database::disconnect();
 
-$pageTitle = 'Mobilidade & Contactos DIE';
+$pageTitle = t('MOBILE_PAGE_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

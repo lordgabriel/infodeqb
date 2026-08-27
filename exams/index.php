@@ -40,13 +40,13 @@ if (!empty($_POST) && $isExamAdmin) {
             trim($_POST['editarmario']  ?? ''),
             (int)$_POST['editid'],
         ]);
-        $_SESSION['_exam_flash'] = ['Registo actualizado.', 'success'];
+        $_SESSION['_exam_flash'] = [t('SUCCESS_UPDATED'), 'success'];
         header('Location: index.php'); exit;
 
     } elseif ($acao === 'admin_apagar') {
         $pdo->prepare('DELETE FROM infodeqb_exam_archive WHERE autoid=?')
             ->execute([(int)$_POST['deleteid']]);
-        $_SESSION['_exam_flash'] = ['Registo eliminado.', 'success'];
+        $_SESSION['_exam_flash'] = [t('SUCCESS_DELETED'), 'success'];
         header('Location: index.php'); exit;
 
     } elseif ($acao === 'admin_imprimir') {
@@ -76,7 +76,7 @@ if (!empty($_POST) && ($_POST['_acao'] ?? '') !== '') {
                 trim($_POST['tipo']  ?? ''),
             ]);
         } catch (Exception $e) {
-            $flashMsg  = 'Erro ao adicionar linha.';
+            $flashMsg  = t('EXAM_ERROR_ADD');
             $flashType = 'danger';
         }
         header('Location: index.php'); exit;
@@ -115,7 +115,7 @@ if (!empty($_POST) && ($_POST['_acao'] ?? '') !== '') {
                 unset($_SESSION['uid'], $_SESSION['name']);
                 header('Location: success.php'); exit;
             } else {
-                $flashMsg  = 'Adicione pelo menos uma linha antes de submeter.';
+                $flashMsg  = t('EXAM_MIN_LINE');
                 $flashType = 'warning';
             }
         }
@@ -153,11 +153,12 @@ if ($isExamAdmin) {
 
 Database::disconnect();
 
-$pageTitle = 'Arquivo de Exames';
+$pageTitle = t('EXAM_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <style>
+.table thead th { background: var(--iq-blue-light) !important; color: var(--iq-blue-dark) !important; }
 /* ── Passos numerados (processo de submissão) ──────────────────── */
 .iq-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
 .iq-steps li { counter-increment: step; display: flex; gap: .65rem; align-items: flex-start; padding: .32rem 0; font-size: .84rem; color: var(--iq-text); }
@@ -187,7 +188,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="iq-page-header">
   <div>
     <h1 class="iq-page-title"><i class="fas fa-archive me-2 text-primary"></i><?= t('EXAM_TITLE') ?></h1>
-    <p class="iq-page-sub">Autos de incorporação e arquivo físico de provas de avaliação</p>
+    <p class="iq-page-sub"><?= t('EXAM_SUBTITLE') ?></p>
   </div>
   <div class="d-flex gap-2 ms-auto">
     <?php if ($isExamAdmin): ?>
@@ -197,7 +198,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </button>
     <?php endif; ?>
     <a href="files/Auto_Entrega_Eliminacao.doc" class="btn btn-outline-secondary btn-sm" download>
-      <i class="fas fa-file-download me-1"></i>Auto de Entrega para Eliminação
+      <i class="fas fa-file-download me-1"></i><?= t('EXAM_ELIM_DOC') ?>
     </a>
   </div>
 </div>
@@ -240,17 +241,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                  value="<?= htmlspecialchars($_SESSION['name'] ?? '') ?>"
                  <?= isset($_SESSION['name']) ? 'readonly' : '' ?>>
           <?php if (isset($_SESSION['name'])): ?>
-          <div class="form-text" style="font-size:.72rem"><i class="fas fa-lock fa-xs me-1"></i>Fixo para este auto</div>
+          <div class="form-text" style="font-size:.72rem"><i class="fas fa-lock fa-xs me-1"></i><?= t('EXAM_TEACHER_FIXED') ?></div>
           <?php endif; ?>
         </div>
         <div class="col-6 col-md-3 form-group mb-2">
-          <label class="small font-weight-bold">Curso <span class="text-danger">*</span></label>
+          <label class="small font-weight-bold"><?= t('COURSE') ?> <span class="text-danger">*</span></label>
           <input type="text" name="curso" class="form-control form-control-sm" required placeholder="Designação">
         </div>
         <div class="col-6 col-md-2 form-group mb-2">
-          <label class="small font-weight-bold">Ano Letivo <span class="text-danger">*</span></label>
+          <label class="small font-weight-bold"><?= t('EXAM_ACADEMIC_YEAR') ?> <span class="text-danger">*</span></label>
           <select name="ano" class="form-control form-control-sm" required>
-            <option disabled selected value="">Seleccione</option>
+            <option disabled selected value=""><?= t('SELECT_OPTION') ?></option>
             <?= $option_ano ?>
           </select>
         </div>
@@ -275,9 +276,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <table class="table table-sm table-hover mb-0" style="font-size:.83rem">
         <thead class="">
           <tr>
-            <th>Curso</th><th style="width:7em">Ano Letivo</th>
-            <th>Unidade Curricular</th><th style="width:9em">Tipologia</th>
-            <th style="width:5em" class="text-center">Ações</th>
+            <th><?= t('COURSE') ?></th><th style="width:7em"><?= t('EXAM_ACADEMIC_YEAR') ?></th>
+            <th><?= t('EXAM_COURSE_UNIT') ?></th><th style="width:9em"><?= t('EXAM_TYPOLOGY') ?></th>
+            <th style="width:5em" class="text-center"><?= t('ACTIONS') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -309,7 +310,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </table>
     </div>
     <div class="d-flex align-items-center justify-content-between">
-      <small class="text-muted"><?= count($pendentes) ?> linha(s) adicionada(s)</small>
+      <small class="text-muted"><?= sprintf(t('EXAM_LINE_ADDED'), count($pendentes)) ?></small>
       <form method="post">
         <input type="hidden" name="_acao" value="submeter">
         <button type="submit" class="btn btn-primary btn-sm">
@@ -319,7 +320,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </div>
     <?php else: ?>
     <p class="text-muted small mb-0">
-      <i class="fas fa-info-circle me-1"></i>Adicione linhas acima para criar o auto de incorporação.
+      <i class="fas fa-info-circle me-1"></i><?= t('EXAM_ADD_LINES_HINT') ?>
     </p>
     <?php endif; ?>
 
@@ -328,22 +329,20 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="card <?= $isExamAdmin ? '' : 'mb-4' ?>" style="<?= $isExamAdmin ? 'margin-top:1rem' : '' ?>">
   <div class="card-header py-2">
-    <i class="fas fa-list-ol fa-sm me-2 text-muted"></i><strong>Como funciona</strong>
+    <i class="fas fa-list-ol fa-sm me-2 text-muted"></i><strong><?= t('EXAM_HOW_IT_WORKS') ?></strong>
   </div>
   <div class="card-body">
     <ol class="iq-steps mb-3">
-      <li>Organizar os elementos de avaliação por ano letivo e por unidade curricular.</li>
-      <li>Preencher o formulário acima. Cada linha pode referenciar mais que uma UC mas <strong>apenas um ano letivo</strong>.</li>
-      <li>Clicar em <strong>Submeter</strong> — será gerado um PDF com o auto de incorporação que deve ser impresso.</li>
-      <li>Entregar os elementos devidamente identificados no secretariado juntamente com o auto gerado.</li>
-      <li>Após boa recepção, o auto será carimbado, assinado e devolvido.</li>
-      <li>No final do ano N, os arquivos do ano letivo N‑6/N‑5 são enviados para o Serviço de Arquivo da FEUP para eliminação.</li>
+      <li><?= t('EXAM_STEP_1') ?></li>
+      <li><?= t('EXAM_STEP_2') ?></li>
+      <li><?= t('EXAM_STEP_3') ?></li>
+      <li><?= t('EXAM_STEP_4') ?></li>
+      <li><?= t('EXAM_STEP_5') ?></li>
+      <li><?= t('EXAM_STEP_6') ?></li>
     </ol>
     <div class="alert alert-warning mb-0" style="display:block;font-size:.83rem">
       <i class="fas fa-exclamation-triangle me-2"></i>
-      Só devem ser entregues documentos dentro do prazo de arquivo obrigatório (5 anos). Caso esse prazo tenha sido ultrapassado, preencha o
-      <a href="files/Auto_Entrega_Eliminacao.doc" class="font-weight-bold" download>Auto de Entrega para Eliminação</a>
-      e solicite a eliminação ao Serviço de Arquivo.
+      <?= sprintf(t('EXAM_ARCHIVE_WARN'), '<a href="files/Auto_Entrega_Eliminacao.doc" class="font-weight-bold" download>' . t('EXAM_ELIM_DOC') . '</a>') ?>
     </div>
   </div>
 </div>
@@ -356,15 +355,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="iq-stat-grid mb-3">
   <div class="iq-stat iq-stat-blue stat-badge" data-filter="" style="cursor:pointer" title="Ver todos">
     <div class="iq-stat-icon"><i class="fas fa-list"></i></div>
-    <div><div class="iq-stat-value"><?= count($ticketsAgrupados) ?></div><div class="iq-stat-label">Total de autos</div></div>
+    <div><div class="iq-stat-value"><?= count($ticketsAgrupados) ?></div><div class="iq-stat-label"><?= t('EXAM_TOTAL') ?></div></div>
   </div>
   <div class="iq-stat iq-stat-yellow stat-badge" data-filter="por-arquivar" style="cursor:pointer" title="Filtrar por arquivar">
     <div class="iq-stat-icon"><i class="fas fa-clock"></i></div>
-    <div><div class="iq-stat-value"><?= $nPorArquivar ?></div><div class="iq-stat-label">Por arquivar</div></div>
+    <div><div class="iq-stat-value"><?= $nPorArquivar ?></div><div class="iq-stat-label"><?= t('EXAM_TO_ARCHIVE') ?></div></div>
   </div>
   <div class="iq-stat iq-stat-green stat-badge" data-filter="arquivado" style="cursor:pointer" title="Filtrar arquivados">
     <div class="iq-stat-icon"><i class="fas fa-box"></i></div>
-    <div><div class="iq-stat-value"><?= $nArquivados ?></div><div class="iq-stat-label">Arquivados</div></div>
+    <div><div class="iq-stat-value"><?= $nArquivados ?></div><div class="iq-stat-label"><?= t('EXAM_ARCHIVED_LABEL') ?></div></div>
   </div>
 </div>
 
@@ -373,16 +372,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card-body py-2">
     <div class="d-flex flex-wrap align-items-end" style="gap:10px">
       <div style="flex:1;min-width:180px">
-        <label class="small font-weight-bold d-block mb-1">Docente</label>
+        <label class="small font-weight-bold d-block mb-1"><?= t('EXAM_TEACHER_LABEL') ?></label>
         <input type="text" id="filterDocente" class="form-control form-control-sm"
                placeholder="Pesquisar docente…">
       </div>
       <div style="min-width:130px">
-        <label class="small font-weight-bold d-block mb-1">De</label>
+        <label class="small font-weight-bold d-block mb-1"><?= t('PERIOD_FROM') ?></label>
         <input type="date" id="filterDe" class="form-control form-control-sm">
       </div>
       <div style="min-width:130px">
-        <label class="small font-weight-bold d-block mb-1">Até</label>
+        <label class="small font-weight-bold d-block mb-1"><?= t('PERIOD_TO') ?></label>
         <input type="date" id="filterAte" class="form-control form-control-sm">
       </div>
       <div>
@@ -393,7 +392,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="ml-auto d-flex align-items-end" style="gap:6px">
         <button type="button" id="btnToggleAll" class="btn btn-outline-secondary btn-sm" data-state="collapsed">
-          <i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo
+          <i class="fas fa-expand-alt fa-xs me-1"></i><?= t('EXAM_EXPAND_ALL') ?>
         </button>
         <span class="text-muted small ms-2" id="countVisible"></span>
       </div>
@@ -404,7 +403,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php /* ── Lista de tickets ─────────────────────────────────── */ ?>
 <?php if (empty($ticketsAgrupados)): ?>
 <div class="alert alert-secondary" style="display:block;font-size:.85rem">
-  Sem autos de incorporação submetidos.
+  <?= t('EXAM_NONE') ?>
 </div>
 <?php else: ?>
 <div id="ticketsList">
@@ -449,11 +448,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
       <thead class="">
         <tr>
-          <th>Curso</th><th>Ano Letivo</th>
-          <th style="width:99%">Unidade Curricular</th><th>Tipologia</th>
-          <th>Caixa</th>
-          <th>Armário</th>
-          <th>Ações</th>
+          <th><?= t('COURSE') ?></th><th><?= t('EXAM_ACADEMIC_YEAR') ?></th>
+          <th style="width:99%"><?= t('EXAM_COURSE_UNIT') ?></th><th><?= t('EXAM_TYPOLOGY') ?></th>
+          <th><?= t('EXAM_BOX') ?></th>
+          <th><?= t('EXAM_CABINET') ?></th>
+          <th><?= t('ACTIONS') ?></th>
         </tr>
       </thead>
       <tbody>
@@ -498,33 +497,36 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <input type="hidden" name="_acao"  value="admin_atualizar">
       <input type="hidden" name="editid" id="adminEditId">
       <div class="modal-header">
-        <h5 class="modal-title">Editar linha</h5>
+        <h5 class="modal-title"><?= t('EXAM_EDIT_LINE') ?></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="small font-weight-bold">Curso</label>
+          <label class="small font-weight-bold"><?= t('COURSE') ?></label>
           <input type="text" name="editcurso" id="adminEditCurso" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="small font-weight-bold">Ano Letivo</label>
-          <select name="editano" id="adminEditAno" class="form-control" required><?= $option_ano ?></select>
+          <label class="small font-weight-bold"><?= t('EXAM_ACADEMIC_YEAR') ?></label>
+          <select name="editano" id="adminEditAno" class="form-control" required>
+            <option value="" disabled selected><?= t('OPTION') ?></option>
+            <?= $option_ano ?>
+          </select>
         </div>
         <div class="form-group">
-          <label class="small font-weight-bold">Unidades Curriculares</label>
+          <label class="small font-weight-bold"><?= t('EXAM_COURSE_UNIT') ?></label>
           <input type="text" name="edituc" id="adminEditUc" class="form-control">
         </div>
         <div class="form-group">
-          <label class="small font-weight-bold">Tipologia</label>
+          <label class="small font-weight-bold"><?= t('EXAM_TYPOLOGY') ?></label>
           <input type="text" name="editipologia" id="adminEditTipologia" class="form-control">
         </div>
         <div class="row">
           <div class="col form-group">
-            <label class="small font-weight-bold">Nº Caixa</label>
+            <label class="small font-weight-bold"><?= t('EXAM_BOX_N') ?></label>
             <input type="text" name="editcaixa" id="adminEditCaixa" class="form-control">
           </div>
           <div class="col form-group mb-0">
-            <label class="small font-weight-bold">Nº Armário</label>
+            <label class="small font-weight-bold"><?= t('EXAM_CAB_N') ?></label>
             <input type="text" name="editarmario" id="adminEditArmario" class="form-control">
           </div>
         </div>
@@ -544,7 +546,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <input type="hidden" name="_acao"    value="admin_apagar">
       <input type="hidden" name="deleteid" id="adminDelId">
       <div class="modal-header">
-        <h5 class="modal-title">Eliminar linha</h5>
+        <h5 class="modal-title"><?= t('EXAM_DEL_LINE') ?></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
@@ -570,26 +572,27 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="_acao"  value="atualizar">
         <input type="hidden" name="editid" id="userEditId">
         <div class="modal-header">
-          <h5 class="modal-title">Editar linha</h5>
+          <h5 class="modal-title"><?= t('EXAM_EDIT_LINE') ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="small font-weight-bold">Curso</label>
+            <label class="small font-weight-bold"><?= t('COURSE') ?></label>
             <input type="text" name="editcurso" id="userEditCurso" class="form-control" required>
           </div>
           <div class="form-group">
-            <label class="small font-weight-bold">Ano Letivo</label>
+            <label class="small font-weight-bold"><?= t('EXAM_ACADEMIC_YEAR') ?></label>
             <select name="editano" id="userEditAno" class="form-control" required>
+              <option value="" disabled selected><?= t('OPTION') ?></option>
               <?= $option_ano ?>
             </select>
           </div>
           <div class="form-group">
-            <label class="small font-weight-bold">Unidades Curriculares</label>
+            <label class="small font-weight-bold"><?= t('EXAM_COURSE_UNIT') ?></label>
             <input type="text" name="edituc" id="userEditUc" class="form-control">
           </div>
           <div class="form-group mb-0">
-            <label class="small font-weight-bold">Tipologia</label>
+            <label class="small font-weight-bold"><?= t('EXAM_TYPOLOGY') ?></label>
             <input type="text" name="editipologia" id="userEditTipologia" class="form-control">
           </div>
         </div>
@@ -610,7 +613,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="_acao"    value="apagar_linha">
         <input type="hidden" name="deleteid" id="userDelId">
         <div class="modal-header">
-          <h5 class="modal-title">Eliminar linha</h5>
+          <h5 class="modal-title"><?= t('EXAM_DEL_LINE') ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
         </div>
         <div class="modal-body">
@@ -703,11 +706,11 @@ $(document).ready(function () {
         if (state === 'expanded') {
             $('.ticket-card:visible .ticket-body').collapse('hide');
             $btn.data('state','collapsed')
-                .html('<i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo');
+                .html('<i class="fas fa-expand-alt fa-xs me-1"></i>' + <?= json_encode(t('EXAM_EXPAND_ALL')) ?>);
         } else {
             $('.ticket-card:visible .ticket-body').collapse('show');
             $btn.data('state','expanded')
-                .html('<i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo');
+                .html('<i class="fas fa-compress-alt fa-xs me-1"></i>' + <?= json_encode(t('EXAM_COLLAPSE_ALL')) ?>);
         }
     });
 

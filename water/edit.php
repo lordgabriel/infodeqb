@@ -25,7 +25,7 @@ if (!empty($_POST)) {
                     (int)$_POST['idresp'],
                     (int)$_POST['userid'],
                 ]);
-            $flashMsg = 'Utilizador actualizado.';
+            $flashMsg = t('SUCCESS_UPDATED');
 
         } elseif ($acao === 'desativar_user') {
             $pdo->prepare('UPDATE infodeqb_water_users SET ativo=0 WHERE userid=?')
@@ -47,21 +47,21 @@ if (!empty($_POST)) {
                 $flashType = 'danger';
             } else {
                 $pdo->prepare('DELETE FROM infodeqb_water_users WHERE userid=?')->execute([$uid]);
-                $flashMsg = 'Utilizador eliminado definitivamente.';
+                $flashMsg = t('SUCCESS_DELETED');
             }
 
         } elseif ($acao === 'editar_resp') {
             $pdo->prepare('UPDATE infodeqb_water_resp SET nome=? WHERE id=?')
                 ->execute([trim($_POST['nome_resp']), (int)$_POST['respid']]);
-            $flashMsg = 'Responsável actualizado.';
+            $flashMsg = t('SUCCESS_UPDATED');
 
         } elseif ($acao === 'apagar_resp') {
             $pdo->prepare('DELETE FROM infodeqb_water_resp WHERE id=?')
                 ->execute([(int)$_POST['respid']]);
-            $flashMsg = 'Responsável removido.';
+            $flashMsg = t('SUCCESS_DELETED');
         }
     } catch (Exception $e) {
-        $flashMsg  = 'Erro: ' . $e->getMessage();
+        $flashMsg  = t('ERROR_GENERIC') . ': ' . $e->getMessage();
         $flashType = 'danger';
     }
     $_SESSION['_water_edit_flash'] = [$flashMsg, $flashType];
@@ -99,14 +99,14 @@ foreach ($resps as $r) {
 
 Database::disconnect();
 
-$pageTitle = 'Gerir Utilizadores — Água';
+$pageTitle = t('WATER_MANAGE_USERS');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
 <div class="iq-page-header d-flex align-items-center">
   <h1 class="mr-auto">
     <i class="fas fa-users-cog fa-sm me-2 text-muted"></i>
-    Gerir responsáveis e utilizadores
+    <?= t('WATER_MANAGE_USERS') ?>
   </h1>
   <a href="index.php" class="btn btn-sm btn-outline-secondary">
     <i class="fas fa-arrow-left me-1"></i> <?= t('BACK') ?>

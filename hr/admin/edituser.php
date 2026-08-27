@@ -113,7 +113,7 @@ if (! empty($_POST)) {
     }
 }
 
-$pageTitle = 'Editar Utilizador';
+$pageTitle = t('HR_ADMIN_EDIT_USER');
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 

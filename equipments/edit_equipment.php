@@ -49,7 +49,7 @@ if (!empty($_POST)) {
         || ($equipId > 0 && podeGerirEquipamento($pdo, $userIdNum, $isAdmin, $eq));
 
     if (!$canSave) {
-        $flashMsg  = 'Sem permissão para gerir equipamentos neste laboratório.';
+        $flashMsg  = t('EQUIP_NO_PERM');
         $flashType = 'danger';
     } else {
         $campos = [
@@ -72,7 +72,7 @@ if (!empty($_POST)) {
         ];
 
         if (empty($campos['Equipamento'])) {
-            $flashMsg = 'O nome do equipamento é obrigatório.';
+            $flashMsg = t('EQUIP_NAME_REQUIRED');
             $flashType = 'warning';
             $eq = array_merge($eq, $campos);
         } else {
@@ -119,14 +119,14 @@ if (!empty($_POST)) {
                 $pdo->commit();
                 Database::disconnect();
                 $_SESSION['_equip_flash'] = [
-                    $equipId ? 'Equipamento actualizado.' : 'Equipamento adicionado.',
+                    $equipId ? t('SUCCESS_UPDATED') : t('SUCCESS_ADDED'),
                     'success'
                 ];
                 header('Location: equipment_details.php?id=' . $newId); exit;
 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $flashMsg  = 'Erro ao guardar: ' . $e->getMessage();
+                $flashMsg  = t('ERROR_SAVE') . ': ' . $e->getMessage();
                 $flashType = 'danger';
                 $eq = array_merge($eq, $campos);
             }
@@ -147,7 +147,7 @@ foreach (['jpg','jpeg','png','gif','webp'] as $ext) {
     }
 }
 
-$pageTitle = $equipId ? 'Editar Equipamento' : 'Novo Equipamento';
+$pageTitle = $equipId ? t('EQUIP_EDIT') : t('EQUIP_NEW');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -168,21 +168,33 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php endif; ?>
 
-<form method="post" enctype="multipart/form-data">
+<style>
+.eq-form .card-body          { padding: .65rem .85rem !important; }
+.eq-form .card-header        { padding: .35rem .85rem !important; }
+.eq-form .form-group         { margin-bottom: .35rem !important; }
+.eq-form label.small         { margin-bottom: .1rem; display:block; line-height:1.3; }
+.eq-form .form-control,
+.eq-form select.form-control { font-size: .82rem !important; padding: .25rem .45rem !important; height:auto !important; }
+.eq-form textarea.form-control{ font-size:.82rem !important; padding:.25rem .45rem !important; resize:vertical; }
+.eq-form .form-row           { margin-right:-.35rem; margin-left:-.35rem; }
+.eq-form .form-row > [class*=col-] { padding-right:.35rem; padding-left:.35rem; }
+</style>
+
+<form method="post" enctype="multipart/form-data" class="eq-form">
 
   <div class="row">
     <div class="col-md-8">
 
       <!-- Identificação -->
       <div class="card shadow-sm mb-3">
-        <div class="card-header py-2"><strong>Identificação</strong></div>
+        <div class="card-header py-2"><strong><?= t('EQUIP_IDENTIFICATION') ?></strong></div>
         <div class="card-body">
           <div class="form-row">
             <div class="col-md-4 form-group mb-2">
               <label class="small font-weight-bold"><?= t('EQUIP_LAB') ?> <span class="text-danger">*</span></label>
               <select name="Laboratorio" class="form-control" required
                       <?= (!$isAdmin && $equipId) ? 'disabled' : '' ?>>
-                <option value="">— seleccione —</option>
+                <option value="">— <?= t('SELECT_OPTION') ?> —</option>
                 <?php foreach ($labs as $l):
                   $selected = ($eq['Laboratorio'] === $l['lab_id']);
                   $disabled = !$isAdmin && !in_array($l['lab_id'], $labsDoUser);
@@ -205,35 +217,35 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
           <div class="form-row">
             <div class="col-md-5 form-group mb-2">
-              <label class="small font-weight-bold">Marca</label>
+              <label class="small font-weight-bold"><?= t('EQUIP_BRAND') ?></label>
               <input type="text" name="Marca" class="form-control"
                      value="<?= htmlspecialchars($eq['Marca'] ?? '') ?>">
             </div>
             <div class="col-md-5 form-group mb-2">
-              <label class="small font-weight-bold">Modelo</label>
+              <label class="small font-weight-bold"><?= t('EQUIP_MODEL') ?></label>
               <input type="text" name="Modelo" class="form-control"
                      value="<?= htmlspecialchars($eq['Modelo'] ?? '') ?>">
             </div>
             <div class="col-md-2 form-group mb-2">
-              <label class="small font-weight-bold">Qtd.</label>
+              <label class="small font-weight-bold"><?= t('EQUIP_QTY') ?></label>
               <input type="number" name="Quantidade" class="form-control" min="1"
                      value="<?= (int)($eq['Quantidade'] ?? 1) ?>">
             </div>
           </div>
           <div class="form-row">
             <div class="col-md-3 form-group mb-0">
-              <label class="small font-weight-bold">Ano aquisição</label>
+              <label class="small font-weight-bold"><?= t('EQUIP_ACQ_YEAR') ?></label>
               <input type="text" name="AnoAquisicao" class="form-control" maxlength="11"
                      placeholder="ex: 2022"
                      value="<?= htmlspecialchars($eq['AnoAquisicao'] ?? '') ?>">
             </div>
             <div class="col-md-4 form-group mb-0">
-              <label class="small font-weight-bold">Responsável</label>
+              <label class="small font-weight-bold"><?= t('RESPONSIBLE') ?></label>
               <input type="text" name="Responsavel" class="form-control"
                      value="<?= htmlspecialchars($eq['Responsavel'] ?? '') ?>">
             </div>
             <div class="col-md-5 form-group mb-0">
-              <label class="small font-weight-bold">Técnico</label>
+              <label class="small font-weight-bold"><?= t('EQUIP_TECH') ?></label>
               <input type="text" name="Tecnico" class="form-control"
                      value="<?= htmlspecialchars($eq['Tecnico'] ?? '') ?>">
             </div>
@@ -243,18 +255,18 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
       <!-- Detalhes operacionais -->
       <div class="card shadow-sm mb-3">
-        <div class="card-header py-2"><strong>Detalhes operacionais</strong></div>
+        <div class="card-header py-2"><strong><?= t('EQUIP_OP_DETAILS') ?></strong></div>
         <div class="card-body">
           <div class="form-row">
           <?php foreach ([
-            'Descricao'    => ['Descrição',               2],
-            'Condicoes'    => ['Condições de utilização',  2],
-            'Horario'      => ['Horário',                  2],
-            'Amostras'     => ['Tipo de amostras',         2],
-            'Operacao'     => ['Operação',                 2],
-            'Custo'        => ['Custo',                    2],
-            'Procedimento' => ['Procedimento',             2],
-            'Observacoes'  => ['Observações',              2],
+            'Descricao'    => [t('DESCRIPTION'),          1],
+            'Condicoes'    => [t('EQUIP_CONDITIONS'),     1],
+            'Horario'      => [t('EQUIP_SCHEDULE'),       1],
+            'Amostras'     => [t('EQUIP_SAMPLES'),        1],
+            'Operacao'     => [t('EQUIP_OPERATION'),      1],
+            'Custo'        => [t('EQUIP_COST'),           1],
+            'Procedimento' => [t('EQUIP_PROCEDURE'),      1],
+            'Observacoes'  => [t('OBSERVATIONS'),         1],
           ] as $field => [$label, $rows]): ?>
           <div class="col-md-6 form-group mb-2">
             <label class="small font-weight-bold"><?= htmlspecialchars($label) ?></label>
@@ -283,7 +295,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
           <?php endif; ?>
           <div class="form-group mb-0">
-            <label class="small font-weight-bold"><?= $imgUrl ? 'Substituir imagem' : 'Upload de imagem' ?></label>
+            <label class="small font-weight-bold"><?= $imgUrl ? t('EQUIP_REPLACE_IMG') : t('EQUIP_IMAGE') ?></label>
             <input type="file" name="imagem" class="form-control-file form-control-sm"
                    accept="image/jpeg,image/png,image/gif,image/webp">
             <small class="text-muted"><?= t('EQUIP_IMG_HELP') ?></small>

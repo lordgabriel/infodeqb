@@ -129,7 +129,7 @@ if (!empty($_POST) && $codigoNum && ($_POST['_acao'] ?? '') === 'dados_pessoais'
                 $tfFull,
                 $codigoNum,
             ));
-        $flashMsg  = 'Dados pessoais atualizados.';
+        $flashMsg  = t('HR_MSG_PESSOAL_OK');
         $flashType = 'success';
         $sc->execute([$codigoNum]);
         $colaborador  = $sc->fetch(PDO::FETCH_ASSOC);
@@ -137,7 +137,7 @@ if (!empty($_POST) && $codigoNum && ($_POST['_acao'] ?? '') === 'dados_pessoais'
         $isAtivo   = $registoAtivo && $registoAtivo['status'] === 'Ativo';
         $isInativo = $registoAtivo && $registoAtivo['status'] === 'Inativo';
     } catch (Exception $e) {
-        $flashMsg  = 'Erro ao atualizar dados pessoais.';
+        $flashMsg  = t('HR_MSG_PESSOAL_ERR');
         $flashType = 'danger';
     }
 }
@@ -190,7 +190,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                 $pdo->prepare(
                     'UPDATE infodeqb_rds_colaborador SET emailalt=?, telefone=? WHERE codigo=?'
                 )->execute(array($d['emailalt'], $d['telefone'], $codigoNum));
-                $msgs[] = 'Dados pessoais atualizados.';
+                $msgs[] = t('HR_MSG_PESSOAL_OK');
             }
         }
 
@@ -219,14 +219,14 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
             setRegistoAcessos($pdo, $novoRegistoId, $d['acessos'], $gabMap);
 
             if ($grupoMudou) {
-                $msgs[] = 'Pedido de novo registo (mudança de grupo profissional) criado e enviado para validação.';
-                $_tipoReg = 'Mudança de grupo profissional';
+                $msgs[] = t('HR_MSG_NOVO_GRUPO');
+                $_tipoReg = t('HR_TIPO_MUDANCA_GRUPO');
             } elseif ($isInativo) {
-                $msgs[] = 'Pedido de renovação criado e enviado para validação.';
-                $_tipoReg = 'Renovação / novo período';
+                $msgs[] = t('HR_MSG_RENOVACAO');
+                $_tipoReg = t('HR_TIPO_RENOVACAO');
             } else {
-                $msgs[] = 'Pedido de novo registo criado e enviado para validação.';
-                $_tipoReg = 'Novo registo';
+                $msgs[] = t('HR_MSG_NOVO_REG');
+                $_tipoReg = t('HR_TIPO_NOVO');
             }
             $_pendEmailNovoReg = array(
                 'nome'   => $d['nome'] ?: ($colaborador['nome'] ?? ''),
@@ -272,7 +272,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                     $d['responsavel'], $d['outroresponsavel'], $d['categoria'],
                     (int)$registoAtivo['autoid'],
                 ));
-                $msgs[] = 'Dados de registo atualizados.';
+                $msgs[] = t('HR_MSG_REG_OK');
             }
 
             // ── Pedido unificado para SIGARRA (datafim e/ou labs) ────────
@@ -297,8 +297,9 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                 $dadosAnt['datafim']        = (string)$registoAtivo['datafim'];
             }
             if ($labsMudaram) {
-                $adicionados = array_values(array_diff($newDeqids, $oldDeqids));
-                $removidos   = array_values(array_diff($oldDeqids, $newDeqids));
+                $newDeqidsNoIsentos = array_values(array_diff($newDeqids, $isentoDeqids));
+                $adicionados = array_values(array_diff($newDeqidsNoIsentos, $oldDeqids));
+                $removidos   = array_values(array_diff($oldDeqids, $newDeqidsNoIsentos));
                 // Preservar acessos isentos: mantê-los no conjunto final de acessos do registo
                 $newDeqids = array_values(array_unique(array_merge($newDeqids, $isentoDeqids)));
                 // Usar gabid (deduplicado) em vez de nomegab
@@ -365,7 +366,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         $d['observacoes'] ?: null,
                         $existPed['id'],
                     ));
-                    $msgs[] = 'Pedido de alteração atualizado (data e/ou acessos).';
+                    $msgs[] = t('HR_MSG_PED_UPDATED');
                     $_pendEmailPedAlt = array(
                         'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
                         'email'   => $colaborador['email'] ?? '',
@@ -384,7 +385,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
                         json_encode($dadosAnt, JSON_UNESCAPED_UNICODE),
                         $d['observacoes'] ?: null,
                     ));
-                    $msgs[] = 'Pedido de alteração submetido para aprovação pelo secretariado.';
+                    $msgs[] = t('HR_MSG_PED_SENT');
                     $_pendEmailPedAlt = array(
                         'nome'    => $d['nome'] ?: ($colaborador['nome'] ?? ''),
                         'email'   => $colaborador['email'] ?? '',
@@ -395,7 +396,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
             }
 
             if (!$nonLabMudou && empty($dadosSig) && empty($msgs)) {
-                $msgs[] = 'Nenhuma alteração detectada.';
+                $msgs[] = t('HR_MSG_NO_CHANGE');
                 $flashType = 'info';
             }
         }
@@ -443,7 +444,7 @@ if (!empty($_POST) && $codigoNum && $podeAlterar && ($_POST['_acao'] ?? '') !== 
 
     } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
-        $flashMsg  = 'Erro ao processar o pedido. Tente novamente.';
+        $flashMsg  = t('HR_MSG_ERROR');
         $flashType = 'danger';
         error_log('meu-registo error: ' . $e->getMessage());
     }
@@ -480,24 +481,24 @@ if (empty($flashMsg) && (!$colaborador || empty($todosRegistos))) {
 $topBtnLabel = '';
 $topBtnJs    = '';
 if ($podeAlterar && $isAtivo) {
-    $topBtnLabel = '<i class="fas fa-plus me-1"></i>Pedir novo registo';
+    $topBtnLabel = '<i class="fas fa-plus me-1"></i>' . t('HR_PEDIR_NOVO');
     $topBtnJs    = "abrirForm(true)";
 } elseif ($podeAlterar && $isInativo) {
-    $topBtnLabel = '<i class="fas fa-redo me-1"></i>Renovar acesso';
+    $topBtnLabel = '<i class="fas fa-redo me-1"></i>' . t('HR_RENOVAR');
     $topBtnJs    = "abrirForm(false)";
 }
 
-$pageTitle = 'O meu registo';
+$pageTitle = t('HR_MY_RECORD');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
-<div class="iq-page-header d-flex align-items-center">
-  <h1 class="mr-auto"><i class="fas fa-id-card fa-sm me-2 text-muted"></i>Os meus registos</h1>
+<div class="iq-page-header">
+  <h1><i class="fas fa-id-card fa-sm me-2 text-muted"></i><?= t('HR_MY_RECORDS') ?></h1>
 </div>
 
 <?php if ($flashMsg): ?>
-<div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem">
+<div class="alert alert-<?= $flashType ?> alert-dismissible fade show mb-3" role="alert" style="font-size:.85rem;text-align:left">
   <i class="fas fa-<?= $flashType === 'success' ? 'check-circle' : ($flashType === 'info' ? 'info-circle' : 'exclamation-circle') ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
   <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
@@ -505,38 +506,38 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; ?>
 
 <?php if (!$codigoNum): ?>
-<div class="alert alert-warning">Não foi possível determinar o seu código FEUP.</div>
+<div class="alert alert-warning"><?= t('HR_NO_FEUP_CODE') ?></div>
 
 <?php else: ?>
 
 <?php /* ── Pedidos em análise ──────────────────────────────────── */ ?>
 <?php
 $tipoLabelsU = array(
-    'novo'               => 'Novo registo',
-    'alteracao'          => 'Alteração de dados',
-    'novo_registo'       => 'Mudança de grupo',
-    'alteracao_labs'     => 'Alteração de acessos a laboratórios',
-    'alteracao_datafim'  => 'Alteração de data de fim',
-    'alteracao_sigarra'  => 'Alteração (a enviar ao SIGARRA)',
+    'novo'               => t('HR_TIPO_NOVO'),
+    'alteracao'          => t('HR_TIPO_ALTERACAO'),
+    'novo_registo'       => t('HR_TIPO_NOVO_REG'),
+    'alteracao_labs'     => t('HR_TIPO_ALT_LABS'),
+    'alteracao_datafim'  => t('HR_TIPO_ALT_DATAFIM'),
+    'alteracao_sigarra'  => t('HR_TIPO_ALT_SIGARRA'),
 );
 ?>
 <?php if ($pedidosPendentes): ?>
 <div class="card mb-3 border-warning">
   <div class="card-header py-2 d-flex align-items-center" style="background:var(--iq-amber-light)">
     <i class="fas fa-clock text-warning me-2"></i>
-    <strong style="color:var(--iq-amber-dark)" class="mr-auto">Pedidos em análise</strong>
+    <strong style="color:var(--iq-amber-dark)" class="mr-auto"><?= t('HR_PENDING_ANALYSIS') ?></strong>
   </div>
   <div class="card-body p-0">
     <table class="table table-sm mb-0" style="font-size:.82rem">
       <thead class="">
-        <tr><th>Tipo</th><th><?= t('STATUS') ?></th><th>Submetido em</th><th>Observações</th></tr>
+        <tr><th><?= t('TYPE') ?></th><th><?= t('STATUS') ?></th><th><?= t('HR_SUBMITTED_AT') ?></th><th><?= t('OBSERVATIONS') ?></th></tr>
       </thead>
       <tbody>
       <?php foreach ($pedidosPendentes as $p):
         $tLabel = isset($tipoLabelsU[$p['tipo']]) ? $tipoLabelsU[$p['tipo']] : $p['tipo'];
         $estadoBadge = $p['status'] === 'Aguarda_SIGARRA'
-            ? '<span class="badge badge-secondary">Aguarda SIGARRA</span>'
-            : '<span class="badge badge-warning">Em análise</span>';
+            ? '<span class="badge badge-secondary">' . t('HR_STATUS_SIGARRA') . '</span>'
+            : '<span class="badge badge-warning">' . t('HR_STATUS_ANALYSIS') . '</span>';
       ?>
       <tr>
         <td><?= htmlspecialchars($tLabel) ?></td>
@@ -554,11 +555,10 @@ $tipoLabelsU = array(
 <div class="card mb-3 border-info">
   <div class="card-header py-2 d-flex align-items-center" style="background:#eff6ff">
     <i class="fas fa-hourglass-half text-info me-2"></i>
-    <strong style="color:#1e40af" class="mr-auto">Registo em processamento</strong>
+    <strong style="color:#1e40af" class="mr-auto"><?= t('HR_REG_PROCESSING') ?></strong>
   </div>
   <div class="card-body py-2" style="font-size:.85rem">
-    Existe um registo no estado <strong><?= htmlspecialchars($blkReg['status']) ?></strong> a aguardar processamento pelo secretariado.
-    Não é possível submeter novas alterações até este ser ativado.
+    <?= sprintf(t('HR_REG_PROC_STATUS'), htmlspecialchars($blkReg['status'])) ?>
   </div>
 </div>
 <?php endif; ?>
@@ -566,18 +566,23 @@ $tipoLabelsU = array(
 <?php /* ── Barra de acção: botão fora da tabela ─────────────────── */ ?>
 <div class="d-flex align-items-center mb-3">
   <h5 class="mb-0 me-auto text-secondary" style="font-size:.95rem;font-weight:600">
-    <i class="fas fa-list fa-sm me-1"></i>Registos
+    <i class="fas fa-list fa-sm me-1"></i><?= t('HR_RECORDS') ?>
   </h5>
-  <?php if ($topBtnLabel): ?>
-  <button class="btn btn-primary btn-sm" onclick="<?= $topBtnJs ?>">
-    <?= $topBtnLabel ?>
-  </button>
-  <?php elseif ($temPendente): ?>
-  <button class="btn btn-secondary btn-sm" disabled
-          title="Aguarda processamento de pedido em curso">
-    <i class="fas fa-lock me-1"></i>Novo registo indisponível
-  </button>
-  <?php endif; ?>
+  <div class="d-flex gap-2">
+    <a href="<?= HTTP_DIR ?>/infodeqb/hr/index.php?proxy=1" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-user-plus me-1"></i><?= t('HR_PROXY_BTN') ?>
+    </a>
+    <?php if ($topBtnLabel): ?>
+    <button class="btn btn-primary btn-sm" onclick="<?= $topBtnJs ?>">
+      <?= $topBtnLabel ?>
+    </button>
+    <?php elseif ($temPendente): ?>
+    <button class="btn btn-secondary btn-sm" disabled
+            title="<?= t('HR_REG_PROCESSING') ?>">
+      <i class="fas fa-lock me-1"></i><?= t('HR_NO_NEW_REG') ?>
+    </button>
+    <?php endif; ?>
+  </div>
 </div>
 
 <?php /* ── Tabela de registos ────────────────────────────────────── */ ?>
@@ -587,10 +592,10 @@ $tipoLabelsU = array(
       <thead class="">
         <tr>
           <th style="width:7em"><?= t('STATUS') ?></th>
-          <th>Grupo profissional</th>
-          <th style="width:6em">Início</th>
-          <th style="width:6em">Fim</th>
-          <th>Acessos</th>
+          <th><?= t('HR_COL_PROF_GROUP') ?></th>
+          <th style="width:6em"><?= t('HR_COL_BEGIN') ?></th>
+          <th style="width:6em"><?= t('HR_COL_END') ?></th>
+          <th><?= t('HR_COL_ACCESSES') ?></th>
           <th style="width:8em" class="text-center"><?= t('ACTIONS') ?></th>
         </tr>
       </thead>
@@ -623,18 +628,18 @@ $tipoLabelsU = array(
         </td>
         <td class="align-middle text-center text-nowrap">
           <a href="<?= HTTP_DIR ?>/infodeqb/hr/meu-registo-detalhe.php?id=<?= (int)$reg['autoid'] ?>"
-             class="btn btn-xs btn-outline-secondary me-1" title="Ver detalhe">
+             class="btn btn-xs btn-outline-secondary me-1" title="<?= t('HR_VIEW_DETAIL') ?>">
             <i class="fas fa-eye fa-xs"></i>
           </a>
           <?php if ($reg['status'] === 'Ativo' && $podeAlterar): ?>
-            <button class="btn btn-xs btn-outline-primary" onclick="abrirForm(false)"
+            <button class="btn btn-xs btn-primary" onclick="abrirForm(false)"
                     title="Solicitar alteração a este registo">
-              <i class="fas fa-edit fa-xs"></i>
+              <i class="fas fa-pen fa-xs me-1"></i><?= t('HR_REQUEST_CHANGE') ?>
             </button>
           <?php elseif (in_array($reg['status'], array('Novo','Pendente'))): ?>
-            <span class="text-muted" title="Em validação"><i class="fas fa-clock fa-xs"></i></span>
+            <span class="badge bg-warning text-dark" title="<?= t('HR_IN_VALIDATION') ?>"><i class="fas fa-clock fa-xs me-1"></i><?= t('HR_IN_VALIDATION') ?></span>
           <?php elseif ($temPendente && $reg['status'] === 'Ativo'): ?>
-            <span class="text-muted" title="Pedido pendente"><i class="fas fa-lock fa-xs"></i></span>
+            <span class="badge bg-secondary" title="<?= t('HR_PENDING_REQUEST') ?>"><i class="fas fa-hourglass-half fa-xs me-1"></i><?= t('HR_PENDING_REQUEST') ?></span>
           <?php endif; ?>
         </td>
       </tr>
@@ -649,7 +654,7 @@ $tipoLabelsU = array(
 <div id="formAlterar" style="display:none">
 <div class="card border-primary mb-4">
   <div class="card-header py-2 d-flex align-items-center">
-    <strong class="mr-auto" id="formTitle">Solicitar alteração</strong>
+    <strong class="mr-auto" id="formTitle"><?= t('HR_REQUEST_CHANGE') ?></strong>
     <button type="button" class="btn btn-sm btn-outline-secondary ms-3"
             onclick="document.getElementById('formAlterar').style.display='none'">
       <i class="fas fa-times"></i>
@@ -659,15 +664,15 @@ $tipoLabelsU = array(
 
     <div id="avisoGrupo" class="alert alert-warning py-2 mb-3" style="display:none;font-size:.83rem">
       <i class="fas fa-exclamation-triangle me-1"></i>
-      <strong>Mudança de grupo:</strong> será criado um novo registo e o actual passará a Inativo quando o novo for ativado.
+      <?= t('HR_WARN_GROUP') ?>
     </div>
     <div id="avisoNovoReg" class="alert alert-warning py-2 mb-3 text-start" style="display:none;font-size:.83rem; justify-content:flex-start;;">
       <i class="fas fa-exclamation-triangle me-1"></i>
-      <strong>Novo registo:</strong> o registo actual ficará Inativo quando o novo for ativado. Preencha as novas datas.
+      <?= t('HR_WARN_NEW_REG_MSG') ?>
     </div>
     <div id="avisoLabs" class="alert alert-secondary py-2 mb-3" style="display:none;font-size:.83rem">
       <i class="fas fa-info-circle me-1"></i>
-      A alteração de acessos a laboratórios requer aprovação pelo secretariado. Os restantes campos são aplicados imediatamente.
+      <?= t('HR_WARN_LABS') ?>
     </div>
 
     <form method="post" class="iq-form-2col-wrap" id="mainForm">
@@ -679,24 +684,23 @@ $tipoLabelsU = array(
         <div class="iq-form-col">
           <div class="iq-form-section">
             <div class="iq-form-section-title">
-              Dados Pessoais
-            
+              <?= t('HR_SECTION_PERSONAL') ?>
             </div>
             <div class="form-group">
-              <label>Nome</label>
+              <label><?= t('NAME') ?></label>
               <input type="text" class="form-control" readonly
                      value="<?= htmlspecialchars($registoAtivo['nome'] ?: ($colaborador['nome'] ?: (isset($_SESSION['CommonName']) ? $_SESSION['CommonName'] : ''))) ?>"
-                     title="O nome não pode ser alterado aqui. Contacte o secretariado.">
-              <small class="form-text text-muted">Para alterar nome, email ou código UP, contacte o secretariado.</small>
+                     title="<?= t('HR_NAME_READONLY') ?>">
+              <small class="form-text text-muted"><?= t('HR_NAME_HINT') ?></small>
             </div>
             <div class="row">
               <div class="col-md-5 form-group">
-                <label>Email alternativo</label>
+                <label><?= t('HR_FORM_EMAIL_ALT') ?></label>
                 <input type="email" name="emailalt" class="form-control"
                        value="<?= htmlspecialchars($colaborador['emailalt'] ?? '') ?>">
               </div>
               <div class="col-md-7 form-group">
-                <label>Telefone</label>
+                <label><?= t('HR_FORM_PHONE') ?></label>
                 <?php renderPhoneInput($colaborador['telefone'] ?? '', 'sm', true); ?>
               </div>
             </div>
@@ -704,24 +708,23 @@ $tipoLabelsU = array(
 
           <div class="iq-form-section">
             <div class="iq-form-section-title">
-              Período e Afiliação
-            
+              <?= t('HR_SECTION_PERIOD') ?>
             </div>
             <div class="row">
               <div class="col-md-4 form-group">
-                <label>Data início</label>
+                <label><?= t('BEGIN_DATE') ?></label>
                 <input type="date" name="datainicio" id="datainicio_ped" class="form-control" required
                        value="<?= $isInativo ? '' : htmlspecialchars($registoAtivo['datainicio'] ?? '') ?>">
               </div>
               <div class="col-md-4 form-group">
-                <label>Data fim</label>
+                <label><?= t('END_DATE') ?></label>
                 <input type="date" name="datafim" id="datafim_ped" class="form-control" required
                        value="<?= $isInativo ? '' : htmlspecialchars($registoAtivo['datafim'] ?? '') ?>">
               </div>
               <div class="col-md-4 form-group">
-                <label>Unidade I&D</label>
+                <label><?= t('HR_FORM_UNIT') ?></label>
                 <select name="unidade" class="form-control" required>
-                  <option value="" disabled<?= empty($registoAtivo['unidade']) ? ' selected' : '' ?>>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['unidade']) ? ' selected' : '' ?>><?= t('HR_SELECT') ?></option>
                   <?php foreach (array('CEFT','LEPABE','LSRE-LCM','REQUIMTE','Outro') as $u): ?>
                   <option<?= (($registoAtivo['unidade'] ?? '') === $u) ? ' selected' : '' ?>><?= $u ?></option>
                   <?php endforeach; ?>
@@ -730,12 +733,12 @@ $tipoLabelsU = array(
             </div>
             <div class="row">
               <div class="col-md-7 form-group">
-                <label>Posto de trabalho</label>
+                <label><?= t('HR_FORM_WORKPLACE') ?></label>
                 <input type="text" name="workplace" class="form-control" required
                        value="<?= htmlspecialchars($registoAtivo['local_trabalho'] ?? '') ?>">
               </div>
               <div class="col-md-4 form-group">
-                <label>Extensão FEUP</label>
+                <label><?= t('HR_FORM_EXT') ?></label>
                 <input type="text" name="extensao" class="form-control" maxlength="10"
                        value="<?= htmlspecialchars($registoAtivo['extensao'] ?? '') ?>">
               </div>
@@ -743,9 +746,9 @@ $tipoLabelsU = array(
           </div>
 
           <div class="form-group">
-            <label>Observações <small class="text-muted">(opcional)</small></label>
+            <label><?= t('OBSERVATIONS') ?> <small class="text-muted">(<?= t('OPTIONAL') ?>)</small></label>
             <textarea name="observacoes" class="form-control" rows="2"
-                      placeholder="Motivo do pedido…"></textarea>
+                      placeholder="<?= t('HR_OBS_PLACEHOLDER') ?>"></textarea>
           </div>
         </div>
 
@@ -753,14 +756,13 @@ $tipoLabelsU = array(
         <div class="iq-form-col">
           <div class="iq-form-section">
             <div class="iq-form-section-title">
-              Classificação
-
+              <?= t('HR_SECTION_CLASS') ?>
             </div>
             <div class="row">
               <div class="col-md-6 form-group">
-                <label>Grupo Profissional</label>
+                <label><?= t('HR_FORM_PROF_GROUP') ?></label>
                 <select name="grupo" id="grupo_ped" class="form-control" required>
-                  <option value="" disabled<?= empty($registoAtivo['grupo']) ? ' selected' : '' ?>>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['grupo']) ? ' selected' : '' ?>><?= t('HR_SELECT') ?></option>
                   <?php foreach ($grupos as $g): ?>
                   <option value="<?= (int)$g['grupoid'] ?>"<?= (!empty($registoAtivo['grupo']) && (int)$registoAtivo['grupo'] === (int)$g['grupoid']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars($g['grupo_pro']) ?>
@@ -769,9 +771,9 @@ $tipoLabelsU = array(
                 </select>
               </div>
               <div class="col-md-6 form-group" id="cat-col-wrap-ped">
-                <label>Categoria</label>
+                <label><?= t('CATEGORY') ?></label>
                 <select name="categoria" id="categoria_ped" class="form-control" required>
-                  <option value="" disabled<?= empty($registoAtivo['categoria']) ? ' selected' : '' ?>>— Selecionar —</option>
+                  <option value="" disabled<?= empty($registoAtivo['categoria']) ? ' selected' : '' ?>><?= t('HR_SELECT') ?></option>
                   <?php foreach ($cats as $c): ?>
                   <option value="<?= (int)$c['categoriaid'] ?>"<?= (!empty($registoAtivo['categoria']) && (int)$registoAtivo['categoria'] === (int)$c['categoriaid']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars(trim($c['categoria'])) ?>
@@ -782,21 +784,21 @@ $tipoLabelsU = array(
             </div>
             <div class="row">
               <div class="col-md-8 form-group">
-                <label>Responsável</label>
+                <label><?= t('RESPONSIBLE') ?></label>
                 <select name="responsavel" id="responsavel_ped" class="form-control" required>
-                  <option value="" disabled<?= ($registoAtivo === null || $registoAtivo['responsavel'] === null) ? ' selected' : '' ?>>— Selecionar —</option>
+                  <option value="" disabled<?= ($registoAtivo === null || $registoAtivo['responsavel'] === null) ? ' selected' : '' ?>><?= t('HR_SELECT') ?></option>
                   <?php foreach ($resps as $r): ?>
                   <option value="<?= (int)$r['Codigo'] ?>"<?= ($registoAtivo && $registoAtivo['responsavel'] !== null && (int)$registoAtivo['responsavel'] === (int)$r['Codigo']) ? ' selected' : '' ?>>
                     <?= htmlspecialchars($r['respespaco']) ?>
                   </option>
                   <?php endforeach; ?>
-                  <option value="0"<?= ($registoAtivo && (int)($registoAtivo['responsavel'] ?? -1) === 0) ? ' selected' : '' ?>>Outro…</option>
+                  <option value="0"<?= ($registoAtivo && (int)($registoAtivo['responsavel'] ?? -1) === 0) ? ' selected' : '' ?>><?= t('OTHER') ?>…</option>
                 </select>
               </div>
             </div>
             <div id="outroresp_ped" style="<?= ($registoAtivo && (int)($registoAtivo['responsavel'] ?? -1) === 0) ? '' : 'display:none' ?>">
               <div class="form-group">
-                <label>Responsável (outro)</label>
+                <label><?= t('HR_FORM_RESP_OTHER') ?></label>
                 <input type="text" name="outroresponsavel" class="form-control"
                        value="<?= htmlspecialchars($registoAtivo['outroresponsavel'] ?? '') ?>">
               </div>
@@ -805,46 +807,62 @@ $tipoLabelsU = array(
 
           <div class="iq-form-section iq-form-section-fill">
             <div class="iq-form-section-title">
-              Acessos
-         
+              <?= t('HR_SECTION_ACCESS') ?>
             </div>
             <div class="iq-form-inline mb-2" style="gap:1rem;align-items:center;">
-              <label style="margin-bottom:0;font-weight:500;">Acesso DEQB (porta norte)</label>
+              <label style="margin-bottom:0;font-weight:500;"><?= t('HR_FORM_DEQ_ACCESS') ?></label>
               <div class="d-flex gap-3" style="gap:.75rem;display:flex;">
                 <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
-                  <input type="radio" name="acessodeq" id="acessodeq_sim" value="1" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 1) ? ' checked' : '' ?>> Sim
+                  <input type="radio" name="acessodeq" id="acessodeq_sim" value="1" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 1) ? ' checked' : '' ?>> <?= t('OPT_YES') ?>
                 </label>
                 <label class="d-flex align-items-center gap-1" style="gap:.35rem;margin-bottom:0;cursor:pointer;font-weight:400;">
-                  <input type="radio" name="acessodeq" id="acessodeq_nao" value="0" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 0) ? ' checked' : '' ?>> Não
+                  <input type="radio" name="acessodeq" id="acessodeq_nao" value="0" required onchange="verificarLabs()"<?= ($registoAtivo && (int)$registoAtivo['acessodeq'] === 0) ? ' checked' : '' ?>> <?= t('OPT_NO') ?>
                 </label>
               </div>
             </div>
             <div class="form-group iq-fill">
-              <label>Laboratórios / gabinetes</label>
+              <label><?= t('HR_FORM_LABS') ?></label>
               <div class="iq-checkboxlist" id="acessos_ped" onchange="atualizarPreviewLabs('acessos_ped','labs-preview-ped')">
               <?php
               $selDeqids = $registoAtivo ? getRegistoAcessos($pdo, (int)$registoAtivo['autoid']) : array();
-              $prevPiso = null; $prevEdificio = null; $openGrp = false;
-              foreach ($gabRows as $rg):
-                if ($rg['piso'] !== $prevPiso || $rg['edificio'] !== $prevEdificio):
-                  if ($openGrp) echo '</div>';
-                  $label = '';
-                  if ($rg['edificio'] !== $prevEdificio && stripos($rg['piso'], 'Edifício') === false) {
-                    $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rg['edificio']) . '</span>';
-                  }
-                  $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rg['piso']) . '</span>';
-                  echo '<div class="iq-checkgroup">' . $label;
-                  $prevPiso = $rg['piso']; $prevEdificio = $rg['edificio']; $openGrp = true;
-                endif;
+              $gabByEdPed = array();
+              foreach ($gabRows as $rg) { $gabByEdPed[$rg['edificio']][] = $rg; }
+              foreach ($gabByEdPed as $_edif => $_edRows):
+                $_edId  = 'lab-ped-' . preg_replace('/[^a-z0-9]/i', '', $_edif);
+                $_edSel = 0;
+                foreach ($_edRows as $_r) { if (in_array($_r['deqid'], $selDeqids)) $_edSel++; }
+                $_open  = $_edSel > 0 ? ' show' : '';
+                $_exp   = $_edSel > 0 ? 'true' : 'false';
               ?>
-              <label>
-                <input type="checkbox" name="acessos[]"
-                       value="<?= htmlspecialchars($rg['deqid']) ?>"
-                       onchange="verificarLabs()"
-                       <?= in_array($rg['deqid'], $selDeqids) ? 'checked' : '' ?>>
-                <?= htmlspecialchars($rg['nomegab']) ?>
-              </label>
-              <?php endforeach; if ($openGrp) echo '</div>'; ?>
+              <div class="iq-lab-building">
+                <button type="button" class="iq-lab-building-header"
+                        data-bs-toggle="collapse" data-bs-target="#<?= $_edId ?>"
+                        aria-expanded="<?= $_exp ?>">
+                  <span><?= t('BUILDING') . ' ' . htmlspecialchars($_edif) ?></span>
+                  <span class="iq-lab-sel-count"<?= $_edSel > 0 ? '' : ' style="display:none"' ?>><?= $_edSel > 0 ? $_edSel : '' ?></span>
+                  <i class="fas fa-chevron-down ms-auto"></i>
+                </button>
+                <div class="collapse<?= $_open ?>" id="<?= $_edId ?>">
+                <?php
+                $_curPiso = '';
+                foreach ($_edRows as $rg):
+                  if ($rg['piso'] !== $_curPiso):
+                    if ($_curPiso !== '') echo '</div>';
+                    echo '<div class="iq-checkgroup"><span class="iq-checkgroup-label">' . htmlspecialchars($rg['piso']) . '</span>';
+                    $_curPiso = $rg['piso'];
+                  endif;
+                ?>
+                <label>
+                  <input type="checkbox" name="acessos[]"
+                         value="<?= htmlspecialchars($rg['deqid']) ?>"
+                         onchange="verificarLabs()"
+                         <?= in_array($rg['deqid'], $selDeqids) ? 'checked' : '' ?>>
+                  <?= htmlspecialchars($rg['nomegab']) ?>
+                </label>
+                <?php endforeach; if ($_curPiso !== '') echo '</div>'; ?>
+                </div>
+              </div>
+              <?php endforeach; ?>
               </div>
               <div class="labs-preview mt-2" id="labs-preview-ped"></div>
               <?php
@@ -852,7 +870,7 @@ $tipoLabelsU = array(
               if ($isentoSelDeqids):
               ?>
               <div class="mt-2">
-                <small class="text-muted d-block mb-1">Outros acessos (atribuídos automaticamente):</small>
+                <small class="text-muted d-block mb-1"><?= t('HR_AUTO_ACCESS') ?></small>
                 <?php foreach ($isentoSelDeqids as $did): ?>
                   <span class="badge badge-light border me-1 mb-1" style="font-size:.8rem;font-weight:normal">
                     <?= htmlspecialchars(isset($gabNomesAll[$did]) ? $gabNomesAll[$did] : $did) ?>
@@ -884,6 +902,11 @@ $tipoLabelsU = array(
 
 <script>
 var grupoOriginal     = <?= $registoAtivo ? (int)$registoAtivo['grupo'] : 0 ?>;
+var _txtNenhumSel     = <?= json_encode(t('NONE_SELECTED')) ?>;
+var _txtPedirNovo     = <?= json_encode(t('HR_PEDIR_NOVO')) ?>;
+var _txtSolicRenov    = <?= json_encode(t('HR_SOLICITAR_RENOV')) ?>;
+var _txtSolicAlt      = <?= json_encode(t('HR_REQUEST_CHANGE')) ?>;
+var _txtDateValidation= <?= json_encode(t('HR_DATE_VALIDATION')) ?>;
 var isAtivo           = <?= $isAtivo  ? 'true' : 'false' ?>;
 var isInativo         = <?= $isInativo ? 'true' : 'false' ?>;
 var acessosOriginais  = <?= json_encode($registoAtivo ? getRegistoAcessos($pdo, (int)$registoAtivo['autoid']) : array()) ?>;
@@ -898,13 +921,24 @@ var allCatOpts = document.getElementById('categoria_ped')
     ? document.getElementById('categoria_ped').innerHTML : '';
 
 // ── Preview de labs seleccionados ────────────────────────────────
+function atualizarLabBadges(listId) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    list.querySelectorAll('.iq-lab-building').forEach(function(bldg) {
+        var n = bldg.querySelectorAll('input[type=checkbox]:checked').length;
+        var badge = bldg.querySelector('.iq-lab-sel-count');
+        if (!badge) return;
+        badge.textContent = n > 0 ? n : '';
+        badge.style.display = n > 0 ? '' : 'none';
+    });
+}
 function atualizarPreviewLabs(listId, previewId) {
     var list = document.getElementById(listId);
     var prev = document.getElementById(previewId);
     if (!list || !prev) return;
     var checks = list.querySelectorAll('input[type=checkbox]:checked');
     if (checks.length === 0) {
-        prev.innerHTML = '<span style="font-size:12px;color:#999">Nenhum selecionado</span>';
+        prev.innerHTML = '<span style="font-size:12px;color:#999">' + _txtNenhumSel + '</span>';
     } else {
         var html = '';
         checks.forEach(function(c) {
@@ -936,7 +970,7 @@ function abrirForm(novoReg) {
     avisoN.style.display = 'none';
 
     if (novoReg) {
-        title.textContent = 'Pedir novo registo';
+        title.textContent = _txtPedirNovo;
         avisoN.style.display = '';
         // Limpar datas
         document.getElementById('datainicio_ped').value = '';
@@ -950,10 +984,11 @@ function abrirForm(novoReg) {
         document.querySelectorAll('input[name="acessodeq"]').forEach(function(r) { r.checked = false; });
         document.querySelectorAll('#acessos_ped input[type=checkbox]').forEach(function(c) { c.checked = false; });
         atualizarPreviewLabs('acessos_ped', 'labs-preview-ped');
+        atualizarLabBadges('acessos_ped');
     } else if (isInativo) {
-        title.textContent = 'Solicitar renovação';
+        title.textContent = _txtSolicRenov;
     } else {
-        title.textContent = 'Solicitar alteração';
+        title.textContent = _txtSolicAlt;
     }
     verificarLabs();
     el.scrollIntoView({behavior:'smooth', block:'start'});
@@ -1022,8 +1057,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Preview de labs (meu-registo) ─────────────────────────────
+    // ── Preview de labs + badges accordion (meu-registo) ────────
     atualizarPreviewLabs('acessos_ped', 'labs-preview-ped');
+    atualizarLabBadges('acessos_ped');
+    var _labsPedList = document.getElementById('acessos_ped');
+    if (_labsPedList) {
+        _labsPedList.addEventListener('change', function() { atualizarLabBadges('acessos_ped'); });
+    }
     var selR = document.getElementById('responsavel_ped');
     if (selR) {
         selR.addEventListener('change', function () {
@@ -1048,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!ini || !fim) return;
         function validarDatas() {
             if (ini.value && fim.value && fim.value < ini.value) {
-                fim.setCustomValidity('A data de fim não pode ser anterior à data de início.');
+                fim.setCustomValidity(_txtDateValidation);
             } else {
                 fim.setCustomValidity('');
             }

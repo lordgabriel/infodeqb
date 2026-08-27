@@ -109,31 +109,34 @@ foreach ($result as $row) {
     $subgrupoTotals[$u][$g][$s]['area_EF']      += $areaEF;
 }
 
-$pageTitle = 'Fichas ADI';
+$pageTitle = t('ADI_PAGE_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
 <style>
-#adiTable                 { font-size:.875rem; }
-#adiTable thead th        { background:var(--iq-nav-bg)!important; color:#fff!important; font-size:.875rem; }
-#adiTable .row-unidade td { background:var(--iq-gray-600); color:#fff; font-size:.875rem; }
-#adiTable .row-grupo   td { background:var(--iq-gray-200); color:#2d3748; font-size:.85rem; }
-#adiTable .row-subgrupo td{ background:var(--iq-gray-100); color:#6c757d; font-size:.83rem; }
+#adiTable                              { font-size:.875rem; }
+#adiTable thead th                     { background:var(--iq-accent)!important; color:#fff!important; font-size:.875rem; }
+/* indentação dos sub-níveis — sobrepõe o padding do iq-tbl-group-* */
+#adiTable .row-grupo    > td:first-child { padding-left:1.25rem!important; }
+#adiTable .row-subgrupo > td:first-child { padding-left:2.5rem!important;  }
+/* valores numéricos: mesmo tamanho e alinhamento em todas as linhas */
+#adiTable tr > td:not(:first-child) { font-size:.875rem!important; text-align:right!important; }
 </style>
 
 <div class="iq-page-header">
-  <h1><i class="fas fa-building fa-sm me-2 text-muted"></i>Distribuição de Espaços de Investigação</h1>
+  <h1><i class="fas fa-building fa-sm me-2 text-muted"></i><?= t('ADI_TITLE') ?></h1>
   <div class="iq-page-header-actions">
     <a href="<?php echo HTTP_DIR; ?>/infodeqb/adi/Criterios_Espacos_Investigacao_DEQB.pdf"
        class="btn btn-secondary btn-sm" target="_blank" download>
-      <i class="fas fa-file-download me-1"></i> Critérios de atribuição
+      <i class="fas fa-file-download me-1"></i> <?= t('ADI_CRITERIA') ?>
     </a>
   </div>
 </div>
 
 <div class="card">
   <div class="card-header">
-    <i class="fas fa-table"></i> Produção Científica e Gestão 2018&ndash;2024
+    <i class="fas fa-table"></i> <?= t('ADI_SUBTITLE') ?>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
@@ -141,12 +144,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
         <thead>
           <tr>
             <th rowspan="2">Nome</th>
-            <th rowspan="2" class="text-end">Área ocupada (m²)</th>
-            <th colspan="2" class="text-center">Área a atribuir (m²)</th>
+            <th rowspan="2" class="text-end"><?= t('ADI_AREA_CURRENT') ?></th>
+            <th colspan="2" class="text-center"><?= t('ADI_AREA_FORECAST') ?></th>
           </tr>
           <tr>
-            <th class="text-end">Área DEQ+DEF</th>
-            <th class="text-end">Só Área DEF</th>
+            <th class="text-end"><?= t('ADI_AREA_DEQ_DEF') ?></th>
+            <th class="text-end"><?= t('ADI_AREA_DEF_ONLY') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -168,7 +171,7 @@ if ($result) {
         if ($currentUnidade !== $u) {
             $currentUnidade = $u; $currentGrupo = $currentSubgrupo = null;
             $ut = $unidadeTotals[$u];
-            echo "<tr class='row-unidade font-weight-bold'>";
+            echo "<tr class='row-unidade iq-tbl-group-1'>";
             echo "<td>" . htmlspecialchars($u) . "</td>";
             if ($isAdiAdmin || $temFiltro) {
                 echo "<td class='text-end'>" . number_format($ut['area_ocupada'],1,',','.') . "</td>";
@@ -183,12 +186,12 @@ if ($result) {
         if ($currentGrupo !== $g) {
             $currentGrupo = $g; $currentSubgrupo = null;
             $gt = $grupoTotals[$u][$g] ?? ['area_ocupada'=>0,'A_atribuir'=>0,'area_EF'=>0];
-            echo "<tr class='row-grupo'>";
-            echo "<td style='padding-left:1.25rem'><small class='font-weight-bold'>" . htmlspecialchars($g) . "</small></td>";
+            echo "<tr class='row-grupo iq-tbl-group-2'>";
+            echo "<td>" . htmlspecialchars($g) . "</td>";
             if ($isAdiAdmin || $temFiltro) {
-                echo "<td class='text-end'><small>" . number_format($gt['area_ocupada'],1,',','.') . "</small></td>";
-                echo "<td class='text-end'><small>" . number_format($gt['A_atribuir'],1,',','.') . "</small></td>";
-                echo "<td class='text-end'><small>" . ($isEF ? number_format($gt['area_EF'],1,',','.') : '—') . "</small></td>";
+                echo "<td class='text-end'>" . number_format($gt['area_ocupada'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . number_format($gt['A_atribuir'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . ($isEF ? number_format($gt['area_EF'],1,',','.') : '—') . "</td>";
             } else {
                 echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
             }
@@ -198,12 +201,12 @@ if ($result) {
         if ($currentSubgrupo !== $s) {
             $currentSubgrupo = $s;
             $st = $subgrupoTotals[$u][$g][$s] ?? ['area_ocupada'=>0,'A_atribuir'=>0,'area_EF'=>0];
-            echo "<tr class='row-subgrupo'>";
-            echo "<td style='padding-left:2.5rem'><small class='font-weight-bold'>" . htmlspecialchars($s) . "</small></td>";
+            echo "<tr class='row-subgrupo iq-tbl-group-3'>";
+            echo "<td>" . htmlspecialchars($s) . "</td>";
             if ($isAdiAdmin || $temFiltro) {
-                echo "<td class='text-end'><small>" . number_format($st['area_ocupada'],1,',','.') . "</small></td>";
-                echo "<td class='text-end'><small>" . number_format($st['A_atribuir'],1,',','.') . "</small></td>";
-                echo "<td class='text-end'><small>" . ($isEF ? number_format($st['area_EF'],1,',','.') : '—') . "</small></td>";
+                echo "<td class='text-end'>" . number_format($st['area_ocupada'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . number_format($st['A_atribuir'],1,',','.') . "</td>";
+                echo "<td class='text-end'>" . ($isEF ? number_format($st['area_EF'],1,',','.') : '—') . "</td>";
             } else {
                 echo "<td class='text-end'>$nd</td><td class='text-end'>$nd</td><td class='text-end'>$nd</td>";
             }

@@ -9,7 +9,7 @@ $language = (substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2) === 'pt') ? 'pt' : '
 include ROOT_DIR . '/infodeqb/hr/lang/lang.' . $language . '.php';
 
 require_once ROOT_DIR . '/infodeqb/inc/admins.php';
-if (!($isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr))) {
+if (!($isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr) || in_array($_iqCurrentUser, $_iqAdminsHrList))) {
     header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit;
 }
@@ -35,7 +35,7 @@ foreach ($rows as $r) {
     $letrasComResultados[$l] = true;
 }
 
-$pageTitle = 'Lista de Pessoal';
+$pageTitle = t('HR_LIST_TITLE');
 $mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
@@ -127,7 +127,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <div class="mr-auto">
-    <h1><i class="fas fa-users fa-sm me-2 text-muted"></i>Pessoal ativo DEQB</h1>
+    <h1><i class="fas fa-users fa-sm me-2 text-muted"></i><?= t('HR_LIST_SUBTITLE') ?></h1>
     <small class="text-muted" style="font-size:.85rem">
       <?= count($rows) ?> colaboradores / investigadores
     </small>
