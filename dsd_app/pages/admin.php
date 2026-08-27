@@ -27,7 +27,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">⚙️ Administração</div>
+    <div class="page-title"><i class="fas fa-cog me-1"></i>Administração</div>
     <div class="page-sub">Gestão do sistema DSD</div>
   </div>
 </div>
@@ -36,20 +36,20 @@ require_once __DIR__ . '/../includes/header.php';
 
   <!-- Docentes -->
   <div class="card">
-    <div class="card-title">👩‍🏫 Docentes</div>
+    <div class="card-title"><i class="fas fa-chalkboard-teacher me-1"></i>Docentes</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <a href="<?= BASE_URL ?>/pages/docentes.php" class="btn btn-secondary">Lista de Docentes</a>
       <a href="<?= BASE_URL ?>/pages/docente-form.php" class="btn btn-secondary">+ Adicionar Docente</a>
       <hr style="margin:4px 0;border-color:var(--gray-200)">
-      <a href="<?= BASE_URL ?>/pages/carreiras.php" class="btn btn-secondary">🎓 Carreiras</a>
-      <a href="<?= BASE_URL ?>/pages/categorias.php" class="btn btn-secondary">🏷️ Categorias</a>
-      <a href="<?= BASE_URL ?>/pages/departamentos.php" class="btn btn-secondary">🏢 Departamentos</a>
+      <a href="<?= BASE_URL ?>/pages/carreiras.php" class="btn btn-secondary"><i class="fas fa-graduation-cap me-1"></i>Carreiras</a>
+      <a href="<?= BASE_URL ?>/pages/categorias.php" class="btn btn-secondary"><i class="fas fa-tags me-1"></i>Categorias</a>
+      <a href="<?= BASE_URL ?>/pages/departamentos.php" class="btn btn-secondary"><i class="fas fa-building me-1"></i>Departamentos</a>
     </div>
   </div>
 
   <!-- UCs -->
   <div class="card">
-    <div class="card-title">📚 Unidades Curriculares</div>
+    <div class="card-title"><i class="fas fa-book me-1"></i>Unidades Curriculares</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <a href="<?= BASE_URL ?>/pages/ucs.php" class="btn btn-secondary">Catálogo de UCs</a>
       <a href="<?= BASE_URL ?>/pages/uc-form.php" class="btn btn-secondary">+ Adicionar UC</a>
@@ -61,7 +61,7 @@ require_once __DIR__ . '/../includes/header.php';
 
   <!-- Anos letivos -->
   <div class="card">
-    <div class="card-title">📅 Anos Letivos</div>
+    <div class="card-title"><i class="fas fa-calendar-alt me-1"></i>Anos Letivos</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <a href="<?= BASE_URL ?>/pages/anos-letivos.php" class="btn btn-secondary">Gerir Anos Letivos</a>
     </div>
@@ -69,31 +69,31 @@ require_once __DIR__ . '/../includes/header.php';
 
   <!-- Dados -->
   <div class="card">
-    <div class="card-title">💾 Dados</div>
+    <div class="card-title"><i class="fas fa-save me-1"></i>Dados</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <a href="<?= BASE_URL ?>/pages/import-csv.php" class="btn btn-secondary">📥 Importar CSV</a>
-      <a href="<?= BASE_URL ?>/pages/export.php"     class="btn btn-secondary">📤 Exportar / Backup</a>
+      <a href="<?= BASE_URL ?>/pages/import-csv.php" class="btn btn-secondary"><i class="fas fa-file-upload me-1"></i>Importar CSV</a>
+      <a href="<?= BASE_URL ?>/pages/export.php"     class="btn btn-secondary"><i class="fas fa-file-export me-1"></i>Exportar / Backup</a>
     </div>
   </div>
 
   <!-- Relatórios Admin -->
   <div class="card" style="grid-column:1/-1">
-    <div class="card-title">📈 Relatórios</div>
+    <div class="card-title"><i class="fas fa-chart-line me-1"></i>Relatórios</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
-      <a href="<?= BASE_URL ?>/reports/por-docente.php" class="btn btn-secondary">👩‍🏫 Por Docente</a>
-      <a href="<?= BASE_URL ?>/reports/por-ciclo.php" class="btn btn-secondary">📚 Por Ciclo de Estudos</a>
-      <a href="<?= BASE_URL ?>/reports/resumo.php" class="btn btn-secondary">📊 Resumo de Horas</a>
-      <a href="<?= BASE_URL ?>/reports/tabela1.php" class="btn btn-secondary">📋 Tabela 1 – DSD</a>
-      <a href="<?= BASE_URL ?>/reports/por-area.php" class="btn btn-secondary">🔬 Por Área Científica</a>
-      <a href="<?= BASE_URL ?>/reports/horas-em-falta.php" class="btn btn-secondary">⚠️ Horas em Falta</a>
-      <a href="<?= BASE_URL ?>/reports/graficos.php" class="btn btn-secondary">📈 Gráficos</a>
-      <a href="<?= BASE_URL ?>/reports/por-carreira.php" class="btn btn-secondary">📊 Por Carreira e Categoria</a>
+      <a href="<?= BASE_URL ?>/reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-chalkboard-teacher me-1"></i>Por Docente</a>
+      <a href="<?= BASE_URL ?>/reports/por-ciclo.php" class="btn btn-secondary"><i class="fas fa-book me-1"></i>Por Ciclo de Estudos</a>
+      <a href="<?= BASE_URL ?>/reports/resumo.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Resumo de Horas</a>
+      <a href="<?= BASE_URL ?>/reports/tabela1.php" class="btn btn-secondary"><i class="fas fa-clipboard-list me-1"></i>Tabela 1 – DSD</a>
+      <a href="<?= BASE_URL ?>/reports/por-area.php" class="btn btn-secondary"><i class="fas fa-flask me-1"></i>Por Área Científica</a>
+      <a href="<?= BASE_URL ?>/reports/horas-em-falta.php" class="btn btn-secondary"><i class="fas fa-exclamation-triangle me-1"></i>Horas em Falta</a>
+      <a href="<?= BASE_URL ?>/reports/graficos.php" class="btn btn-secondary"><i class="fas fa-chart-line me-1"></i>Gráficos</a>
+      <a href="<?= BASE_URL ?>/reports/por-carreira.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Por Carreira e Categoria</a>
     </div>
   </div>
 
   <!-- Acesso -->
   <div class="card" style="grid-column:1/-1">
-    <div class="card-title">🔐 Controlo de Acesso</div>
+    <div class="card-title"><i class="fas fa-lock me-1"></i>Controlo de Acesso</div>
     <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
       Autenticação completa será implementada numa versão futura.
       Por agora podes controlar o acesso aos relatórios e páginas de gestão.
@@ -122,7 +122,7 @@ require_once __DIR__ . '/../includes/header.php';
         </label>
       </div>
       <div style="margin-top:16px">
-        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar</button>
       </div>
     </form>
   </div>

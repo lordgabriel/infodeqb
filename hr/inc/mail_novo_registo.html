@@ -1,15 +1,15 @@
-<!-- EMAIL_SUBTITLE: Pedido de Registo Submetido -->
+<!-- EMAIL_SUBTITLE: {valorsubtitle} -->
 {{HEADER}}
-              <p style="font-size:15px;color:#153643;margin:0 0 16px 0;">O seu pedido de registo foi submetido com sucesso e aguarda aprovação pelo secretariado.</p>
+              <p style="font-size:14px;color:#333;margin:0 0 10px 0;">{valormsg_intro}</p>
 
-              <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:16px;">
-                <tr><th colspan="2" style="background:#2475ba;color:#fff;padding:8px;text-align:left;">Dados do Pedido</th></tr>
-                <tr><td style="padding:6px 8px;color:#555;width:40%;">Nome:</td><td style="padding:6px 8px;">{valornome}</td></tr>
-                <tr><td style="padding:6px 8px;color:#555;">Código FEUP:</td><td style="padding:6px 8px;">{valorcodigo}</td></tr>
-                <tr><td style="padding:6px 8px;color:#555;">Data início:</td><td style="padding:6px 8px;">{valorinicio}</td></tr>
-                <tr><td style="padding:6px 8px;color:#555;">Data fim:</td><td style="padding:6px 8px;">{valorfim}</td></tr>
-                <tr><td style="padding:6px 8px;color:#555;">Tipo:</td><td style="padding:6px 8px;">{valortipo}</td></tr>
+              <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px;">
+                <tr><th colspan="2" style="background:#2475ba;color:#fff;padding:6px 8px;text-align:left;font-size:13px;">{valorlabel_section}</th></tr>
+                <tr style="background:#f0f5fb;"><td style="padding:4px 8px;color:#555;width:40%;border-bottom:1px solid #dde6f0;">{valorlabel_nome}:</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valornome}</td></tr>
+                <tr><td style="padding:4px 8px;color:#555;border-bottom:1px solid #dde6f0;">{valorlabel_codigo}:</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorcodigo}</td></tr>
+                <tr style="background:#f0f5fb;"><td style="padding:4px 8px;color:#555;border-bottom:1px solid #dde6f0;">{valorlabel_inicio}:</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorinicio}</td></tr>
+                <tr><td style="padding:4px 8px;color:#555;border-bottom:1px solid #dde6f0;">{valorlabel_fim}:</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorfim}</td></tr>
+                <tr style="background:#f0f5fb;"><td style="padding:4px 8px;color:#555;">{valorlabel_tipo}:</td><td style="padding:4px 8px;">{valortipo}</td></tr>
               </table>
 
-              <p style="font-size:13px;color:#666;margin:0;">Será notificado por email quando o pedido for processado.</p>
+              <p style="font-size:12px;color:#777;margin:0;">{valormsg_footer}</p>
 {{FOOTER}}

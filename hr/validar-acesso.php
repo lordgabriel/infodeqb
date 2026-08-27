@@ -91,7 +91,7 @@ Database::disconnect();
     .val-header p  { margin:0; font-size:.9rem; opacity:.85; }
     .val-body { padding:30px; }
     .val-footer {
-      background:#18163a; color:#ccc; font-size:.8rem;
+      background:#16232b; color:#ccc; font-size:.8rem;
       padding:14px 30px; text-align:center;
     }
     .info-table td { padding:7px 12px; font-size:.95rem; }
@@ -134,7 +134,7 @@ Database::disconnect();
         Por favor reveja os detalhes e <strong>valide ou rejeite</strong> o pedido.
       </p>
 
-      <table class="info-table table table-sm table-bordered mb-4">
+      <table class="info-table table table-sm mb-4">
         <tbody>
           <tr>
             <td>Colaborador</td>

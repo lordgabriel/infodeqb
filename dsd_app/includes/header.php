@@ -48,7 +48,7 @@ if (!$_dsdAccess) {
 unset($_dsdAccess);
 
 // ── CSS extra: app.css do dsd_app ────────────────────────────────
-$extraCss = BASE_URL . '/assets/css/app.css';
+$extraCss = BASE_URL . '/assets/css/app.css?v=' . filemtime(dirname(__DIR__) . '/assets/css/app.css');
 
 // ── Ano letivo para o selector ───────────────────────────────────
 $_dsdAnosNav = getDB()->query('SELECT * FROM infodeqb_dsd_ano_letivo ORDER BY id DESC')->fetchAll();
@@ -66,8 +66,6 @@ ob_start();
     <ul class="dsd-subnav-links">
       <li><a href="<?= BASE_URL ?>/"
              class="<?= $_ap === 'home'        ? 'active' : '' ?>">Início</a></li>
-      <li><a href="<?= BASE_URL ?>/pages/distribuicao.php"
-             class="<?= $_ap === 'distribuicao' ? 'active' : '' ?>">Distribuição</a></li>
       <li><a href="<?= BASE_URL ?>/pages/ocorrencias.php"
              class="<?= $_ap === 'ocorrencias'  ? 'active' : '' ?>">Ocorrências</a></li>
       <li class="dsd-subnav-sep"></li>

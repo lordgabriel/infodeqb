@@ -9,7 +9,7 @@ $language = (substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2) === 'pt') ? 'pt' : '
 include ROOT_DIR . '/infodeqb/hr/lang/lang.' . $language . '.php';
 
 require_once ROOT_DIR . '/infodeqb/inc/admins.php';
-if (!($isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr))) {
+if (!($isAdmin || in_array($_iqCurrentUser, $_iqAdminsHr) || in_array($_iqCurrentUser, $_iqAdminsHrList))) {
     header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit;
 }
@@ -35,7 +35,8 @@ foreach ($rows as $r) {
     $letrasComResultados[$l] = true;
 }
 
-$pageTitle = 'Lista de Pessoal';
+$pageTitle = t('HR_LIST_TITLE');
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -126,7 +127,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <div class="iq-page-header d-flex align-items-center">
   <div class="mr-auto">
-    <h1><i class="fas fa-users fa-sm me-2 text-muted"></i>Pessoal ativo DEQB</h1>
+    <h1><i class="fas fa-users fa-sm me-2 text-muted"></i><?= t('HR_LIST_SUBTITLE') ?></h1>
     <small class="text-muted" style="font-size:.85rem">
       <?= count($rows) ?> colaboradores / investigadores
     </small>
@@ -164,14 +165,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         $link = (strlen($row['codigo']) > 6)
             ? 'https://sigarra.up.pt/feup/pt/fest_geral.cursos_list?pv_num_unico='
             : 'https://sigarra.up.pt/feup/pt/func_geral.formview?p_codigo=';
-        // Iniciais para avatar
-        $parts    = preg_split('/\s+/', trim($row['nome']));
-        $initials = mb_strtoupper(mb_substr($parts[0], 0, 1) . (count($parts) > 1 ? mb_substr(end($parts), 0, 1) : ''));
       ?>
         <tr>
           <td><?= htmlspecialchars($row['codigo']) ?></td>
           <td class="align-middle">
-            <span class="iq-avatar-sm"><?= htmlspecialchars($initials) ?></span>
             <?= htmlspecialchars($row['nome']) ?>
             <a href="<?= $link . htmlspecialchars($row['codigo']) ?>"
                target="_blank" title="Ver no SIGARRA" class="ml-1 text-muted">

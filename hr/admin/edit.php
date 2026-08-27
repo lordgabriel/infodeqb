@@ -56,7 +56,14 @@ $statusValidos = ['Novo','Pendente','Ativo','Inativo'];
 
 // Registo Pendente: o SIGARRA já foi contactado — só permitir ao admin
 // alterar o estado, para evitar incongruências com o pedido em curso.
-$lockEdit = ($data['status'] === 'Pendente');
+// notif_pendente: alteração ainda por registar — bloquear até o admin resolver.
+$lockNotif = !empty($data['notif_pendente']) && $data['status'] === 'Ativo';
+$qAg = $pdo->prepare(
+    "SELECT id FROM infodeqb_rds_pedido WHERE registo_id=? AND status='Aguarda_SIGARRA' LIMIT 1"
+);
+$qAg->execute([$id1]);
+$lockAguarda = (bool)$qAg->fetchColumn();
+$lockEdit    = ($data['status'] === 'Pendente') || $lockNotif || $lockAguarda;
 
 if (!empty($_POST) && $lockEdit) {
 
@@ -199,13 +206,33 @@ if (!empty($_POST) && $lockEdit) {
                 }
             }
 
-            // Actualizar tabela relacional de acessos
-            if (isset($_POST['acessos'])) {
-                $labsPost = array_values(array_unique(array_filter(
-                    array_map('trim', (array)$_POST['acessos'])
-                )));
-                $gabMapAdmin = getGabMap($pdo);
-                setRegistoAcessos($pdo, (int)$id1, $labsPost, $gabMapAdmin);
+            // Actualizar tabela relacional de acessos (sempre — array vazio limpa todos)
+            $labsPost = array_values(array_unique(array_filter(
+                array_map('trim', (array)($_POST['acessos'] ?? array()))
+            )));
+            $gabMapAdmin = getGabMap($pdo);
+            setRegistoAcessos($pdo, (int)$id1, $labsPost, $gabMapAdmin);
+
+            // Apagar validações cujos labs já não fazem parte do registo (qualquer status)
+            $qPV = $pdo->prepare(
+                "SELECT id, deq_id, labs_json FROM infodeqb_rds_validacao WHERE registo_id=?"
+            );
+            $qPV->execute([(int)$id1]);
+            foreach ($qPV->fetchAll(PDO::FETCH_ASSOC) as $pv) {
+                $pvDeqids = array();
+                $pvLabs = json_decode($pv['labs_json'], true);
+                if (is_array($pvLabs)) {
+                    foreach ($pvLabs as $l) {
+                        if (!empty($l['deq_id'])) $pvDeqids[] = (string)$l['deq_id'];
+                    }
+                } elseif (!empty($pv['deq_id'])) {
+                    $pvDeqids[] = (string)$pv['deq_id'];
+                }
+                // Apagar se nenhum lab desta validação existe no novo conjunto
+                if (!empty($pvDeqids) && empty(array_intersect($pvDeqids, $labsPost))) {
+                    $pdo->prepare("DELETE FROM infodeqb_rds_validacao WHERE id=?")
+                        ->execute([$pv['id']]);
+                }
             }
 
             // Detetar alterações relevantes num registo Ativo
@@ -219,7 +246,7 @@ if (!empty($_POST) && $lockEdit) {
                 $mudouDatas = ($datafim    !== $datafimAntigo)
                            || ($datainicio !== $data['datainicio']);
                 $labsAntigos = array_filter(array_map('trim', preg_split('/[\s;,]+/', $data['acessosid'] ?? '')));
-                $labsNovos   = isset($_POST['acessos']) ? array_values(array_unique(array_filter(array_map('trim', (array)$_POST['acessos'])))) : $labsAntigos;
+                $labsNovos   = $labsPost;
                 $mudouLabs   = $_normLabs(implode(';', $labsNovos)) !== $_normLabs(implode(';', $labsAntigos))
                             || ((int)$acessodeq_post !== (int)$data['acessodeq']);
 
@@ -282,9 +309,11 @@ if (!empty($_POST) && $lockEdit) {
                         'labs_removidos_nomes'   => $labsRemNomes,
                     ), JSON_UNESCAPED_UNICODE);
                     $dadosAnt = json_encode(array(
-                        'datafim'  => $datafimAntigo,
-                        'acessosid'=> $data['acessosid'] ?? '',
-                        'acessodeq'=> (int)$data['acessodeq'],
+                        'datainicio'=> $data['datainicio'] ?? '',
+                        'datafim'   => $datafimAntigo,
+                        'acessosid' => $data['acessosid'] ?? '',
+                        'acessos'   => $data['acessos'] ?? '',
+                        'acessodeq' => (int)$data['acessodeq'],
                     ), JSON_UNESCAPED_UNICODE);
 
                     $pdo->prepare(
@@ -341,30 +370,38 @@ $fAcessodeq = isset($_POST['acessodeq'])        ? $_POST['acessodeq']       : $d
 $fAcessos = !empty($_POST) && isset($_POST['acessos'])
     ? (array)$_POST['acessos']
     : getRegistoAcessos($pdo, (int)$id1);
+$gabByEdificio = array();
+foreach ($gabRows as $rowgab) { $gabByEdificio[$rowgab['edificio']][] = $rowgab; }
 $gab = '';
-$gabCurPiso = '';
-$gabCurEdificio = '';
-foreach ($gabRows as $rowgab) {
-    if ($rowgab['piso'] !== $gabCurPiso || $rowgab['edificio'] !== $gabCurEdificio) {
-        if ($gabCurPiso !== '') $gab .= '</div>';
-        $label = '';
-        if ($rowgab['edificio'] !== $gabCurEdificio && stripos($rowgab['piso'], 'Edifício') === false) {
-            $label .= '<span class="iq-edificio-label">' . htmlspecialchars($rowgab['edificio']) . '</span>';
-        }
-        $label .= '<span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
-        $gab .= '<div class="iq-checkgroup">' . $label;
-        $gabCurPiso = $rowgab['piso'];
-        $gabCurEdificio = $rowgab['edificio'];
-    }
-    $checked = in_array($rowgab['deqid'], $fAcessos) ? ' checked' : '';
+foreach ($gabByEdificio as $edificio => $edRows) {
+    $edId  = 'lab-ed-' . preg_replace('/[^a-z0-9]/i', '', $edificio);
+    $edSel = 0;
+    foreach ($edRows as $r) { if (in_array($r['deqid'], $fAcessos)) $edSel++; }
+    $open     = $edSel > 0 ? ' show' : '';
+    $expanded = $edSel > 0 ? 'true' : 'false';
+    $badge    = '<span class="iq-lab-sel-count"' . ($edSel > 0 ? '' : ' style="display:none"') . '>' . ($edSel > 0 ? $edSel : '') . '</span>';
+    $gab .= '<div class="iq-lab-building">'
+        . '<button type="button" class="iq-lab-building-header" data-bs-toggle="collapse" data-bs-target="#' . $edId . '" aria-expanded="' . $expanded . '">'
+        . '<span>' . t('BUILDING') . ' ' . htmlspecialchars($edificio) . '</span>' . $badge
+        . '<i class="fas fa-chevron-down ms-auto"></i></button>'
+        . '<div class="collapse' . $open . '" id="' . $edId . '">';
+    $curPiso = '';
     $disAttr = $lockEdit ? ' disabled' : '';
-    $gab .= '<label><input type="checkbox" name="acessos[]" value="'
-          . htmlspecialchars($rowgab['deqid']) . '"' . $checked . $disAttr . '> '
-          . htmlspecialchars($rowgab['nomegab']) . '</label>';
+    foreach ($edRows as $rowgab) {
+        if ($rowgab['piso'] !== $curPiso) {
+            if ($curPiso !== '') $gab .= '</div>';
+            $gab .= '<div class="iq-checkgroup"><span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
+            $curPiso = $rowgab['piso'];
+        }
+        $checked = in_array($rowgab['deqid'], $fAcessos) ? ' checked' : '';
+        $gab .= '<label><input type="checkbox" name="acessos[]" value="' . htmlspecialchars($rowgab['deqid']) . '"' . $checked . $disAttr . '> ' . htmlspecialchars($rowgab['nomegab']) . '</label>';
+    }
+    if ($curPiso !== '') $gab .= '</div>';
+    $gab .= '</div></div>';
 }
-if ($gabCurPiso !== '') $gab .= '</div>';
 
-$pageTitle = 'Editar Colaborador';
+$pageTitle = t('HR_ADMIN_EDIT');
+$mainClass = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -380,18 +417,36 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php unset($_SESSION['val_info']); endif; ?>
 
-<?php if ($lockEdit): ?>
-<div class="alert alert-warning" role="alert">
-  <i class="fas fa-exclamation-triangle me-1"></i>
-  <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido.
-  Para evitar inconsistências, os dados ficam bloqueados; a única alteração permitida é o <strong>Estado</strong>.
-</div>
-<?php endif; ?>
-
 <form action="edit.php?id=<?= htmlspecialchars($id) ?>&id1=<?= htmlspecialchars($id1) ?>"
       method="post" class="iq-form-2col-wrap">
   <input type="hidden" name="id1"   value="<?= htmlspecialchars($id1) ?>">
   <input type="hidden" name="id"    value="<?= htmlspecialchars($id) ?>">
+
+  <?php if ($lockAguarda): ?>
+  <div class="alert alert-info d-flex align-items-start" role="alert" style="gap:.75rem;margin-bottom:1rem">
+    <i class="fas fa-paper-plane mt-1" style="flex-shrink:0"></i>
+    <div>
+      <strong>Edição bloqueada — aguarda confirmação do SIGARRA.</strong><br>
+      <span style="font-size:.9rem">Foi enviada notificação ao SIGARRA sobre alteração neste registo. Os dados ficam bloqueados até o SIGARRA confirmar.
+      <a href="detail.php?id=<?= urlencode($id) ?>">Ver detalhe do colaborador</a>.</span>
+    </div>
+  </div>
+  <?php elseif ($lockNotif): ?>
+  <div class="alert alert-warning d-flex align-items-start" role="alert" style="gap:.75rem;margin-bottom:1rem">
+    <i class="fas fa-exclamation-triangle mt-1" style="flex-shrink:0"></i>
+    <div>
+      <strong>Edição bloqueada — alteração por registar.</strong><br>
+      <span style="font-size:.9rem">Este registo foi modificado mas a alteração ainda não foi comunicada ao SIGARRA nem aceite silenciosamente.
+      <a href="detail.php?id=<?= urlencode($id) ?>">Volte ao detalhe do colaborador</a> e resolva antes de editar novamente.</span>
+    </div>
+  </div>
+  <?php elseif ($lockEdit): ?>
+  <div class="alert alert-warning" role="alert" style="margin-bottom:1rem">
+    <i class="fas fa-exclamation-triangle me-1"></i>
+    <strong>Atenção:</strong> Este registo está <strong>Pendente</strong> — o SIGARRA já foi contactado e pode estar a processar o pedido.
+    Para evitar inconsistências, os dados ficam bloqueados; a única alteração permitida é o <strong>Estado</strong>.
+  </div>
+  <?php endif; ?>
 
   <div class="iq-form-2col">
 
@@ -466,7 +521,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
       <div class="col-md-4 form-group">
         <label><?= $lang['EXTENSION'] ?></label>
-        <input type="text" name="extension" class="form-control" id="extension" <?= $lockEdit ? 'disabled' : '' ?>
+        <input type="text" name="extension" class="form-control" id="extension" autocomplete="off" <?= $lockEdit ? 'disabled' : '' ?>
                value="<?= htmlspecialchars($fExtensao) ?>">
       </div>
     </div>
@@ -546,7 +601,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="col-md-auto form-group mb-0">
         <label class="d-block"><?= $lang['STATUS'] ?></label>
         <div class="d-flex align-items-center" style="gap:8px">
-          <select name="status" class="form-control form-control-sm" style="width:auto">
+          <select name="status" class="form-control form-control-sm" style="width:auto" <?= ($lockNotif || $lockAguarda) ? 'disabled' : '' ?>>
             <?php
             $sBadges = ['Novo'=>'badge-info','Pendente'=>'badge-warning','Ativo'=>'badge-success','Inativo'=>'badge-secondary'];
             foreach ($statusValidos as $st):
@@ -639,6 +694,17 @@ function filtrarCategorias(grupoId, preservarAtual) {
 }
 
 // ── Preview de labs seleccionados ────────────────────────────────
+function atualizarLabBadges(listId) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    list.querySelectorAll('.iq-lab-building').forEach(function(bldg) {
+        var n = bldg.querySelectorAll('input[type=checkbox]:checked').length;
+        var badge = bldg.querySelector('.iq-lab-sel-count');
+        if (!badge) return;
+        badge.textContent = n > 0 ? n : '';
+        badge.style.display = n > 0 ? '' : 'none';
+    });
+}
 function atualizarPreviewLabs(listId, previewId) {
     var list = document.getElementById(listId);
     var prev = document.getElementById(previewId);
@@ -719,13 +785,15 @@ document.addEventListener('DOMContentLoaded', function () {
         inpFim.addEventListener('change',    function () { inpInicio.max = this.value; });
     }
 
-    // ── Preview de labs (edit) ────────────────────────────────────
+    // ── Preview de labs + badges accordion (edit) ────────────────
     var labList = document.getElementById('acessos-list');
     if (labList) {
         labList.addEventListener('change', function () {
             atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
+            atualizarLabBadges('acessos-list');
         });
         atualizarPreviewLabs('acessos-list', 'labs-preview-edit');
+        atualizarLabBadges('acessos-list');
     }
 });
 </script>

@@ -45,9 +45,13 @@ dsd_app/
 │   ├── header.php       — navbar e layout
 │   └── footer.php
 ├── pages/
-│   ├── distribuicao.php — página principal de distribuição (modal, treeview sem-SD, flex layout)
-│   ├── ocorrencias.php  — gestão de ocorrências (layout flex: treeview esquerda, tabela direita)
-│   ├── ocorrencia-form.php — edição/criação de ocorrência (modo ?new=1&uc_id=X ou ?id=X)
+│   ├── ocorrencias.php  — página principal: gestão de ocorrências (treeview esquerda agrupado por
+│   │                      plano, tabela direita agrupada por plano/semestre, filtro plano+semestre+UC),
+│   │                      painel lateral "Ver Distribuição" (showDist) com preview só de leitura das
+│   │                      linhas de serviço por ocorrência
+│   ├── ocorrencia-form.php — edição da ocorrência (dados próprios + secção "Serviço Docente":
+│   │                      adicionar/editar/remover linhas de serviço, guardar por linha; modo
+│   │                      ?new=1&uc_id=X ou ?id=X)
 │   ├── ajax-dist.php    — AJAX para linhas de distribuição e list_ocors
 │   ├── ajax-copy-dist.php — copia serviço entre ocorrências (copia também n_turmas e horas)
 │   ├── anos-letivos.php — gestão de anos letivos e cópia entre anos
@@ -71,12 +75,16 @@ dsd_app/
 - `getAnoLetivoAtivo()` usa sessão como override mas a verificação de "é activo?" deve ser feita directamente na BD (`WHERE ativo=1`)
 - Criar ocorrência: só insere na BD ao guardar o form (modo `?new=1&uc_id=X`), cancelar não cria nada
 - Horas da UC (`h_T`, `h_TP`, etc.) alimentam por defeito a ocorrência na criação mas podem ser ajustadas na ocorrência
-- Badge "sem serviço" na distribuição usa query separada à BD (não usa `$rows` filtrado)
+- Badge "sem serviço" usa query separada à BD (não usa a lista já filtrada)
+- Não há página "distribuição" separada — foi retirada por ser redundante com ocorrencias.php
+  (mesmo filtro plano/semestre/UC) e com reports/por-docente.php (mesmo filtro por docente/carreira);
+  a edição de linhas de serviço vive inteiramente em ocorrencia-form.php
 
 ## Funcionalidades implementadas
 - Dashboard com badges: horas por carreira (H/s, H SLEf, H Equiv), top 10 docentes, UCs em falta
-- Distribuição: modal multi-linha, editar UC, copiar serviço entre ocorrências, treeview sem-SD
-- Ocorrências: layout flex (treeview esquerda agrupado por plano, tabela direita agrupada por plano/semestre)
+- Ocorrências: layout flex (treeview esquerda agrupado por plano, tabela direita agrupada por plano/semestre),
+  filtro plano+semestre+UC, painel lateral de preview da distribuição, copiar serviço entre ocorrências
+  partilhadas (a partir de ocorrencia-form.php)
 - Reports: por docente, por ciclo, gráficos, horas em falta
 - Administração: CRUD docentes, UCs, carreiras, categorias, departamentos, anos letivos
 - Exportação: SQL backup, CSVs

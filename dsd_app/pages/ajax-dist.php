@@ -53,7 +53,7 @@ $ocData = $oc->fetch();
 $need = $ocData ? horasNecessarias($ocData)['total'] : 0;
 
 $rows = $db->prepare("
-    SELECT doc.nome AS docente,
+    SELECT doc.id AS docente_id, doc.nome AS docente,
            d.semanas, d.dsd_por_docente AS dsd, d.regente AS reg,
            d.turmas_T, d.horas_T, d.turmas_TP, d.horas_TP,
            d.turmas_L, d.horas_L, d.turmas_Sem, d.horas_Sem, d.turmas_OT, d.horas_OT,
@@ -79,10 +79,8 @@ foreach ($data as &$r) {
     $r['h_slef'] = round((float)$r['h_slef'], 3);
     $r['dsd']    = (bool)$r['dsd'];
     $r['reg']    = (bool)$r['reg'];
-    $r['turmas'] = sprintf('%g/%g/%g/%g/%g',
-        $r['turmas_T'], $r['turmas_TP'], $r['turmas_L'], $r['turmas_Sem'], $r['turmas_OT']);
     foreach (['turmas_T','horas_T','turmas_TP','horas_TP','turmas_L','horas_L',
-              'turmas_Sem','horas_Sem','turmas_OT','horas_OT'] as $f) unset($r[$f]);
+              'turmas_Sem','horas_Sem','turmas_OT','horas_OT'] as $f) $r[$f] = (float)$r[$f];
 }
 
 echo json_encode(['rows'=>$data, 'need'=>round($need,3), 'done'=>round($done,3)]);

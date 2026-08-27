@@ -30,8 +30,9 @@ function endsWith ($haystack, $needle)
  */
 function getRegistoAcessos(PDO $pdo, int $registoId): array {
     $s = $pdo->prepare(
-        'SELECT lab_id FROM infodeqb_rds_registo_acessos
-         WHERE registo_id = ? ORDER BY lab_id ASC'
+        'SELECT g.deqid FROM infodeqb_rds_gabinetes g
+         JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
+         WHERE ra.registo_id = ?'
     );
     $s->execute([$registoId]);
     return $s->fetchAll(PDO::FETCH_COLUMN);
@@ -44,19 +45,19 @@ function getRegistoAcessos(PDO $pdo, int $registoId): array {
 function setRegistoAcessos(PDO $pdo, int $registoId, array $labIds, array $gabMap = []): void {
     $labIds = array_values(array_unique(array_filter(array_map('trim', $labIds))));
 
-    // Nova tabela relacional
-    $pdo->prepare('DELETE FROM infodeqb_rds_registo_acessos WHERE registo_id = ?')
-        ->execute([$registoId]);
+    // Actualizar tabela relacional (fonte primária)
+    $pdo->prepare('DELETE FROM infodeqb_rds_registo_acessos WHERE registo_id = ?')->execute([$registoId]);
     if (!empty($labIds)) {
-        $stmt = $pdo->prepare(
-            'INSERT IGNORE INTO infodeqb_rds_registo_acessos (registo_id, lab_id) VALUES (?,?)'
-        );
-        foreach ($labIds as $labId) {
-            $stmt->execute([$registoId, $labId]);
+        $ph   = implode(',', array_fill(0, count($labIds), '?'));
+        $gabs = $pdo->prepare("SELECT id FROM infodeqb_rds_gabinetes WHERE deqid IN ($ph)");
+        $gabs->execute($labIds);
+        $ins  = $pdo->prepare('INSERT INTO infodeqb_rds_registo_acessos (registo_id, lab_id) VALUES (?, ?)');
+        foreach ($gabs->fetchAll(PDO::FETCH_COLUMN) as $labId) {
+            $ins->execute([$registoId, $labId]);
         }
     }
 
-    // Compatibilidade: manter acessosid + acessos no registo (legado)
+    // Actualizar cache de texto
     $acessosid = implode('; ', $labIds);
     $nomes = [];
     foreach ($labIds as $id) {
@@ -400,17 +401,19 @@ function _registoTotalmenteValidado($pdo, $registo_id) {
     $deqidsComPedido = array_unique($deqidsComPedido);
 
     // Acessos actuais do registo com responsável definido e ainda sem pedido
-    $qAcessos = $pdo->prepare(
-        "SELECT ra.lab_id, g.responsavel
-         FROM infodeqb_rds_registo_acessos ra
-         JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
-         WHERE ra.registo_id = ?
-           AND g.responsavel IS NOT NULL AND g.responsavel != 0
-           AND g.responsavel != 246398"
-    );
-    $qAcessos->execute([$registo_id]);
-    foreach ($qAcessos->fetchAll(PDO::FETCH_ASSOC) as $_a) {
-        if (!in_array(trim((string)$_a['lab_id']), $deqidsComPedido)) return false;
+    $deqids = getRegistoAcessos($pdo, $registo_id);
+    if (!empty($deqids)) {
+        $ph = implode(',', array_fill(0, count($deqids), '?'));
+        $qG = $pdo->prepare(
+            "SELECT deqid FROM infodeqb_rds_gabinetes
+             WHERE deqid IN ($ph)
+               AND responsavel IS NOT NULL AND responsavel != 0
+               AND responsavel != 246398"
+        );
+        $qG->execute($deqids);
+        foreach ($qG->fetchAll(PDO::FETCH_COLUMN) as $_deqid) {
+            if (!in_array(trim((string)$_deqid), $deqidsComPedido)) return false;
+        }
     }
 
     return true;
@@ -533,6 +536,30 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
 }
 
 /**
+ * Devolve a forma curta do nome para saudações de email.
+ * Maria/Mário: 1º + 2º + último nome. Outros: 1º nome.
+ */
+function _nomeEmailCurto($nomeCompleto) {
+    $partes = preg_split('/\s+/', trim($nomeCompleto));
+    if (count($partes) <= 1) return $nomeCompleto;
+    $primeiro = mb_strtolower($partes[0], 'UTF-8');
+    if (in_array($primeiro, array('maria', 'mário', 'mario'))) {
+        $preps = array('do', 'da', 'de', 'dos', 'das', 'e');
+        if (count($partes) >= 3) {
+            // Se partes[1] é preposição, incluir também partes[2]
+            if (in_array(mb_strtolower($partes[1], 'UTF-8'), $preps) && isset($partes[2])) {
+                $meio = $partes[1] . ' ' . $partes[2];
+            } else {
+                $meio = $partes[1];
+            }
+            return $partes[0] . ' ' . $meio . ' ' . end($partes);
+        }
+        return $partes[0] . ' ' . $partes[1];
+    }
+    return $partes[0] . ' ' . end($partes);
+}
+
+/**
  * Envia email de validação ao responsável do espaço.
  * $gab deve ter: nomegab (ou gab_nome), resp_codigo, resp_nome
  */
@@ -557,6 +584,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
 
     $info = array(
         'nome_resp'      => isset($gab['resp_nome']) ? $gab['resp_nome'] : '—',
+        'nome_resp_curto'=> isset($gab['resp_nome']) ? _nomeEmailCurto($gab['resp_nome']) : '—',
         'nome_colab'     => $colab_nome,
         'link_colab'     => $linkColab,
         'espaco'         => isset($gab['nomegab']) ? $gab['nomegab'] : (isset($gab['gab_nome']) ? $gab['gab_nome'] : '—'),
@@ -571,7 +599,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
         send_email(
             array($respEmail),
             $body,
-            'Acessos DEQB: Pedido de validação de acesso — ' . $colab_nome,
+            'Acessos DEQB: Pedido de validacao de acesso - ' . $colab_nome,
             array('deqdir@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -650,12 +678,29 @@ function getGrupoCategoriasMap(PDO $pdo): array {
 }
 
 function _emailNovoRegisto($nome, $email, $codigo, $datainicio, $datafim, $tipo = 'Novo registo') {
+    $L = (substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'pt', 0, 2) === 'en') ? 'en' : 'pt';
+    $e = function($pt, $en) use ($L) { return ($L === 'en') ? $en : $pt; };
     $info = array(
-        'nome'   => $nome,
-        'codigo' => $codigo,
-        'inicio' => $datainicio,
-        'fim'    => $datafim,
-        'tipo'   => $tipo,
+        'nome'          => $nome,
+        'codigo'        => $codigo,
+        'inicio'        => $datainicio ?: '-',
+        'fim'           => $datafim ?: '-',
+        'tipo'          => $tipo ?: '-',
+        'subtitle'      => $e('Pedido de Registo Submetido', 'Registration Request Submitted'),
+        'msg_intro'     => $e(
+            'O seu pedido de registo foi submetido com sucesso e aguarda aprovação pelo secretariado.',
+            'Your registration request was successfully submitted and is pending approval by the secretariat.'
+        ),
+        'label_section' => $e('Dados do Pedido', 'Request Details'),
+        'label_nome'    => $e('Nome', 'Name'),
+        'label_codigo'  => $e('Código FEUP', 'FEUP Code'),
+        'label_inicio'  => $e('Data início', 'Start date'),
+        'label_fim'     => $e('Data fim', 'End date'),
+        'label_tipo'    => $e('Tipo', 'Type'),
+        'msg_footer'    => $e(
+            'Será notificado por email quando o pedido for processado.',
+            'You will be notified by email when the request is processed.'
+        ),
     );
     $body = format_email($info, 'mail_novo_registo.html');
     try {
@@ -711,7 +756,7 @@ function _notificarRejeicaoValidacao($val, $colab_nome) {
         send_email(
             array('deqdir@fe.up.pt'),
             $body,
-            'Acessos DEQB: Validação rejeitada — ' . $colab_nome,
+            'Acessos DEQB: Validacao rejeitada - ' . $colab_nome,
             array('fmartins@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -813,7 +858,7 @@ function _emailSigarra($pdo, $ped, $d) {
         'alteracoes'  => $alteracoes ?: '<p style="color:#555;font-family:Arial,sans-serif;">Sem alterações de detalhe disponíveis.</p>',
     );
     $body    = format_email($info, 'mail_alteracao_sigarra.html');
-    $subject = 'Acessos DEQB: Atualização de acessos — ' . $reg['nome'];
+    $subject = 'Acessos DEQB: Atualizacao de acessos - ' . $reg['nome'];
     try {
         send_email(
             array('sigarra@fe.up.pt'),

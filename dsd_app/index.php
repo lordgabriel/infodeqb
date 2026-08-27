@@ -143,38 +143,37 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="page-header">
   <div>
-    <div class="page-title">🏠 Painel Principal</div>
+    <div class="page-title"><i class="fas fa-home me-1"></i>Painel Principal</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
   <div style="display:flex;gap:10px">
-    <a href="pages/ocorrencias.php" class="btn btn-secondary">📅 Ocorrências</a>
-    <a href="pages/distribuicao.php" class="btn btn-primary">➕ Nova Distribuição</a>
-    <a href="reports/por-docente.php" class="btn btn-secondary">📊 Relatórios</a>
+    <a href="pages/ocorrencias.php" class="btn btn-primary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
+    <a href="reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Relatórios</a>
   </div>
 </div>
 
 <div class="stats-grid">
   <div class="stat-card">
-    <div class="stat-icon">👩‍🏫</div>
+    <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
     <div><div class="stat-value"><?= $nDocentes ?></div><div class="stat-label">Docentes / Colaboradores</div></div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">📚</div>
+    <div class="stat-icon"><i class="fas fa-book"></i></div>
     <div><div class="stat-value"><?= $nUCs ?></div><div class="stat-label">UCs no Catálogo</div></div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">📅</div>
+    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
     <div><div class="stat-value"><?= $nOcs ?></div><div class="stat-label">Ocorrências neste ano</div></div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon">📋</div>
+    <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
     <div><div class="stat-value"><?= $nDist ?></div><div class="stat-label">Registos de Distribuição</div></div>
   </div>
 </div>
 
 <!-- Painel de cobertura (h/sem) -->
 <div class="card" style="background:linear-gradient(135deg, var(--blue-light), #fff);border-left:4px solid var(--blue)">
-  <div class="card-title">📊 Cobertura de Horas no Ano Letivo</div>
+  <div class="card-title"><i class="fas fa-chart-bar me-1"></i>Cobertura de Horas no Ano Letivo</div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;font-size:13px">
     <div style="background:#fff;border:1px solid var(--gray-200);border-radius:6px;padding:12px;text-align:center">
       <div style="color:var(--gray-600);font-size:11px;text-transform:uppercase;font-weight:600">Necessárias</div>
@@ -194,7 +193,7 @@ require_once __DIR__ . '/includes/header.php';
       <div style="color:var(--gray-600);font-size:11px;text-transform:uppercase;font-weight:600">Em Falta</div>
 
       <div style="font-size:22px;font-weight:700;color:<?= $nUcsFaltaTotal > 0 ? 'var(--red)' : 'var(--green)' ?>;margin:4px 0">
-        <?= $nUcsFaltaTotal > 0 ? $nUcsFaltaTotal . ' UC(s)' : '✅ OK' ?>
+        <?= $nUcsFaltaTotal > 0 ? $nUcsFaltaTotal . ' UC(s)' : '<i class="fas fa-check-circle me-1"></i>OK' ?>
       </div>
       <div style="font-size:11px;color:var(--gray-500)">
         <?= $nUcsFaltaTotal > 0 ? 'com horas por atribuir' : 'Tudo distribuído' ?>
@@ -206,7 +205,7 @@ require_once __DIR__ . '/includes/header.php';
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
 <div class="card">
-  <div class="card-title">📊 Horas por Carreira</div>
+  <div class="card-title"><i class="fas fa-chart-bar me-1"></i>Horas por Carreira</div>
   <?php if (!$porCarreira): ?>
     <p style="color:var(--gray-400);font-size:13px">Sem dados de distribuição ainda.</p>
   <?php else: ?>
@@ -248,7 +247,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <div class="card">
-  <div class="card-title">🏆 Top 10 Docentes por Serviço</div>
+  <div class="card-title"><i class="fas fa-trophy me-1"></i>Top 10 Docentes por Serviço</div>
   <?php if (!$topDocentes): ?>
     <p style="color:var(--gray-400);font-size:13px">Sem dados de distribuição ainda.</p>
   <?php else: ?>
@@ -281,7 +280,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php if ($ocsFalta): ?>
 <div class="card" style="border-left:4px solid var(--red)">
-  <div class="card-title" style="color:var(--red)">⚠️ Ocorrências com mais horas em falta</div>
+  <div class="card-title" style="color:var(--red)"><i class="fas fa-exclamation-triangle me-1"></i>Ocorrências com mais horas em falta</div>
   <table class="data-table">
     <thead>
       <tr>
@@ -303,7 +302,7 @@ require_once __DIR__ . '/includes/header.php';
         <td class="num"><?= fmt((float)$o['done_total'], 1) ?></td>
         <td class="num" style="color:var(--red);font-weight:700"><?= fmt($falta, 1) ?></td>
         <td style="text-align:right">
-          <a href="pages/distribuicao.php?ocorrencia=<?= $o['id'] ?>" class="btn btn-primary btn-xs">➕ Atribuir</a>
+          <a href="pages/ocorrencia-form.php?id=<?= $o['id'] ?>#linhas-servico" class="btn btn-primary btn-xs"><i class="fas fa-plus me-1"></i>Atribuir</a>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -316,17 +315,16 @@ require_once __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <div class="card">
-  <div class="card-title">🚀 Acesso Rápido</div>
+  <div class="card-title"><i class="fas fa-bolt me-1"></i>Acesso Rápido</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <a href="pages/docentes.php" class="btn btn-secondary">👩‍🏫 Docentes</a>
-    <a href="pages/ucs.php" class="btn btn-secondary">📚 Catálogo UCs</a>
-    <a href="pages/ocorrencias.php" class="btn btn-secondary">📅 Ocorrências</a>
-    <a href="pages/distribuicao.php" class="btn btn-secondary">📋 Distribuição</a>
-    <a href="pages/planos.php" class="btn btn-secondary">🎓 Planos</a>
-    <a href="pages/areas.php" class="btn btn-secondary">🔬 Áreas</a>
-    <a href="pages/import-csv.php" class="btn btn-secondary">📥 Importar CSV</a>
-    <a href="reports/por-docente.php" class="btn btn-secondary">📄 Rel. Por Docente</a>
-    <a href="reports/horas-em-falta.php" class="btn btn-secondary">⚠️ Horas em Falta</a>
+    <a href="pages/docentes.php" class="btn btn-secondary"><i class="fas fa-chalkboard-teacher me-1"></i>Docentes</a>
+    <a href="pages/ucs.php" class="btn btn-secondary"><i class="fas fa-book me-1"></i>Catálogo UCs</a>
+    <a href="pages/ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
+    <a href="pages/planos.php" class="btn btn-secondary"><i class="fas fa-graduation-cap me-1"></i>Planos</a>
+    <a href="pages/areas.php" class="btn btn-secondary"><i class="fas fa-flask me-1"></i>Áreas</a>
+    <a href="pages/import-csv.php" class="btn btn-secondary"><i class="fas fa-file-upload me-1"></i>Importar CSV</a>
+    <a href="reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-file-alt me-1"></i>Rel. Por Docente</a>
+    <a href="reports/horas-em-falta.php" class="btn btn-secondary"><i class="fas fa-exclamation-triangle me-1"></i>Horas em Falta</a>
   </div>
 </div>
 

@@ -33,6 +33,7 @@ $lang['WORK_RESP2'] = 'Responsável pelo trabalho (não indicado no campo anteri
 $lang['UNIT'] = 'Unidade I&D:';
 $lang['PROGROUP'] = 'Grupo Profissional:';
 $lang['CATEGORY'] = 'Categoria:';
+$lang['BUILDING']   = 'Edifício';
 $lang['DEQ_ACCESS'] = 'Pretende acesso ao DEQB (porta norte)?';
 $lang['LAB_ACCESS'] = 'Indique os laboratórios/gabinetes que pretende acesso:';
 $lang['REQUESTED_ACCESS'] = 'Acessos Solicitados:';

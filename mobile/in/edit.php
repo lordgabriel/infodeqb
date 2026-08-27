@@ -13,7 +13,8 @@ if (!($isAdmin || in_array($_iqCurrentUser, $_iqAdminsMobile))) {
     $sth->execute();
     $dados= $sth->fetchAll(PDO::FETCH_ASSOC);
 
-$pageTitle = 'Editar Pedido — Mobilidade';
+$pageTitle = t('MOBILE_EDIT_REQUEST');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
@@ -37,9 +38,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-bordered table-sm" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
                   <thead>
-                    <tr class="bg-info text-white">
+                    <tr>
                       <th ></th>
                       <th >Nome </th>
                       <th>Universidade</th>
@@ -59,7 +60,7 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                       $row = array();
                       if ($sth->execute()){
                         while ($row = $sth->fetch(PDO::FETCH_ASSOC)){
-                          echo '<td class='."small".'><a class="btn btn-info  btn-sm" href="detail.php?id='.$row['id'].'"><i class="far fa-edit"></i></a> </td>';
+                          echo '<td class='."small".'><a class="btn btn-xs btn-outline-primary" href="detail.php?id='.$row['id'].'" title="Editar"><i class="fas fa-edit fa-xs"></i></a></td>';
                           echo '<td class='."small".'>'. $row['nome'] . '</td>';
                           echo '<td class='."small".'>'. $row['universidade'] . '</td>';
                           echo '<td class='."small".'>'. $row['pais'] . '</td>';

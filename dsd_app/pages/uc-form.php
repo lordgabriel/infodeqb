@@ -92,7 +92,7 @@ $areas  = $db->query("SELECT * FROM infodeqb_dsd_area_cientifica ORDER BY sigla"
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
-  <div><div class="page-title"><?= $id ? '✏️ Editar UC' : '➕ Adicionar UC' ?></div>
+  <div><div class="page-title"><?= $id ? '<i class="fas fa-edit me-1"></i>Editar UC' : '<i class="fas fa-plus me-1"></i>Adicionar UC' ?></div>
     <div class="page-sub">Dados estáveis da UC. Estudantes, fatores e turmas são por <strong>ocorrência</strong> (ano letivo).</div>
   </div>
   <a href="ucs.php" class="btn btn-secondary">← Voltar</a>
@@ -125,7 +125,7 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </select>
       <a href="#" onclick="document.getElementById('novo-plano-box').style.display='block';return false"
-         style="font-size:11px;margin-top:3px">➕ Criar novo plano</a>
+         style="font-size:11px;margin-top:3px"><i class="fas fa-plus me-1"></i>Criar novo plano</a>
     </div>
 
     <div id="novo-plano-box" class="form-group full" style="display:none;background:var(--blue-light);padding:10px;border-radius:6px">
@@ -199,7 +199,7 @@ require_once __DIR__ . '/../includes/header.php';
                  style="margin-left:4px;transform:scale(0.9)">
         </label>
         <?php endforeach; ?>
-        <a href="areas.php" style="align-self:center;font-size:11px">➕ Gerir áreas</a>
+        <a href="areas.php" style="align-self:center;font-size:11px"><i class="fas fa-plus me-1"></i>Gerir áreas</a>
       </div>
       <span class="form-hint">Checkbox = pertence à área. Radio = área principal (usada em relatórios agrupados).</span>
     </div>
@@ -228,7 +228,7 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary">💾 Guardar</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar</button>
     <a href="ucs.php" class="btn btn-secondary">Cancelar</a>
   </div>
 </form>

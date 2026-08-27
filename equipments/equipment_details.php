@@ -23,17 +23,17 @@ if (!empty($_POST) && $isAdmin) {
                     'INSERT IGNORE INTO infodeqb_equipmentdeq_access (user_id, equipment_id, granted_by)
                      VALUES (?,?,?)'
                 )->execute([$tc, $equipId, $userIdNum]);
-                $_SESSION['_equip_flash'] = ['Acesso concedido ao utilizador ' . $tc . '.', 'success'];
+                $_SESSION['_equip_flash'] = [t('EQUIP_ACCESS_GRANTED_MSG'), 'success'];
             } catch (Exception $e) {
-                $_SESSION['_equip_flash'] = ['Erro ao conceder acesso.', 'danger'];
+                $_SESSION['_equip_flash'] = [t('EQUIP_ERROR_GRANT'), 'danger'];
             }
         } else {
-            $_SESSION['_equip_flash'] = ['Código UP inválido.', 'warning'];
+            $_SESSION['_equip_flash'] = [t('EQUIP_INVALID_CODE'), 'warning'];
         }
     } elseif ($acao === 'revoke_access') {
         $pdo->prepare('DELETE FROM infodeqb_equipmentdeq_access WHERE id = ?')
             ->execute([(int)$_POST['access_id']]);
-        $_SESSION['_equip_flash'] = ['Acesso revogado.', 'success'];
+        $_SESSION['_equip_flash'] = [t('EQUIP_ACCESS_REVOKED'), 'success'];
     }
     header('Location: equipment_details.php?id=' . $equipId); exit;
 }
@@ -101,14 +101,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </small>
   </div>
   <a href="index.php" class="btn btn-outline-secondary btn-sm">
-    <i class="fas fa-arrow-left me-1"></i>Lista
+    <i class="fas fa-arrow-left me-1"></i><?= t('EQUIP_LIST') ?>
   </a>
   <?php if ($podeEditar): ?>
   <a href="edit_equipment.php?id=<?= $equipId ?>" class="btn btn-outline-primary btn-sm">
     <i class="fas fa-edit me-1"></i><?= t('EDIT') ?>
   </a>
   <a href="delete.php?id=<?= $equipId ?>" class="btn btn-outline-danger btn-sm"
-     onclick="return confirm('Eliminar este equipamento permanentemente?')">
+     onclick="return confirm(<?= json_encode(t('EQUIP_CONFIRM_DELETE')) ?>)">
     <i class="fas fa-trash me-1"></i><?= t('DELETE') ?>
   </a>
   <?php endif; ?>
@@ -141,12 +141,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="card-body py-2">
         <div class="row" style="font-size:.85rem">
           <?php foreach ([
-            'Marca'          => $eq['Marca'],
-            'Modelo'         => $eq['Modelo'],
-            'Ano aquisição'  => $eq['AnoAquisicao'],
-            'Quantidade'     => $eq['Quantidade'],
-            'Responsável'    => $eq['Responsavel'],
-            'Técnico'        => $eq['Tecnico'],
+            t('EQUIP_BRAND')    => $eq['Marca'],
+            t('EQUIP_MODEL')    => $eq['Modelo'],
+            t('EQUIP_ACQ_YEAR') => $eq['AnoAquisicao'],
+            t('EQUIP_QTY')      => $eq['Quantidade'],
+            t('RESPONSIBLE')    => $eq['Responsavel'],
+            t('EQUIP_TECH')     => $eq['Tecnico'],
           ] as $lbl => $val):
             if (empty($val)) continue; ?>
           <div class="col-6 col-md-4 mb-2">
@@ -162,14 +162,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 
 <?php foreach ([
-    'Descrição'               => $eq['Descricao'],
-    'Condições de utilização' => $eq['Condicoes'],
-    'Horário'                 => $eq['Horario'],
-    'Tipo de amostras'        => $eq['Amostras'],
-    'Operação'                => $eq['Operacao'],
-    'Custo'                   => $eq['Custo'],
-    'Procedimento'            => $eq['Procedimento'],
-    'Observações'             => $eq['Observacoes'],
+    t('DESCRIPTION')       => $eq['Descricao'],
+    t('EQUIP_CONDITIONS')  => $eq['Condicoes'],
+    t('EQUIP_SCHEDULE')    => $eq['Horario'],
+    t('EQUIP_SAMPLES')     => $eq['Amostras'],
+    t('EQUIP_OPERATION')   => $eq['Operacao'],
+    t('EQUIP_COST')        => $eq['Custo'],
+    t('EQUIP_PROCEDURE')   => $eq['Procedimento'],
+    t('OBSERVATIONS')      => $eq['Observacoes'],
 ] as $titulo => $conteudo):
     if (empty($conteudo)) continue; ?>
 <div class="card shadow-sm mb-3">
@@ -184,13 +184,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card-header py-2 d-flex align-items-center">
     <i class="fas fa-key text-warning me-2"></i>
     <strong class="mr-auto"><?= t('EQUIP_ACCESS_TITLE') ?></strong>
-    <small class="text-muted">só visível ao admin global</small>
+    <small class="text-muted"><?= t('EQUIP_ADMIN_ONLY') ?></small>
   </div>
   <div class="card-body">
     <?php if ($acessosEspecificos): ?>
     <table class="table table-sm mb-3" style="font-size:.83rem">
       <thead class="">
-        <tr><th>Utilizador (UP)</th><th>Concedido por</th><th>Data</th><th style="width:4em"></th></tr>
+        <tr><th><?= t('EQUIP_ACCESS_USER') ?></th><th><?= t('EQUIP_GRANTED_BY') ?></th><th><?= t('DATE') ?></th><th style="width:4em"></th></tr>
       </thead>
       <tbody>
       <?php foreach ($acessosEspecificos as $ac): ?>

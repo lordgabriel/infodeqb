@@ -190,8 +190,8 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="modal-dist" class="modal-overlay" style="display:none">
  <div class="modal-box">
   <div class="modal-header">
-   <div id="modal-title" class="modal-title">➕ Adicionar Distribuição</div>
-   <button class="modal-close" onclick="closeModal()">✕</button>
+   <div id="modal-title" class="modal-title"><i class="fas fa-plus me-1"></i>Adicionar Distribuição</div>
+   <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
   </div>
   <div class="modal-body">
   <form method="post" id="dist-form">
@@ -305,7 +305,7 @@ require_once __DIR__ . '/../includes/header.php';
    </div>
 
    <div style="display:flex;gap:10px">
-    <button type="submit" class="btn btn-primary">💾 Guardar</button>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar</button>
     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    </div>
   </form>
@@ -315,13 +315,13 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
  <div>
-  <div class="page-title">📋 Distribuição de Serviço Docente</div>
+  <div class="page-title"><i class="fas fa-clipboard-list me-1"></i>Distribuição de Serviço Docente</div>
   <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?> &mdash; <?= count($rows) ?> registos</div>
  </div>
  <div style="display:flex;gap:10px">
-  <a href="ocorrencias.php" class="btn btn-secondary">📅 Ocorrências</a>
-  <a href="../reports/por-docente.php" class="btn btn-secondary">📊 Relatório</a>
-  <button class="btn btn-primary" onclick="openModal()">➕ Adicionar</button>
+  <a href="ocorrencias.php" class="btn btn-secondary"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</a>
+  <a href="../reports/por-docente.php" class="btn btn-secondary"><i class="fas fa-chart-bar me-1"></i>Relatório</a>
+  <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus me-1"></i>Adicionar</button>
  </div>
 </div>
 
@@ -353,8 +353,8 @@ require_once __DIR__ . '/../includes/header.php';
     <option value="2S" <?= $filterSem === '2S' ? 'selected' : '' ?>>2S</option>
    </select>
   </div>
-  <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end">🔍</button>
-  <a href="distribuicao.php" class="btn btn-secondary btn-sm" style="align-self:flex-end">✕</a>
+  <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end"><i class="fas fa-search"></i></button>
+  <a href="distribuicao.php" class="btn btn-secondary btn-sm" style="align-self:flex-end"><i class="fas fa-times"></i></a>
  </form>
 </div>
 
@@ -394,4 +394,4 @@ require_once __DIR__ . '/../includes/header.php';
   <td><span class="badge badge-gray" style="font-size:10px"><?= esc($r['semestre']) ?></span></td>
   <td><strong><?= esc($r['docente_nome']) ?></strong>
    <?php if ($r['depto']): ?><span style="font-size:10px;color:var(--gray-400);margin-left:4px"><?= esc($r['depto']) ?></span><?php endif; ?></td>
-  <td style="text-align:center"><?= $r['regente'] ? '⭐' : '' ?>
+  <td style="text-align:center"><?= $r['regente'] ? '<i class="fas fa-star"></i>' : '' ?>

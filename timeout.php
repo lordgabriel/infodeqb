@@ -1,7 +1,7 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include ROOT_DIR . '/infodeqb/session.php';
-$pageTitle = 'Aviso';
+$pageTitle = t('TIMEOUT_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

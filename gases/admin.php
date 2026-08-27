@@ -13,7 +13,8 @@ if (!$isGasAdmin) {
 }
 
 $gases = GASES_DEF;
-$pageTitle = 'Admin — Gases Especiais';
+$pageTitle = t('GASES_ADMIN_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -21,7 +22,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div>
     <h1 class="iq-page-title">
       <a href="index.php" class="text-muted me-2" style="font-size:.8em;"><i class="fas fa-arrow-left"></i></a>
-      Administração — Gases Especiais
+      <?= t('GASES_ADMIN_TITLE') ?>
     </h1>
     <p class="iq-page-sub">Consultar e gerir todos os registos de leitura</p>
   </div>
@@ -35,8 +36,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
           <tr><th>ID</th><th>Gás</th><th>Símbolo</th><th>Pressão máx.</th><th>Unidade</th></tr>
         </thead>
         <tbody>
@@ -63,8 +64,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 table-sm">
-        <thead class="table-light">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
           <tr>
             <th>Data/Hora</th><th>Gás</th><th>Pressão</th>
             <th style="text-align:center;">Garrafa</th><th>Notas</th><th>Utilizador</th>

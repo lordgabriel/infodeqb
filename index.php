@@ -8,11 +8,9 @@ $userCode  = $_SESSION['Code']  ?? '';   // up356946@up.pt
 $userEmail = $_SESSION['user']  ?? '';   // eppn (produção: @fe.up.pt)
 $userIdNum = (int)preg_replace('/\D/', '', $userCode);
 
-$_meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-           'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-$_dias  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira',
-           'Quinta-feira','Sexta-feira','Sábado'];
-$dataHoje  = $_dias[date('w')] . ', ' . date('j') . ' de ' . $_meses[date('n')-1] . ' de ' . date('Y');
+$_dias    = $GLOBALS['_lang']['DAYS_OF_WEEK'] ?? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+$_meses   = $GLOBALS['_lang']['MONTHS']       ?? range(1, 12);
+$dataHoje = sprintf(t('DATE_FMT_LONG'), $_dias[date('w')], (int)date('j'), $_meses[(int)date('n')-1], (int)date('Y'));
 $firstName = explode(' ', trim($_SESSION['CommonName'] ?? $_SESSION['DisplayName'] ?? ''))[0];
 
 $pdo = Database::connect();
@@ -112,8 +110,9 @@ if ($isSectionAdmin) {
 // DADOS DO UTILIZADOR NORMAL
 // ═══════════════════════════════════════════════════════════════════
 $myHrRecord      = null;
-$myServdoc       = null;   // null = não é docente
-$myServdocSubm   = false;
+$myServdoc         = null;   // null = não é docente
+$myServdocSubm     = false;
+$myServdocPedido   = null;  // linha de infodeqb_servdoc_edit_request activa
 $myAreas         = null;   // null = não é investigador
 $myAreasSubm     = false;
 $myAdiFeupId     = null;   // null = não tem ficha ADI
@@ -131,11 +130,13 @@ if (!$isAdmin) {
 }
 $canSeeAreas = $isAdmin || ($myAreas === true);
 
-if (!$isAdmin && !$isSectionAdmin) {
-    // Registo HR
+// Registo HR — todos os não-global-admins (inclui section admins sem acesso HR)
+if (!$isAdmin) {
     $s=$pdo->prepare('SELECT r.status, r.datafim FROM infodeqb_rds_registo r WHERE r.codigo=? AND r.deleted=0 ORDER BY CASE r.status WHEN "Ativo" THEN 1 WHEN "Pendente" THEN 2 WHEN "Novo" THEN 3 ELSE 4 END, r.datafim DESC LIMIT 1');
     $s->execute([$userIdNum]); $myHrRecord=$s->fetch(PDO::FETCH_ASSOC);
+}
 
+if (!$isAdmin && !$isSectionAdmin) {
     // Docente / Serviço Docente
     $s=$pdo->prepare('SELECT Codigo FROM infodeqb_inv_deqb WHERE email=?');
     $s->execute([$userEmail]); $doc=$s->fetch(PDO::FETCH_ASSOC);
@@ -143,6 +144,10 @@ if (!$isAdmin && !$isSectionAdmin) {
         $myServdoc = true;
         $s2=$pdo->prepare('SELECT COUNT(*) FROM infodeqb_ucs_deqb_pref WHERE id_docente=?');
         $s2->execute([$doc['Codigo']]); $myServdocSubm=(int)$s2->fetchColumn()>0;
+        $s3=$pdo->prepare('SELECT * FROM infodeqb_servdoc_edit_request WHERE id_docente=? AND editado_em IS NULL ORDER BY pedido_em DESC LIMIT 1');
+        $s3->execute([$doc['Codigo']]); $myServdocPedido=$s3->fetch(PDO::FETCH_ASSOC) ?: null;
+        $myServdocFormClosed = is_file(ROOT_DIR.'/infodeqb/servdoc/.form_state')
+                            && trim(file_get_contents(ROOT_DIR.'/infodeqb/servdoc/.form_state')) === 'closed';
     }
 
     // Espaços de Investigação (ADI)
@@ -152,7 +157,7 @@ if (!$isAdmin && !$isSectionAdmin) {
 
 Database::disconnect();
 
-$pageTitle = 'Início';
+$pageTitle = t('DASH_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -160,7 +165,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="iq-dash-greeting">
   <div class="iq-dash-greeting-row">
     <div>
-      <h1>Olá, <?= htmlspecialchars($firstName ?: 'bem-vindo') ?>!</h1>
+      <h1><?= t('DASH_HELLO', htmlspecialchars($firstName ?: t('DASH_WELCOME'))) ?></h1>
       <div class="iq-dash-greeting-sub">
         <?= $dataHoje ?> &nbsp;·&nbsp; Departamento de Engenharia Química e Biológica
       </div>
@@ -178,7 +183,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php if ($isAdmin): ?>
 <?php /* ═══════════ ADMIN GLOBAL ════════════════════════════════ */ ?>
 
-<div class="iq-dash-label">Pessoal</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_STAFF') ?></div>
 <div class="iq-stat-grid">
   <?php
   $hrBase = HTTP_DIR . '/infodeqb/hr/admin/index.php';
@@ -207,31 +212,28 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 
 <?php if ($dsdAno): ?>
-<div class="iq-dash-label">Serviço Docente &mdash; <?= htmlspecialchars($dsdAno['designacao']) ?></div>
+<div class="iq-dash-label"><?= t('NAV_SERVDOC') ?> &mdash; <?= htmlspecialchars($dsdAno['designacao']) ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat iq-stat-blue" href="<?= HTTP_DIR ?>/infodeqb/dsd_app/" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-    <div><div class="iq-stat-value"><?= $dsdDocentes ?></div><div class="iq-stat-label">Docentes ativos</div></div>
+    <div><div class="iq-stat-value"><?= $dsdDocentes ?></div><div class="iq-stat-label"><?= t('DASH_STAT_STAFF_ACTIVE') ?></div></div>
   </a>
   <a class="iq-stat iq-stat-green" href="<?= HTTP_DIR ?>/infodeqb/dsd_app/pages/ocorrencias.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-book-open"></i></div>
-    <div><div class="iq-stat-value"><?= $dsdUcs ?></div><div class="iq-stat-label">Ocorrências de UCs</div></div>
+    <div><div class="iq-stat-value"><?= $dsdUcs ?></div><div class="iq-stat-label"><?= t('DASH_STAT_UCS') ?></div></div>
   </a>
   <a class="iq-stat <?= $dsdUcsSemServ>0?'iq-stat-red':'iq-stat-green' ?>" href="<?= HTTP_DIR ?>/infodeqb/dsd_app/pages/distribuicao.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
-    <div><div class="iq-stat-value"><?= $dsdUcsSemServ ?></div><div class="iq-stat-label">UCs sem serviço</div></div>
+    <div><div class="iq-stat-value"><?= $dsdUcsSemServ ?></div><div class="iq-stat-label"><?= t('DASH_STAT_UCS_NO_SRV') ?></div></div>
   </a>
 </div>
 <?php endif; ?>
-
-<div class="iq-dash-label">Módulos</div>
-<div>
 
 <?php elseif ($isSectionAdmin): ?>
 <?php /* ═══════════ ADMIN DE SECÇÃO ═════════════════════════════ */ ?>
 
 <?php if ($isHrAdmin): ?>
-<div class="iq-dash-label">Pessoal</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_STAFF') ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat <?= $secHrNovo>0?'iq-stat-yellow':'iq-stat-green' ?>" href="<?= HTTP_DIR ?>/infodeqb/hr/admin/index.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-file-alt"></i></div>
@@ -249,11 +251,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; ?>
 
 <?php if ($isEquipAdmin && !empty($labsEquip)): ?>
-<div class="iq-dash-label">Equipamentos</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_EQUIPMENT') ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat iq-stat-blue" href="<?= HTTP_DIR ?>/infodeqb/equipments/" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-flask"></i></div>
-    <div><div class="iq-stat-value"><?= $secEquipTotal ?></div><div class="iq-stat-label">Equipamentos nos meus labs</div></div>
+    <div><div class="iq-stat-value"><?= $secEquipTotal ?></div><div class="iq-stat-label"><?= t('DASH_STAT_EQUIP_LABS') ?></div></div>
   </a>
   <a class="iq-stat iq-stat-green" href="<?= HTTP_DIR ?>/infodeqb/equipments/edit_equipment.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-plus-circle"></i></div>
@@ -263,31 +265,31 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; ?>
 
 <?php if ($isExamAdmin): ?>
-<div class="iq-dash-label">Arquivo de Exames</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_EXAMS') ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat <?= $secExamsPorArquivar>0?'iq-stat-yellow':'iq-stat-green' ?>" href="<?= HTTP_DIR ?>/infodeqb/exams/" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-archive"></i></div>
-    <div><div class="iq-stat-value"><?= $secExamsPorArquivar ?></div><div class="iq-stat-label">Autos por arquivar</div></div>
+    <div><div class="iq-stat-value"><?= $secExamsPorArquivar ?></div><div class="iq-stat-label"><?= t('DASH_STAT_EXAMS_PEND') ?></div></div>
   </a>
 </div>
 <?php endif; ?>
 
 <?php if ($isWaterAdmin): ?>
-<div class="iq-dash-label">Água</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_WATER') ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat iq-stat-blue" href="<?= HTTP_DIR ?>/infodeqb/water/waterqc.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-tint"></i></div>
-    <div><div class="iq-stat-value" style="font-size:.95rem"><?= htmlspecialchars($secWaterLastDate ?: '—') ?></div><div class="iq-stat-label">Última leitura</div></div>
+    <div><div class="iq-stat-value" style="font-size:.95rem"><?= htmlspecialchars($secWaterLastDate ?: '—') ?></div><div class="iq-stat-label"><?= t('DASH_STAT_WATER_LAST') ?></div></div>
   </a>
   <a class="iq-stat iq-stat-green" href="<?= HTTP_DIR ?>/infodeqb/water/index.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-water"></i></div>
-    <div><div class="iq-stat-value"><?= $secWaterMes ?> L</div><div class="iq-stat-label">Consumo este mês</div></div>
+    <div><div class="iq-stat-value"><?= $secWaterMes ?> L</div><div class="iq-stat-label"><?= t('DASH_STAT_WATER_MONTH') ?></div></div>
   </a>
 </div>
 <?php endif; ?>
 
 <?php if ($isMobileAdmin && $secMobileAno): ?>
-<div class="iq-dash-label">Mobilidade</div>
+<div class="iq-dash-label"><?= t('DASH_LABEL_MOBILITY') ?></div>
 <div class="iq-stat-grid">
   <a class="iq-stat iq-stat-blue" href="<?= HTTP_DIR ?>/infodeqb/mobile/in/" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-plane-arrival"></i></div>
@@ -296,14 +298,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php endif; ?>
 
-<div class="iq-dash-label">Todos os módulos</div>
-<div style="margin-top:.5rem">
-
 <?php else: ?>
 <?php /* ═══════════ UTILIZADOR NORMAL ════════════════════════════ */ ?>
 
 <?php /* ── O meu registo HR ──────────────────────────────────────── */ ?>
-<div class="iq-dash-label">O meu registo de colaborador</div>
+<div class="iq-dash-label"><?= t('DASH_MY_RECORD') ?></div>
 <?php
 $hrStatusBadge = ['Ativo'=>['iq-stat-green','check-circle'], 'Pendente'=>['iq-stat-yellow','clock'], 'Novo'=>['iq-stat-blue','file-alt'], 'Inativo'=>['iq-stat-red','user-slash']];
 $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slate','question-circle']) : null;
@@ -324,28 +323,165 @@ $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slat
   <?php else: ?>
   <a class="iq-stat iq-stat-slate" href="<?= HTTP_DIR ?>/infodeqb/hr/index.php" style="text-decoration:none">
     <div class="iq-stat-icon"><i class="fas fa-plus-circle"></i></div>
-    <div><div class="iq-stat-value" style="font-size:1rem">Sem registo</div><div class="iq-stat-label">Criar registo de colaborador</div></div>
+    <div><div class="iq-stat-value" style="font-size:1rem"><?= t('HR_NO_RECORD') ?></div><div class="iq-stat-label"><?= t('HR_CREATE_RECORD') ?></div></div>
   </a>
   <?php endif; ?>
 </div>
 
-<?php /* ── Formulários que me dizem respeito ──────────────────────── */ ?>
-<?php if ($myServdoc !== null || $myAreas !== null || $myAdiFeupId !== null): ?>
-<div class="iq-dash-label">Os meus formulários</div>
-<div class="iq-modules" style="margin-bottom:1.2rem">
+<?php /* ── Acesso à lista de pessoal (módulo hr_list) ─────────────── */ ?>
+<?php if (in_array($userCode, $_iqAdminsHrList ?? [])): ?>
+<div class="iq-modules mb-3" style="margin-top:-.4rem">
+  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/hr/list.php">
+    <span class="iq-module-tag">MOD · HR</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-list-ul"></i></div>
+      <div class="iq-module-body">
+        <div class="iq-module-title"><?= t('NAV_STAFF_LIST') ?></div>
+        <div class="iq-module-sub"><?= t('MOD_HR_LIST_SUB') ?></div>
+      </div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+</div>
+<?php endif; ?>
 
-  <?php if ($myServdoc !== null): ?>
-  <a class="iq-module <?= $myServdocSubm ? 'iq-mod-emerald' : 'iq-mod-amber' ?>" href="<?= HTTP_DIR ?>/infodeqb/servdoc/">
+
+<?php endif; /* fim dos 3 casos */ ?>
+
+<?php /* ════════ GRELHA DE MÓDULOS AGRUPADA (todos os casos) ════════ */ ?>
+
+<?php /* ── O meu registo (admins e section admins — utilizadores normais têm card personalizado acima) */ ?>
+<?php if ($isAdmin || $isSectionAdmin): ?>
+<div class="iq-dash-label"><?= t('DASH_MY_RECORD') ?></div>
+<div class="iq-modules mb-3">
+  <?php if ($isAdmin || $isHrAdmin): ?>
+  <?php /* HR admin ou admin global — card de gestão */ ?>
+  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/hr/admin/index.php">
+    <span class="iq-module-tag">MOD · HR</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-users"></i></div>
+      <div class="iq-module-body">
+        <div class="iq-module-title"><?= t('NAV_STAFF_ADMIN') ?></div>
+        <div class="iq-module-sub"><?= $isAdmin ? $hrAtivo . ' ativos'.($hrNExpirar>0?' &nbsp;·&nbsp; <span style="color:#991b1b;font-weight:600">'.$hrNExpirar.' a expirar</span>':'') : t('MOD_HR_ADMIN_SUB') ?></div>
+      </div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php else: ?>
+  <?php /* Section admin sem acesso HR — card do registo pessoal */ ?>
+  <a class="iq-module <?= $myHrRecord ? 'iq-mod-indigo' : 'iq-mod-slate' ?>" href="<?= HTTP_DIR ?>/infodeqb/hr/<?= $myHrRecord ? 'meu-registo.php' : 'index.php' ?>">
+    <span class="iq-module-tag">MOD · HR</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-<?= $myHrRecord ? 'id-card' : 'plus-circle' ?>"></i></div>
+      <div class="iq-module-body">
+        <div class="iq-module-title"><?= $myHrRecord ? t('NAV_MY_RECORD') : t('HR_NO_RECORD') ?></div>
+        <div class="iq-module-sub"><?= $myHrRecord ? htmlspecialchars($myHrRecord['status']) . ($myHrRecord['datafim'] ? ' &nbsp;·&nbsp; Válido até ' . htmlspecialchars($myHrRecord['datafim']) : '') : t('HR_CREATE_RECORD') ?></div>
+      </div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php endif; ?>
+</div>
+<?php endif; /* isAdmin || isSectionAdmin */ ?>
+
+<?php /* ── Recursos ────────────────────────────────────────── */ ?>
+<div class="iq-dash-label"><?= t('NAV_RESOURCES') ?></div>
+<div class="iq-modules mb-3">
+  <a class="iq-module iq-mod-emerald" href="<?= HTTP_DIR ?>/infodeqb/booking" target="_blank">
+    <span class="iq-module-tag">MOD · RES</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_BOOKING') ?></div><div class="iq-module-sub"><?= t('MOD_BOOKING_SUB') ?> <i class="fa fa-external-link fa-xs"></i></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/equipments/">
+    <span class="iq-module-tag">MOD · EQP</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-flask"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_EQUIPMENT') ?></div><div class="iq-module-sub"><?= t('MOD_EQUIP_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <a class="iq-module iq-mod-emerald" href="<?= HTTP_DIR ?>/infodeqb/reagentes/">
+    <span class="iq-module-tag">MOD · RGT</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-vial"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_REAGENTS') ?></div><div class="iq-module-sub"><?= t('MOD_REAGENTS_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <a class="iq-module iq-mod-slate" href="<?= HTTP_DIR ?>/infodeqb/water/waterqc.php">
+    <span class="iq-module-tag">MOD · H₂O</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-tint"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_WATER_QUALITY') ?></div><div class="iq-module-sub"><?= t('MOD_WATER_Q_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php if ($isAdmin || in_array($userCode, $_iqAdminsWater)): ?>
+  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/water/index.php">
+    <span class="iq-module-tag">MOD · H₂O</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-water"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_WATER_ADMIN') ?></div><div class="iq-module-sub"><?= t('MOD_WATER_C_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php endif; ?>
+</div>
+
+<?php /* ── Ensino ──────────────────────────────────────────── */ ?>
+<div class="iq-dash-label"><?= t('NAV_TEACHING') ?></div>
+<div class="iq-modules mb-3">
+  <a class="iq-module iq-mod-violet" href="<?= HTTP_DIR ?>/infodeqb/exams">
+    <span class="iq-module-tag">MOD · EXM</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-archive"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_EXAMS') ?></div><div class="iq-module-sub"><?= t('MOD_EXAMS_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php if ($canSeeMobile): ?>
+  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/mobile">
+    <span class="iq-module-tag">MOD · MOB</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-globe"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_MOBILITY') ?></div><div class="iq-module-sub"><?= t('MOD_MOBILE_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php endif; ?>
+</div>
+
+<?php /* ── Departamento ─────────────────────────────────────── */ ?>
+<?php $hasDeptModules = $isAdmin || in_array($userCode, $_iqAdminsHr) || $canSeeAreas || $myServdoc !== null || $myAreas !== null || $myAdiFeupId !== null; ?>
+<?php if ($hasDeptModules): ?>
+<div class="iq-dash-label"><?= t('NAV_DEPT') ?></div>
+<div class="iq-modules mb-3">
+  <?php if ($myServdoc !== null):
+    if ($myServdocSubm)                                       $_sdModClass = 'iq-mod-emerald';
+    elseif ($myServdocPedido && $myServdocPedido['aprovado']) $_sdModClass = 'iq-mod-sky';
+    elseif ($myServdocFormClosed)                             $_sdModClass = 'iq-mod-slate';
+    else                                                      $_sdModClass = 'iq-mod-amber';
+  ?>
+  <a class="iq-module <?= $_sdModClass ?>" href="<?= HTTP_DIR ?>/infodeqb/servdoc/">
     <span class="iq-module-tag">MOD · SRV</span>
     <div class="iq-module-row">
       <div class="iq-module-icon"><i class="fas fa-chalkboard-teacher"></i></div>
       <div class="iq-module-body">
-        <div class="iq-module-title">Preferência Serviço Docente</div>
+        <div class="iq-module-title"><?= t('NAV_SERVDOC') ?></div>
         <div class="iq-module-sub">
           <?php if ($myServdocSubm): ?>
-            <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i>Preferências submetidas
+            <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i><?= t('SERVDOC_SUBMITTED') ?>
+          <?php elseif ($myServdocPedido && $myServdocPedido['aprovado']): ?>
+            <i class="fas fa-unlock-alt me-1" style="color:#0891b2"></i><?= t('MOD_SERVDOC_APPROVED') ?>
+          <?php elseif ($myServdocPedido): ?>
+            <i class="fas fa-clock me-1" style="color:#d97706"></i><?= t('MOD_SERVDOC_PENDING') ?>
+          <?php elseif ($myServdocFormClosed): ?>
+            <i class="fas fa-lock me-1" style="color:#64748b"></i><?= t('AREAS_FORM_CLOSED') ?>
           <?php else: ?>
-            <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i>Por preencher
+            <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i><?= t('MOD_TODO') ?>
           <?php endif; ?>
         </div>
       </div>
@@ -353,19 +489,18 @@ $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slat
     </div>
   </a>
   <?php endif; ?>
-
   <?php if ($myAreas !== null): ?>
   <a class="iq-module <?= $myAreasSubm ? 'iq-mod-emerald' : 'iq-mod-amber' ?>" href="<?= HTTP_DIR ?>/infodeqb/areas/">
     <span class="iq-module-tag">MOD · ARE</span>
     <div class="iq-module-row">
       <div class="iq-module-icon"><i class="fas fa-sitemap"></i></div>
       <div class="iq-module-body">
-        <div class="iq-module-title">Áreas Disciplinares</div>
+        <div class="iq-module-title"><?= t('NAV_AREAS') ?></div>
         <div class="iq-module-sub">
           <?php if ($myAreasSubm): ?>
-            <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i>Resposta submetida
+            <i class="fas fa-check-circle me-1" style="color:#0e9f6e"></i><?= t('MOD_AREAS_SUBMITTED') ?>
           <?php else: ?>
-            <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i>Por preencher
+            <i class="fas fa-exclamation-circle me-1" style="color:#d97706"></i><?= t('MOD_TODO') ?>
           <?php endif; ?>
         </div>
       </div>
@@ -373,172 +508,71 @@ $hrStat = $myHrRecord ? ($hrStatusBadge[$myHrRecord['status']] ?? ['iq-stat-slat
     </div>
   </a>
   <?php endif; ?>
-
   <?php if ($myAdiFeupId !== null): ?>
   <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/adi/ficha.php?feup_id=<?= urlencode($myAdiFeupId) ?>">
     <span class="iq-module-tag">MOD · ADI</span>
     <div class="iq-module-row">
       <div class="iq-module-icon"><i class="fas fa-building"></i></div>
       <div class="iq-module-body">
-        <div class="iq-module-title">Espaços de Investigação</div>
-        <div class="iq-module-sub">Ver a minha ficha ADI</div>
+        <div class="iq-module-title"><?= t('NAV_ADI') ?></div>
+        <div class="iq-module-sub"><?= t('MOD_ADI_SUB') ?></div>
       </div>
       <i class="fas fa-chevron-right iq-module-arrow"></i>
     </div>
   </a>
   <?php endif; ?>
-
-</div>
-<?php endif; ?>
-
-<div class="iq-dash-label">Acesso rápido</div>
-<div style="margin-top:.5rem">
-
-<?php endif; /* fim dos 3 casos */ ?>
-
-<?php /* ════════ GRELHA DE MÓDULOS (todos os casos) ══════════════ */ ?>
-<div class="iq-modules">
-
-  <?php if (!$isSectionAdmin && !$isAdmin): /* só para utilizador normal */ ?>
-  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/hr/meu-registo.php">
-    <span class="iq-module-tag">MOD · HR</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-id-card"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">O meu registo</div><div class="iq-module-sub">Colaboradores DEQB</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-  <?php else: ?>
-  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/hr<?= ($isAdmin||$isHrAdmin)?'/admin/index.php':'' ?>">
-    <span class="iq-module-tag">MOD · HR</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-users"></i></div>
-      <div class="iq-module-body">
-        <div class="iq-module-title">Colaboradores</div>
-        <div class="iq-module-sub"><?= $isAdmin ? $hrAtivo . ' ativos'.($hrNExpirar>0?' &nbsp;·&nbsp; <span style="color:#991b1b;font-weight:600">'.$hrNExpirar.' a expirar</span>':'') : 'Registo e gestão de pessoal' ?></div>
-      </div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-  <?php endif; ?>
-
-  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/equipments/">
-    <span class="iq-module-tag">MOD · EQP</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-flask"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Equipamentos</div><div class="iq-module-sub">Catálogo de equipamentos</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
-  <a class="iq-module iq-mod-emerald" href="<?= HTTP_DIR ?>/infodeqb/booking" target="_blank">
-    <span class="iq-module-tag">MOD · RES</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-calendar-alt"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Reserva de recursos</div><div class="iq-module-sub">Salas e equipamentos partilhados <i class="fa fa-external-link fa-xs"></i></div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
-  <a class="iq-module iq-mod-amber" href="<?= HTTP_DIR ?>/infodeqb/dsd_app/">
-    <span class="iq-module-tag">MOD · DSD</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-      <div class="iq-module-body">
-        <div class="iq-module-title">Serviço Docente</div>
-        <div class="iq-module-sub"><?= ($isAdmin && $dsdAno) ? $dsdUcs.' UCs &nbsp;·&nbsp; '.htmlspecialchars($dsdAno['designacao']) : 'Distribuição e relatórios' ?></div>
-      </div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
-  <?php if ($isAdmin || in_array($userCode, $_iqAdminsHr)): ?>
-  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/servdoc/">
-    <span class="iq-module-tag">MOD · SRV</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-list-ol"></i></div>
-      <div class="iq-module-body">
-        <div class="iq-module-title">Pref. Serviço Docente</div>
-        <div class="iq-module-sub">Gestão de preferências</div>
-      </div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-  <?php endif; ?>
-
-  <?php if ($isAdmin || in_array($userCode, $_iqAdminsWater)): ?>
-  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/water/index.php">
-    <span class="iq-module-tag">MOD · H₂O</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-water"></i></div>
-      <div class="iq-module-body">
-        <div class="iq-module-title">Consumos de água</div>
-        <div class="iq-module-sub">Água ultrapura — registos</div>
-      </div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-  <?php endif; ?>
-
-  <a class="iq-module iq-mod-violet" href="<?= HTTP_DIR ?>/infodeqb/exams">
-    <span class="iq-module-tag">MOD · EXM</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-archive"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Arquivo de exames</div><div class="iq-module-sub">Autos de incorporação</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
-  <?php if ($canSeeMobile): ?>
-  <a class="iq-module iq-mod-sky" href="<?= HTTP_DIR ?>/infodeqb/mobile">
-    <span class="iq-module-tag">MOD · MOB</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-globe"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Mobilidade</div><div class="iq-module-sub">Mobilidade EQ e contactos DIE</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-  <?php endif; ?>
-
-  <a class="iq-module iq-mod-slate" href="<?= HTTP_DIR ?>/infodeqb/water/waterqc.php">
-    <span class="iq-module-tag">MOD · H₂O</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-tint"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Qualidade da água</div><div class="iq-module-sub">Monitorização e registos</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
-  <a class="iq-module iq-mod-emerald" href="<?= HTTP_DIR ?>/infodeqb/reagentes/">
-    <span class="iq-module-tag">MOD · RGT</span>
-    <div class="iq-module-row">
-      <div class="iq-module-icon"><i class="fas fa-vial"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Reagentes</div><div class="iq-module-sub">Inventário de reagentes</div></div>
-      <i class="fas fa-chevron-right iq-module-arrow"></i>
-    </div>
-  </a>
-
   <?php if ($canSeeAreas): ?>
   <a class="iq-module iq-mod-slate" href="<?= HTTP_DIR ?>/infodeqb/areas/">
     <span class="iq-module-tag">MOD · ARE</span>
     <div class="iq-module-row">
       <div class="iq-module-icon"><i class="fas fa-sitemap"></i></div>
-      <div class="iq-module-body"><div class="iq-module-title">Áreas disciplinares</div><div class="iq-module-sub">Estrutura do departamento</div></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_AREAS') ?></div><div class="iq-module-sub"><?= t('MOD_AREAS_SUB') ?></div></div>
       <i class="fas fa-chevron-right iq-module-arrow"></i>
     </div>
   </a>
   <?php endif; ?>
+  <?php if ($isAdmin || in_array($userCode, $_iqAdminsHr)): ?>
+  <a class="iq-module iq-mod-indigo" href="<?= HTTP_DIR ?>/infodeqb/servdoc/">
+    <span class="iq-module-tag">MOD · SRV</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-list-ol"></i></div>
+      <div class="iq-module-body"><div class="iq-module-title"><?= t('NAV_SERVDOC') ?></div><div class="iq-module-sub"><?= t('MOD_SERVDOC_SUB') ?></div></div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php endif; ?>
+  <?php if ($isAdmin): ?>
+  <a class="iq-module iq-mod-amber" href="<?= HTTP_DIR ?>/infodeqb/dsd_app/">
+    <span class="iq-module-tag">MOD · DSD</span>
+    <div class="iq-module-row">
+      <div class="iq-module-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="iq-module-body">
+        <div class="iq-module-title"><?= t('NAV_DSD') ?></div>
+        <div class="iq-module-sub"><?= ($dsdAno) ? $dsdUcs.' UCs &nbsp;·&nbsp; '.htmlspecialchars($dsdAno['designacao']) : t('MOD_DSD_SUB') ?></div>
+      </div>
+      <i class="fas fa-chevron-right iq-module-arrow"></i>
+    </div>
+  </a>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
 
-</div><!-- /.iq-modules -->
-
-<?php if ($isAdmin): ?>
-</div><!-- /modules wrap -->
-
+<?php if ($isAdmin):
+  $_dashAreasClosed   = is_file(ROOT_DIR.'/infodeqb/areas/.form_state')   && trim(file_get_contents(ROOT_DIR.'/infodeqb/areas/.form_state'))   === 'closed';
+  $_dashServdocClosed = is_file(ROOT_DIR.'/infodeqb/servdoc/.form_state') && trim(file_get_contents(ROOT_DIR.'/infodeqb/servdoc/.form_state')) === 'closed';
+?>
 <div class="iq-dash-label"><?= t('DASH_ADMIN_SEC') ?></div>
 <div class="iq-tool-card" style="margin-bottom:.75rem">
   <div class="iq-tool-icon"><i class="fas fa-user-cog"></i></div>
   <div class="iq-tool-body">
-    <div class="iq-tool-title"><?= t('DASH_SECTION_ADMINS') ?></div>
+    <div class="iq-tool-title">
+      <?= t('DASH_SECTION_ADMINS') ?>
+      <?php if ($_dashAreasClosed || $_dashServdocClosed): ?>
+      <span class="badge ms-2" style="background:#7c2615;font-size:.68rem;vertical-align:middle;font-weight:500">
+        <i class="fas fa-lock fa-xs me-1"></i>Formulário fechado
+      </span>
+      <?php endif; ?>
+    </div>
     <div class="iq-tool-desc"><?= t('DASH_SECTION_ADMINS_DESC') ?></div>
   </div>
   <div class="iq-tool-actions">
@@ -614,8 +648,6 @@ document.getElementById('btnBackupAll').addEventListener('click', function () {
 });
 </script>
 
-<?php else: ?>
-</div><!-- /modules wrap -->
 <?php endif; ?>
 
 <?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>

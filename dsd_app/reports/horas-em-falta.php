@@ -110,7 +110,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="page-header">
   <div>
-    <div class="page-title">⚠️ Balanço de Horas</div>
+    <div class="page-title"><i class="fas fa-exclamation-triangle me-1"></i>Balanço de Horas</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?> &mdash;
       <?= $totLinhas ?> ocorrência<?= $totLinhas === 1 ? '' : 's' ?>
       em <?= count($grupos) ?> plano<?= count($grupos) === 1 ? '' : 's' ?>
@@ -124,13 +124,13 @@ require_once __DIR__ . '/../includes/header.php';
     <a href="?<?= $mostrarTudo ? '' : 'tudo=1' ?>" class="btn btn-secondary btn-sm">
       <?= $mostrarTudo ? 'Só com falta' : 'Mostrar tudo' ?>
     </a>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir</button>
   </div>
 </div>
 
 <!-- Resumo global -->
 <div class="card" style="background:linear-gradient(135deg, var(--blue-light), #fff);border-left:4px solid var(--blue)">
-  <div class="card-title">📊 Resumo Global por Tipologia <span style="font-size:11px;font-weight:400;color:var(--gray-500)">(h/sem)</span></div>
+  <div class="card-title"><i class="fas fa-chart-bar me-1"></i>Resumo Global por Tipologia <span style="font-size:11px;font-weight:400;color:var(--gray-500)">(h/sem)</span></div>
   <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;font-size:12px">
     <?php foreach (['T','TP','L','Sem','OT','total'] as $k):
       $n = $totGeral['need'][$k]; $d = $totGeral['done'][$k]; $f = $n - $d;
@@ -147,7 +147,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
       <div style="font-size:11px;color:var(--gray-500)">Atrib: <?= fmt($d, 1) ?></div>
       <div style="font-size:11px;font-weight:600;color:<?= $cor ?>">
-        <?= abs($f) < 0.01 ? '✅' : ($f > 0 ? '−' . fmt($f, 1) : '+' . fmt(-$f, 1)) ?>
+        <?= abs($f) < 0.01 ? '<i class="fas fa-check-circle"></i>' : ($f > 0 ? '−' . fmt($f, 1) : '+' . fmt(-$f, 1)) ?>
       </div>
     </div>
     <?php endforeach; ?>
@@ -177,8 +177,8 @@ require_once __DIR__ . '/../includes/header.php';
         <option value="2S" <?= $filterSem === '2S' ? 'selected' : '' ?>>2S</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end">🔍 Filtrar</button>
-    <a href="horas-em-falta.php" class="btn btn-secondary btn-sm" style="align-self:flex-end">✕</a>
+    <button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-end"><i class="fas fa-search me-1"></i>Filtrar</button>
+    <a href="horas-em-falta.php" class="btn btn-secondary btn-sm" style="align-self:flex-end"><i class="fas fa-times"></i></a>
   </form>
 </div>
 
@@ -207,7 +207,7 @@ require_once __DIR__ . '/../includes/header.php';
   <tbody>
   <?php if (!$grupos): ?>
     <tr><td colspan="20" style="text-align:center;padding:40px;color:var(--green);font-weight:600">
-      ✅ Sem horas em falta para os filtros selecionados!
+      <i class="fas fa-check-circle me-1"></i>Sem horas em falta para os filtros selecionados!
     </td></tr>
   <?php else: foreach ($grupos as $planoKey => $g):
     $planoId = 'plano-' . md5($planoKey);
@@ -232,10 +232,10 @@ require_once __DIR__ . '/../includes/header.php';
     ?>
       <td class="num nec tipo-sep"><?= $hasData ? fmt($n, 1) : '–' ?></td>
       <td class="num atr tipo-sep-light"><?= $hasData ? fmt($d, 1) : '' ?></td>
-      <td class="num falta <?= $cls ?> tipo-sep-light"><?= $hasData ? (abs($f) < 0.01 ? '✓' : ($f > 0 ? '−' : '+') . fmt(abs($f), 1)) : '' ?></td>
+      <td class="num falta <?= $cls ?> tipo-sep-light"><?= $hasData ? (abs($f) < 0.01 ? '<i class="fas fa-check"></i>' : ($f > 0 ? '−' : '+') . fmt(abs($f), 1)) : '' ?></td>
     <?php endforeach; ?>
     <td class="num falta <?= $clsSubTot ?> tipo-sep" style="font-size:13px">
-      <?= abs($subFalta['total']) < 0.01 ? '✅' : (($subFalta['total'] > 0 ? '−' : '+') . fmt(abs($subFalta['total']), 1)) ?>
+      <?= abs($subFalta['total']) < 0.01 ? '<i class="fas fa-check-circle"></i>' : (($subFalta['total'] > 0 ? '−' : '+') . fmt(abs($subFalta['total']), 1)) ?>
     </td>
     <td></td>
   </tr>
@@ -248,7 +248,7 @@ require_once __DIR__ . '/../includes/header.php';
     <td>
       <strong><?= esc($o['uc_nome']) ?></strong>
       <?php if ($o['outros_planos']): ?>
-        <span style="font-size:10px;color:var(--orange);margin-left:4px">⚠️ <?= esc($o['outros_planos']) ?></span>
+        <span style="font-size:10px;color:var(--orange);margin-left:4px"><i class="fas fa-exclamation-triangle me-1"></i><?= esc($o['outros_planos']) ?></span>
       <?php endif; ?>
     </td>
     <td style="text-align:center"><span class="badge badge-gray" style="font-size:10px"><?= esc($o['semestre']) ?></span></td>
@@ -260,14 +260,14 @@ require_once __DIR__ . '/../includes/header.php';
     ?>
       <td class="num nec tipo-sep"><?= $hasData ? fmt($n, 1) : '<span class="dash">–</span>' ?></td>
       <td class="num atr tipo-sep-light"><?= $hasData ? fmt($d, 1) : '' ?></td>
-      <td class="num falta <?= $cls ?> tipo-sep-light"><?= $hasData ? (abs($f) < 0.01 ? '✓' : ($f > 0 ? '−' : '+') . fmt(abs($f), 1)) : '' ?></td>
+      <td class="num falta <?= $cls ?> tipo-sep-light"><?= $hasData ? (abs($f) < 0.01 ? '<i class="fas fa-check"></i>' : ($f > 0 ? '−' : '+') . fmt(abs($f), 1)) : '' ?></td>
     <?php endforeach; ?>
     <td class="num falta <?= $clsTot ?> tipo-sep" style="font-size:13px">
-      <?= abs($falta['total']) < 0.01 ? '✅' : (($falta['total'] > 0 ? '−' : '+') . fmt(abs($falta['total']), 1)) ?>
+      <?= abs($falta['total']) < 0.01 ? '<i class="fas fa-check-circle"></i>' : (($falta['total'] > 0 ? '−' : '+') . fmt(abs($falta['total']), 1)) ?>
     </td>
     <td style="text-align:center;white-space:nowrap;padding:4px">
-      <a href="../pages/distribuicao.php?ocorrencia=<?= $o['id'] ?>" class="btn btn-primary btn-xs" title="Atribuir docente">➕</a>
-      <a href="../pages/ocorrencia-form.php?id=<?= $o['id'] ?>" class="btn btn-secondary btn-xs" title="Editar ocorrência">✏️</a>
+      <a href="../pages/ocorrencia-form.php?id=<?= $o['id'] ?>#linhas-servico" class="btn btn-primary btn-xs" title="Atribuir docente"><i class="fas fa-plus"></i></a>
+      <a href="../pages/ocorrencia-form.php?id=<?= $o['id'] ?>" class="btn btn-secondary btn-xs" title="Editar ocorrência"><i class="fas fa-edit"></i></a>
     </td>
   </tr>
   <?php endforeach; ?>

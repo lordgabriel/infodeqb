@@ -180,7 +180,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📈 Gráficos</div>
+    <div class="page-title"><i class="fas fa-chart-line me-1"></i>Gráficos</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
 </div>
@@ -211,9 +211,9 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endforeach; ?>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary btn-sm">🔍 Filtrar</button>
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i>Filtrar</button>
     <?php if ($filterCarrId !== null || $filterCatId !== null): ?>
-      <a href="graficos.php" class="btn btn-secondary btn-sm">✕ Limpar</a>
+      <a href="graficos.php" class="btn btn-secondary btn-sm"><i class="fas fa-times me-1"></i>Limpar</a>
     <?php endif; ?>
   </form>
 </div>
@@ -228,7 +228,7 @@ require_once __DIR__ . '/../includes/header.php';
         echo $titleParts ? ' — ' . esc(implode(' · ', $titleParts)) : '';
       ?>
     </div>
-    <button onclick="exportarGrafico()" class="btn btn-secondary btn-sm">⬇️ Exportar PNG</button>
+    <button onclick="exportarGrafico()" class="btn btn-secondary btn-sm"><i class="fas fa-download me-1"></i>Exportar PNG</button>
   </div>
 
   <!-- Legenda custom -->
@@ -263,7 +263,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- ── Tabela top docentes ────────────────────────────────── -->
 <div class="card">
-  <div class="card-title">📊 Top Docentes – H SLEf
+  <div class="card-title"><i class="fas fa-chart-bar me-1"></i>Top Docentes – H SLEf
     <?= $filterCarrName ? '(' . esc($filterCarrName) . ')' : '' ?>
   </div>
   <div class="table-wrap">

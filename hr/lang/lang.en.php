@@ -33,6 +33,7 @@ $lang['WORK_RESP2'] = 'Work supervisor (not in previous list):';
 $lang['UNIT'] = 'Research Unit:';
 $lang['PROGROUP'] = 'Professional Group:';
 $lang['CATEGORY'] = 'Category:';
+$lang['BUILDING']   = 'Building';
 $lang['DEQ_ACCESS'] = 'Grant DEQB Access (north door)?';
 $lang['LAB_ACCESS'] = 'Choose the labs / offices you want to access:';
 $lang['REQUESTED_ACCESS'] = 'Requested accesses:';

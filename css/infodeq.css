@@ -5,13 +5,12 @@
    ============================================================= */
 
 /* ── Design tokens ──
-   Refresh visual (branch design/refresh-total): azul genérico → petróleo
-   (evoca vidro de laboratório) + acento âmbar (rótulo de amostra). */
+   Branch design/infodeqb-design-system: petróleo → azul institucional #2475ba */
 :root {
-  /* Petróleo — acento principal */
-  --iq-blue:       #0b6e73;
-  --iq-blue-dark:  #084d51;
-  --iq-blue-light: #dbeeee;
+  /* Azul institucional — acento principal */
+  --iq-blue:       #2475ba;
+  --iq-blue-dark:  #1a5a94;
+  --iq-blue-light: #dbeafe;
 
   /* Âmbar — acento de assinatura (etiquetas, estados "precisa de atenção") */
   --iq-amber:       #b6650c;
@@ -104,7 +103,6 @@ body {
 }
 .iq-tn-brand img {
   height: 42px;
-  filter: brightness(0) invert(1);
   display: block;
 }
 .iq-tn-brand-title {
@@ -363,7 +361,54 @@ table.dataTable td { font-size: .83rem !important; color: var(--iq-text) !import
   padding: .55rem .75rem;
 }
 .table tr:last-child td { border-bottom: none; }
-.table-hover tbody tr:hover { background: var(--iq-gray-50) !important; }
+/* Hover — regra base (tabelas sem zebra: bordered, borderless) */
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
+  background-color: #fef3c7 !important;
+  --bs-table-bg-state: #fef3c7;
+}
+/* Hover alta especificidade colocada antes da zebra mas definida depois — ver regra final abaixo */
+/* ── Striped global ──────────────────────────────────────────────────
+   Tabelas normais: :nth-child  |  DataTables: classes .odd/.even (JS)
+   --bs-table-bg-type: transparent neutraliza o box-shadow do Bootstrap
+   para que background-color seja a única fonte de cor (#e5e7eb exacoto)
+   ─────────────────────────────────────────────────────────────────── */
+/* Tabelas estáticas */
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > td,
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(odd) > th,
+.table-striped > tbody > tr:nth-child(odd) > td,
+.table-striped > tbody > tr:nth-child(odd) > th {
+  background-color: #e5e7eb !important;
+  --bs-table-bg-type: transparent;
+}
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > td,
+.table:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:nth-child(even) > th,
+.table-striped > tbody > tr:nth-child(even) > td,
+.table-striped > tbody > tr:nth-child(even) > th {
+  background-color: var(--iq-surface) !important;
+  --bs-table-bg-type: transparent;
+}
+/* DataTables: usa .odd/.even nas linhas em vez de :nth-child */
+table.dataTable:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr.odd > td,
+table.dataTable:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr.odd > th {
+  background-color: #e5e7eb !important;
+  --bs-table-bg-type: transparent;
+}
+table.dataTable:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr.even > td,
+table.dataTable:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr.even > th {
+  background-color: var(--iq-surface) !important;
+  --bs-table-bg-type: transparent;
+}
+/* Hover — especificidade (0,5,3) > zebra (0,4,3): vence em linhas ímpares sem depender da ordem */
+.table.table-hover:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:hover > td,
+.table.table-hover:not(.table-bordered):not(.table-borderless):not(.iq-no-stripe) > tbody > tr:hover > th {
+  background-color: #fef3c7 !important;
+  --bs-table-bg-state: #fef3c7;
+}
+/* Linhas de grupo/totais preservam o seu fundo próprio */
+.table > tbody > tr.group,
+.table > tbody > tr.group > td,
+.table > tbody > tr.group > th { background: var(--iq-gray-100) !important; --bs-table-bg-type: transparent; }
 
 /* Linhas de grupo/totais */
 tr.group, tr.group:hover {
@@ -472,9 +517,10 @@ label {
   padding: .7rem 1rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: .5rem;
 }
+.alert:has(.btn-close) { justify-content: space-between; }
 .alert-success { background: #ecfdf5 !important; border-color: #a7f3d0 !important; color: #065f46 !important; }
 .alert-danger  { background: #fef2f2 !important; border-color: #fecaca !important; color: #991b1b !important; }
 .alert-warning { background: var(--iq-amber-light) !important; border-color: #e8c691 !important; color: var(--iq-amber-dark) !important; }
@@ -533,26 +579,26 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
 #pills-tab .nav-link {
   border: none;
   border-bottom: 3px solid transparent;
-  border-radius: 0;
+  border-radius: 5px 5px 0 0;
   margin-bottom: -2px;
   padding: 10px 18px;
   font-size: .875rem;
   font-weight: 500;
   color: var(--iq-muted);
-  background: transparent;
+  background: var(--iq-gray-100);
   white-space: nowrap;
-  transition: color .15s, border-color .15s;
+  transition: color .15s, border-color .15s, background .15s;
 }
 #pills-tab .nav-link:hover {
   color: var(--iq-text);
   border-bottom-color: var(--iq-amber-light);
-  background: transparent;
+  background: #e5e7eb;
 }
 #pills-tab .nav-link.active {
   color: var(--iq-text);
   font-weight: 700;
   border-bottom-color: var(--iq-amber);
-  background: transparent;
+  background: rgba(245, 197, 24, .10);
 }
 #pills-tab .nav-link .tab-badge {
   display: inline-flex;
@@ -831,47 +877,92 @@ a.page-link { color: var(--iq-blue) !important; font-size: .8rem; }
   border: 1px solid var(--iq-gray-300);
   border-radius: var(--iq-r);
   background: var(--iq-surface);
-  overflow-y: auto;
-  max-height: 220px;
-  padding: .4rem .5rem;
-  flex: 1;          /* cresce no iq-form-section-fill */
+  overflow: hidden;
+  padding: 0;
+  flex: 1;
   min-height: 120px;
 }
 .iq-checkboxlist:focus-within {
   border-color: var(--iq-blue);
   box-shadow: 0 0 0 3px rgba(26,86,219,.10);
 }
-.iq-checkgroup { margin-bottom: .5rem; }
-.iq-checkgroup:last-child { margin-bottom: 0; }
+
+/* ── Accordion por edifício ─────────────────────────────────── */
+.iq-lab-building { border-bottom: 1px solid var(--iq-gray-200); }
+.iq-lab-building:last-child { border-bottom: none; }
+.iq-lab-building-header {
+  all: unset;               /* reset total — browser button defaults */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  width: 100%;
+  padding: .38rem .65rem .38rem .6rem;
+  background: var(--iq-gray-50);
+  border-left: 2px solid transparent;
+  font-size: .79rem;
+  font-weight: 600;
+  color: var(--iq-subtle);
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.iq-lab-building-header:hover {
+  background: var(--iq-gray-100);
+  color: var(--iq-text);
+}
+.iq-lab-building-header[aria-expanded="true"] {
+  background: rgba(26,86,219,.06);
+  border-left-color: var(--iq-blue);
+  color: var(--iq-blue);
+}
+.iq-lab-building-header .fa-chevron-down {
+  font-size: .62rem;
+  opacity: .5;
+  transition: transform .18s, opacity .12s;
+  flex-shrink: 0;
+}
+.iq-lab-building-header:hover .fa-chevron-down,
+.iq-lab-building-header[aria-expanded="true"] .fa-chevron-down {
+  opacity: 1;
+}
+.iq-lab-building-header[aria-expanded="true"] .fa-chevron-down {
+  transform: rotate(180deg);
+}
+.iq-lab-sel-count {
+  font-size: .67rem;
+  font-weight: 700;
+  color: var(--iq-blue);
+  background: rgba(26,86,219,.12);
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+.iq-lab-building .collapse,
+.iq-lab-building .collapsing {
+  padding: .25rem .5rem .2rem;
+}
+
+/* ── Grupos por piso ─────────────────────────────────────────── */
+.iq-checkgroup { margin-bottom: .4rem; }
+.iq-checkgroup:last-child { margin-bottom: .1rem; }
 .iq-checkgroup-label {
   display: block;
-  font-size: .68rem;
+  font-size: .66rem;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--iq-subtle);
-  padding: .2rem .4rem .15rem;
+  padding: .15rem .4rem .1rem;
   border-bottom: 1px solid var(--iq-gray-200);
-  margin-bottom: .2rem;
+  margin-bottom: .15rem;
 }
-.iq-edificio-label {
-  display: block;
-  font-size: .8rem;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--iq-gray-500);
-  background: var(--iq-gray-100);
-  padding: .3rem .4rem;
-  margin: .6rem 0 .2rem;
-  border-radius: 4px;
-}
-.iq-checkgroup:first-child .iq-edificio-label { margin-top: 0; }
 .iq-checkboxlist label {
   display: flex;
   align-items: center;
   gap: .45rem;
-  padding: .2rem .4rem;
+  padding: .18rem .4rem;
   border-radius: 4px;
   font-size: .82rem;
   font-weight: 400;
@@ -1348,23 +1439,12 @@ body:has(.dsd-subnav) .iq-main {
 /* Código/dado tabular — leitura tipo "instrumento" (códigos UP, datas, IDs) */
 .code { font-family: var(--iq-font-mono); font-size: .92em; color: var(--iq-muted); font-variant-numeric: tabular-nums; }
 
-/* Avatar de iniciais (linhas de tabela — HR list/admin) */
-.iq-avatar-sm {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--iq-blue-light);
-  color: var(--iq-blue-dark);
-  font-family: var(--iq-font-mono);
-  font-size: .64rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  vertical-align: middle;
-  margin-right: 7px;
-}
+/* Tamanho de texto nas tabelas HR e Água */
+.iq-hr-page .table td,
+.iq-hr-page .table th,
+.iq-hr-page table.dataTable td,
+.iq-water-page .table td,
+.iq-water-page .table th { font-size: .9rem !important; }
 
 .card-body a   { color: var(--iq-blue); text-decoration: none; }
 .card-body a:hover { color: var(--iq-blue-dark); text-decoration: underline; }
@@ -1437,7 +1517,7 @@ i.fas.fa-eraser { color: #e02424 !important; }
   color: #fff !important;
 }
 
-/* Cabeçalho de secção escuro — reutilizável em qualquer card-header
+/* Cabeçalho de secção com acento — reutilizável em qualquer card-header
    que precise de destaque forte (usado por ADI, ServDoc). Nasceu como
    .adi-section-header (mantida como alias); usar .iq-header-dark em
    código novo. */
@@ -1445,9 +1525,9 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .adi-section-header,
 .adi-ficha .card-header:first-of-type,
 .adi-ficha > .card > .card-header {
-  background: var(--iq-nav-bg) !important;
+  background: var(--iq-accent) !important;
   color: #fff !important;
-  border-bottom-color: #23272b !important;
+  border-bottom-color: var(--iq-blue-dark) !important;
 }
 .iq-header-dark .fas,
 .adi-section-header .fas,
@@ -1461,24 +1541,86 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .adi-score-card { border-radius: var(--iq-r); padding: 12px 16px; font-size: .83rem; }
 .adi-score-val  { font-size: 1.1rem; font-weight: 700; }
 .adi-score-card.sc-blue    { background: var(--iq-blue-light); }
-.adi-score-card.sc-blue    .adi-score-val { color: var(--iq-blue); }
+.adi-score-card.sc-blue    .adi-score-val,
+.adi-score-card.sc-blue    .adi-score-label { color: var(--iq-blue); }
 .adi-score-card.sc-purple  { background: #f5f3ff; }
-.adi-score-card.sc-purple  .adi-score-val { color: #8b5cf6; }
+.adi-score-card.sc-purple  .adi-score-val,
+.adi-score-card.sc-purple  .adi-score-label { color: #8b5cf6; }
 .adi-score-card.sc-teal    { background: #f0f9ff; }
-.adi-score-card.sc-teal    .adi-score-val { color: #0ea5e9; }
+.adi-score-card.sc-teal    .adi-score-val,
+.adi-score-card.sc-teal    .adi-score-label { color: #0ea5e9; }
 .adi-score-card.sc-green   { background: #f0fdf4; }
-.adi-score-card.sc-green   .adi-score-val { color: #10b981; }
+.adi-score-card.sc-green   .adi-score-val,
+.adi-score-card.sc-green   .adi-score-label { color: #10b981; }
 .adi-score-card.sc-amber   { background: var(--iq-amber-light); }
-.adi-score-card.sc-amber   .adi-score-val { color: var(--iq-amber-dark); }
+.adi-score-card.sc-amber   .adi-score-val,
+.adi-score-card.sc-amber   .adi-score-label { color: var(--iq-amber-dark); }
 .adi-score-card.sc-slate   { background: var(--iq-gray-100); }
-.adi-score-card.sc-slate   .adi-score-val { color: var(--iq-gray-600); }
+.adi-score-card.sc-slate   .adi-score-val,
+.adi-score-card.sc-slate   .adi-score-label { color: var(--iq-gray-600); }
+
+/* ─────────────────────────────────────────
+   TABLE GROUP HEADERS
+   Aplicar na <tr> de agrupamento: <tr class="iq-tbl-group-1">
+   4 níveis de hierarquia visual; padding cresce com o nível
+   para reflectir a indentação lógica.
+   ───────────────────────────────────────── */
+.iq-tbl-group-1 > td, .iq-tbl-group-1 > th {
+  background: var(--iq-accent) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: .8rem !important;
+  padding: 4px 8px !important;
+  border-color: var(--iq-accent-h) !important;
+}
+.iq-tbl-group-2 > td, .iq-tbl-group-2 > th {
+  background: var(--iq-blue-light) !important;
+  color: var(--iq-blue-dark) !important;
+  font-weight: 600 !important;
+  font-size: .78rem !important;
+  padding: 3px 8px !important;
+}
+.iq-tbl-group-2 > td:first-child, .iq-tbl-group-2 > th:first-child {
+  padding-left: 16px !important;
+}
+.iq-tbl-group-3 > td, .iq-tbl-group-3 > th {
+  background: var(--iq-gray-100) !important;
+  color: var(--iq-gray-700) !important;
+  font-weight: 600 !important;
+  font-size: .78rem !important;
+  padding: 3px 8px !important;
+}
+.iq-tbl-group-3 > td:first-child, .iq-tbl-group-3 > th:first-child {
+  padding-left: 24px !important;
+}
+.iq-tbl-group-4 > td, .iq-tbl-group-4 > th {
+  background: var(--iq-surface) !important;
+  color: var(--iq-muted) !important;
+  font-weight: 600 !important;
+  font-size: .77rem !important;
+  padding: 2px 8px !important;
+  border-top: 1px dashed var(--iq-border2) !important;
+}
+.iq-tbl-group-4 > td:first-child, .iq-tbl-group-4 > th:first-child {
+  padding-left: 32px !important;
+}
+
+/* ─────────────────────────────────────────
+   TABLE THEAD — cabeçalho de colunas global
+   Mais fraco que iq-tbl-group-1 (accent) para manter
+   a hierarquia: secção > colunas > dados
+   ───────────────────────────────────────── */
+.iq-hr-page .table thead th {
+  background: var(--iq-blue-light) !important;
+  color: var(--iq-blue-dark) !important;
+}
 
 /* ServDoc — cabeçalho da tabela por-uc */
 #tblUcs thead th,
 #tblUcs thead tr:first-child th {
-  background: var(--iq-gray-800) !important;
+  background: var(--iq-accent) !important;
   color: #fff !important;
-  border-color: #495057 !important;
+  border-color: var(--iq-blue-dark) !important;
 }
 #tblUcs thead tr.filter-row th {
   background: #fff !important;
@@ -1495,6 +1637,9 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .btn-orange:focus    { background-color:#e96b02; border-color:#e96b02; color:#000; }
 .btn-outline-orange  { border-color:#fd7e14; color:#fd7e14; background:transparent; }
 .btn-outline-orange:hover { background-color:#fd7e14; color:#000; }
+.btn-outline-feup        { border-color:#8C2D19; color:#8C2D19; background:transparent; }
+.btn-outline-feup:hover  { background-color:#8C2D19; color:#fff; }
+.btn-outline-feup:hover i { color:#fff; }
 .badge.bg-orange     { background-color:#fd7e14 !important; color:#000; }
 
 /* ─────────────────────────────────────────

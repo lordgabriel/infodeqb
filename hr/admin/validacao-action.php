@@ -84,7 +84,14 @@ elseif ($acao === 'solicitar_registo' && !empty($_POST['registo_id'])) {
             $n = _criarValidacoes($pdo, null, $rid, $deqids, $reg['colab_nome'], $reg['datainicio'], $reg['datafim'], $reg['colab_codigo'], $reg['resp_trabalho'] ?? '');
 
             if ($n === 0) {
-                $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+                // Distinguir entre "sem responsável" e "já solicitado"
+                $qPend = $pdo->prepare("SELECT COUNT(*) FROM infodeqb_rds_validacao WHERE registo_id=? AND status='Pendente'");
+                $qPend->execute([$rid]);
+                if ((int)$qPend->fetchColumn() > 0) {
+                    $_SESSION['val_info'] = 'Validações já solicitadas anteriormente — aguarda resposta dos responsáveis.';
+                } else {
+                    $_SESSION['val_info'] = 'Nenhum dos espaços tem responsável definido — não é necessária validação.';
+                }
             } else {
                 $_SESSION['val_info'] = 'Pedido de validação enviado a ' . $n . ' responsável(is).';
             }
@@ -248,8 +255,72 @@ elseif ($acao === 'notif_sigarra' && !empty($_POST['registo_id'])) {
         $d = json_decode($ped['dados_json'], true);
         if (!is_array($d)) $d = array();
 
-        _emailSigarra($pdo, $ped, $d);
+        // 1. Forçar aprovação de validações Pendentes existentes
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_validacao
+             SET status='Validado', respondido_em=NOW(),
+                 nota='Aprovação forçada — notificação de alteração enviada ao SIGARRA'
+             WHERE registo_id=? AND status='Pendente'"
+        )->execute([$rid]);
 
+        // 2. Forçar aprovação de labs sem qualquer pedido de validação
+        $todosDeqids = getRegistoAcessos($pdo, $rid);
+        if (!empty($todosDeqids)) {
+            $qVals = $pdo->prepare("SELECT labs_json, deq_id FROM infodeqb_rds_validacao WHERE registo_id=?");
+            $qVals->execute([$rid]);
+            $deqidsComPedido = array();
+            foreach ($qVals->fetchAll(PDO::FETCH_ASSOC) as $_v) {
+                if (!empty($_v['labs_json'])) {
+                    $_labs = json_decode($_v['labs_json'], true);
+                    if (is_array($_labs)) {
+                        foreach ($_labs as $_l) {
+                            if (!empty($_l['deq_id'])) $deqidsComPedido[] = (string)$_l['deq_id'];
+                        }
+                        continue;
+                    }
+                }
+                if (!empty($_v['deq_id'])) $deqidsComPedido[] = (string)$_v['deq_id'];
+            }
+            $deqidsComPedido = array_unique($deqidsComPedido);
+
+            $labsSemPedido = array();
+            foreach ($todosDeqids as $_deqid) {
+                if (!in_array((string)$_deqid, $deqidsComPedido, true)) $labsSemPedido[] = (string)$_deqid;
+            }
+
+            if (!empty($labsSemPedido)) {
+                $porResp = array();
+                foreach ($labsSemPedido as $_deqid) {
+                    $qG = $pdo->prepare(
+                        "SELECT g.nomegab, r.Codigo AS resp_codigo
+                         FROM infodeqb_rds_gabinetes g
+                         LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+                         WHERE g.deqid = ?"
+                    );
+                    $qG->execute([$_deqid]);
+                    foreach ($qG->fetchAll(PDO::FETCH_ASSOC) as $_g) {
+                        $rc = (string)$_g['resp_codigo'];
+                        if (!isset($porResp[$rc])) $porResp[$rc] = array();
+                        $porResp[$rc][] = array('deq_id' => $_deqid, 'gab_nome' => $_g['nomegab']);
+                    }
+                }
+                foreach ($porResp as $respCod => $spLabs) {
+                    $qResp = $pdo->prepare("SELECT respespaco FROM infodeqb_rds_responsaveis WHERE Codigo=?");
+                    $qResp->execute([$respCod]);
+                    $respNome = $qResp->fetchColumn() ?: '';
+                    $firstId  = $spLabs[0]['deq_id'];
+                    $labNames = substr(implode(', ', array_column($spLabs, 'gab_nome')), 0, 490);
+                    $labsJson = json_encode($spLabs, JSON_UNESCAPED_UNICODE);
+                    $pdo->prepare(
+                        "INSERT INTO infodeqb_rds_validacao
+                         (registo_id, deq_id, gab_nome, labs_json, resp_codigo, resp_nome, token, status, nota, respondido_em)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, 'Validado', 'Aprovação forçada — notificação SIGARRA', NOW())"
+                    )->execute([$rid, $firstId, $labNames, $labsJson, $respCod, $respNome, bin2hex(random_bytes(16))]);
+                }
+            }
+        }
+
+        // 3. Actualizar estado antes do email (garante consistência mesmo se email falhar)
         $pdo->prepare(
             "UPDATE infodeqb_rds_pedido SET status='Aguarda_SIGARRA' WHERE id=?"
         )->execute([$ped['id']]);
@@ -257,9 +328,182 @@ elseif ($acao === 'notif_sigarra' && !empty($_POST['registo_id'])) {
             "UPDATE infodeqb_rds_registo SET notif_pendente=0 WHERE autoid=?"
         )->execute([$rid]);
 
+        // 4. Enviar email (falha não-fatal — estado já foi guardado)
+        _emailSigarra($pdo, $ped, $d);
+
         $_SESSION['val_info'] = 'SIGARRA notificado com sucesso.';
     } else {
         $_SESSION['val_info'] = 'Erro: não foi possível criar pedido de notificação.';
+    }
+}
+
+// ── Aceitar alteração sem notificar SIGARRA (correções internas) ──────
+elseif ($acao === 'aceitar_silencioso' && !empty($_POST['registo_id'])) {
+    $rid = (int)$_POST['registo_id'];
+
+    // Fechar pedido secretariado Pendente, se existir
+    $qPed = $pdo->prepare(
+        "SELECT id FROM infodeqb_rds_pedido
+         WHERE registo_id=? AND origem='secretariado' AND tipo='alteracao_sigarra'
+           AND status='Pendente'
+         ORDER BY criado_em DESC LIMIT 1"
+    );
+    $qPed->execute([$rid]);
+    $pedId = $qPed->fetchColumn();
+
+    if ($pedId) {
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_pedido
+             SET status='Concluido', processado_em=NOW(), processado_por=?,
+                 notas_admin='Aceite pelo administrador sem notificação ao SIGARRA'
+             WHERE id=?"
+        )->execute([$_SESSION['Code'] ?? '', (int)$pedId]);
+    }
+
+    $pdo->prepare("UPDATE infodeqb_rds_registo SET notif_pendente=0 WHERE autoid=?")
+        ->execute([$rid]);
+
+    // Forçar aprovação de validações ainda pendentes
+    $pdo->prepare(
+        "UPDATE infodeqb_rds_validacao
+         SET status='Validado', respondido_em=NOW(),
+             nota='Aprovação forçada — aceite silenciosamente pelo administrador'
+         WHERE registo_id=? AND status='Pendente'"
+    )->execute([$rid]);
+
+    $_SESSION['val_info'] = 'Alteração registada e validações aprovadas. SIGARRA não foi notificado.';
+}
+
+// ── Rejeitar alteração e repor estado anterior ────────────────────────
+elseif ($acao === 'rejeitar_alteracao' && !empty($_POST['registo_id'])) {
+    $rid = (int)$_POST['registo_id'];
+
+    $qPed = $pdo->prepare(
+        "SELECT id, dados_anteriores FROM infodeqb_rds_pedido
+         WHERE registo_id=? AND origem='secretariado' AND tipo='alteracao_sigarra'
+           AND status='Pendente'
+         ORDER BY criado_em DESC LIMIT 1"
+    );
+    $qPed->execute([$rid]);
+    $ped = $qPed->fetch(PDO::FETCH_ASSOC);
+
+    if ($ped) {
+        $ant = json_decode($ped['dados_anteriores'], true);
+        if (!is_array($ant)) $ant = array();
+
+        // Deqids antigos (separados por ; ou espaço)
+        $oldAcessosid  = $ant['acessosid'] ?? '';
+        $oldLabsDeqids = array_values(array_unique(array_filter(
+            array_map('trim', preg_split('/[\s;,|]+/', $oldAcessosid))
+        )));
+
+        // Restaurar campos do registo
+        $setCols = 'notif_pendente=0';
+        $params  = array();
+        if (isset($ant['datainicio']) && $ant['datainicio'] !== '') {
+            $setCols .= ', datainicio=?'; $params[] = $ant['datainicio'];
+        }
+        if (isset($ant['datafim']) && $ant['datafim'] !== '') {
+            $setCols .= ', datafim=?';    $params[] = $ant['datafim'];
+        }
+        if (isset($ant['acessodeq'])) {
+            $setCols .= ', acessodeq=?';  $params[] = (int)$ant['acessodeq'];
+        }
+        // Restaurar texto de acessos — usar campo guardado ou reconstruir de gabinetes
+        if (isset($ant['acessos']) && $ant['acessos'] !== '') {
+            $setCols .= ', acessos=?';    $params[] = $ant['acessos'];
+        }
+        $setCols .= ', acessosid=?';
+        $params[] = implode('; ', $oldLabsDeqids);
+        $params[] = $rid;
+
+        $pdo->prepare("UPDATE infodeqb_rds_registo SET $setCols WHERE autoid=?")
+            ->execute($params);
+
+        // Restaurar tabela relacional de acessos
+        $gabMap = getGabMap($pdo);
+        setRegistoAcessos($pdo, $rid, $oldLabsDeqids, $gabMap);
+
+        // Apagar validações que já não correspondem ao estado restaurado
+        $qPV = $pdo->prepare(
+            "SELECT id, deq_id, labs_json FROM infodeqb_rds_validacao WHERE registo_id=?"
+        );
+        $qPV->execute([$rid]);
+        foreach ($qPV->fetchAll(PDO::FETCH_ASSOC) as $pv) {
+            $pvDeqids = array();
+            $pvLabs = json_decode($pv['labs_json'], true);
+            if (is_array($pvLabs)) {
+                foreach ($pvLabs as $l) {
+                    if (!empty($l['deq_id'])) $pvDeqids[] = (string)$l['deq_id'];
+                }
+            } elseif (!empty($pv['deq_id'])) {
+                $pvDeqids[] = (string)$pv['deq_id'];
+            }
+            if (!empty($pvDeqids) && empty(array_intersect($pvDeqids, $oldLabsDeqids))) {
+                $pdo->prepare("DELETE FROM infodeqb_rds_validacao WHERE id=?")->execute([$pv['id']]);
+            }
+        }
+
+        // Fechar pedido como Rejeitado
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_pedido
+             SET status='Rejeitado', processado_em=NOW(), processado_por=?,
+                 notas_admin='Alteração rejeitada — estado reposto pelo administrador'
+             WHERE id=?"
+        )->execute([$_SESSION['Code'] ?? '', (int)$ped['id']]);
+
+        $_SESSION['val_info'] = 'Alteração rejeitada. Estado reposto ao valor anterior.';
+    }
+}
+
+// ── Concluir pedido Aguarda_SIGARRA (SIGARRA processou) ──────────────
+elseif ($acao === 'concluir_sigarra' && !empty($_POST['pedido_id'])) {
+    $pid = (int)$_POST['pedido_id'];
+
+    $qPed = $pdo->prepare("SELECT * FROM infodeqb_rds_pedido WHERE id=? AND status='Aguarda_SIGARRA'");
+    $qPed->execute([$pid]);
+    $ped = $qPed->fetch(PDO::FETCH_ASSOC);
+
+    if ($ped && $ped['registo_id']) {
+        $regRow = $pdo->prepare(
+            'SELECT r.datafim, r.acessodeq, r.acessos, r.status, r.proxy_email, c.nome, c.email
+             FROM infodeqb_rds_registo r
+             JOIN infodeqb_rds_colaborador c ON c.codigo = r.codigo
+             WHERE r.autoid = ?'
+        );
+        $regRow->execute([$ped['registo_id']]);
+        $reg = $regRow->fetch(PDO::FETCH_ASSOC);
+
+        if ($reg && $reg['email']) {
+            $acessos = ($reg['acessodeq'] == 1 ? 'Porta Norte; ' : '') . ($reg['acessos'] ?? '');
+            $info = array(
+                'nome'    => $reg['nome'],
+                'detalhe' => 'alteração de acessos',
+                'acessos' => $acessos ?: '—',
+                'fim'     => $reg['datafim'],
+            );
+            $body = format_email($info, 'mail_alteracao_concluida.html');
+            // Se o registo foi criado por proxy e ainda não está Activo, notificar o registador
+            $notifTo = (!empty($reg['proxy_email']) && $reg['status'] !== 'Activo')
+                       ? $reg['proxy_email']
+                       : $reg['email'];
+            try {
+                send_email(
+                    array($notifTo),
+                    $body,
+                    'Acessos DEQB: Acessos atualizados',
+                    array('deqdir@fe.up.pt', 'fmartins@fe.up.pt')
+                );
+            } catch (Exception $e) {
+                error_log('HR concluir_sigarra email falhou id=' . $pid . ': ' . $e->getMessage());
+            }
+        }
+
+        $pdo->prepare(
+            "UPDATE infodeqb_rds_pedido SET status='Concluido', processado_em=NOW(), processado_por=? WHERE id=?"
+        )->execute([$_SESSION['Code'] ?? '', $pid]);
+
+        $_SESSION['val_info'] = 'Pedido marcado como concluído. Utilizador notificado por email.';
     }
 }
 
@@ -305,8 +549,8 @@ elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
     // 2. Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
     $qSemVal = $pdo->prepare(
         "SELECT COUNT(*)
-         FROM infodeqb_rds_registo_acessos ra
-         JOIN infodeqb_rds_gabinetes g ON g.deqid = ra.lab_id
+         FROM infodeqb_rds_gabinetes g
+         JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
          WHERE ra.registo_id = ?
            AND g.responsavel IS NOT NULL AND g.responsavel != 0
            AND g.responsavel != 246398

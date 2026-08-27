@@ -64,7 +64,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📑 Tabela 1 – Distribuição de Serviço Docente</div>
+    <div class="page-title"><i class="fas fa-table me-1"></i>Tabela 1 – Distribuição de Serviço Docente</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -72,7 +72,7 @@ require_once __DIR__ . '/../includes/header.php';
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('doc-');expandAll('carr-')">↕ Docentes</button>
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('sem-');expandAll('doc-')">↕ Semestres</button>
     <button class="btn btn-secondary btn-sm" onclick="expandAll('')">⊞ Tudo</button>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir / PDF</button>
   </div>
 </div>
 
@@ -161,10 +161,10 @@ require_once __DIR__ . '/../includes/header.php';
     <td><span class="badge badge-blue" style="font-size:10px"><?= esc($r['plano'] ?? '–') ?></span></td>
     <td>
       <?= $r['regente'] ? '<strong>' : '' ?><?= esc($r['uc_nome']) ?><?= $r['regente'] ? '<sup style="color:var(--blue)"> R</sup></strong>' : '' ?>
-      <?php if ($r['outros_planos']): ?><div style="font-size:10px;color:var(--orange)">⚠️ <?= esc($r['outros_planos']) ?></div><?php endif; ?>
+      <?php if ($r['outros_planos']): ?><div style="font-size:10px;color:var(--orange)"><i class="fas fa-exclamation-triangle me-1"></i><?= esc($r['outros_planos']) ?></div><?php endif; ?>
     </td>
-    <td style="text-align:center"><?= $r['regente'] ? '⭐' : '' ?></td>
-    <td style="text-align:center"><?= $r['dsd_por_docente'] ? '✅' : '<span style="color:var(--orange)">❌</span>' ?></td>
+    <td style="text-align:center"><?= $r['regente'] ? '<i class="fas fa-star"></i>' : '' ?></td>
+    <td style="text-align:center"><?= $r['dsd_por_docente'] ? '<i class="fas fa-check-circle"></i>' : '<span style="color:var(--orange)"><i class="fas fa-times-circle"></i></span>' ?></td>
     <td class="num"><?= fmt((float)$r['semanas'],2) ?></td>
     <td class="num" style="border-left:1px solid var(--gray-200)"><?= $r['turmas_T']  > 0 ? fmt((float)$r['turmas_T'],1)  : '' ?></td>
     <td class="num"><?= $r['horas_T']  > 0 ? fmt((float)$r['horas_T'],1)  : '' ?></td>
@@ -227,8 +227,8 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <div style="font-size:12px;color:var(--gray-400);margin-top:8px;padding:0 4px">
-  <strong>Legenda:</strong> R = Regente &nbsp;|&nbsp; DSD ✅ = conta nas horas do docente &nbsp;|&nbsp;
-  DSD ❌ = UC partilhada, não duplica &nbsp;|&nbsp; F SLEf = fator SLEf &nbsp;|&nbsp; H SLEf = h/semana × F SLEf
+  <strong>Legenda:</strong> R = Regente &nbsp;|&nbsp; DSD <i class="fas fa-check-circle me-1"></i>= conta nas horas do docente &nbsp;|&nbsp;
+  DSD <i class="fas fa-times-circle me-1"></i>= UC partilhada, não duplica &nbsp;|&nbsp; F SLEf = fator SLEf &nbsp;|&nbsp; H SLEf = h/semana × F SLEf
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

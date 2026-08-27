@@ -1,26 +1,24 @@
 <!-- EMAIL_SUBTITLE: Atualização de Acessos -->
 {{HEADER}}
-              <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Caro Colega,</p>
-              <p style="margin:0 0 20px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Vimos por este meio solicitar a atualização dos acessos do DEQB para o colaborador abaixo indicado.</p>
+              <p style="margin:0 0 8px 0;font-size:14px;font-family:Arial,sans-serif;">Caro Colega,</p>
+              <p style="margin:0 0 12px 0;font-size:14px;line-height:21px;font-family:Arial,sans-serif;">Solicitamos a atualização dos acessos DEQB para o colaborador abaixo indicado.</p>
 
-              <!-- Dados do colaborador -->
-              <table border="0" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:15px;margin-bottom:24px;">
+              <table border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px;margin-bottom:14px;">
                 <thead>
                   <tr>
-                    <th align="left" style="background:#2475ba;color:#fff;padding:8px;">Código</th>
-                    <th align="left" style="background:#2475ba;color:#fff;padding:8px;">Nome</th>
-                    <th align="left" style="background:#2475ba;color:#fff;padding:8px;">Data Fim</th>
+                    <th align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">Código</th>
+                    <th align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">Nome</th>
+                    <th align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">Data Fim</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td style="padding:8px;border-bottom:1px solid #eee;">{valorcodigo}</td>
-                    <td style="padding:8px;border-bottom:1px solid #eee;">{valornome}</td>
-                    <td style="padding:8px;border-bottom:1px solid #eee;">{valorfim}</td>
+                  <tr style="background:#f0f5fb;">
+                    <td style="padding:5px 8px;border-bottom:1px solid #dde6f0;">{valorcodigo}</td>
+                    <td style="padding:5px 8px;border-bottom:1px solid #dde6f0;">{valornome}</td>
+                    <td style="padding:5px 8px;border-bottom:1px solid #dde6f0;">{valorfim}</td>
                   </tr>
                 </tbody>
               </table>
 
-              <!-- Secção dinâmica: alterações (data e/ou labs) -->
               {valoralteracoes}
 {{FOOTER}}

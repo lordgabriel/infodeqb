@@ -77,7 +77,7 @@ if (null == $id) {
     $uniquerespgab = array_unique($respgab);
     sort($uniquerespgab);
 
-$pageTitle = 'Imprimir Ficha';
+$pageTitle = t('HR_ADMIN_PRINT');
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 

@@ -59,7 +59,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">🔬 Relatório por Área Científica</div>
+    <div class="page-title"><i class="fas fa-flask me-1"></i>Relatório por Área Científica</div>
     <div class="page-sub">Ano letivo <?= esc($al['designacao']) ?>
       &mdash; <?= $todasAreas ? 'a contar UCs em <strong>todas</strong> as suas áreas' : 'a contar UCs só na área <strong>principal</strong>' ?>
     </div>
@@ -70,7 +70,7 @@ require_once __DIR__ . '/../includes/header.php';
     </a>
     <button class="btn btn-secondary btn-sm" onclick="collapseAll('area-')">⊟ Colapsar</button>
     <button class="btn btn-secondary btn-sm" onclick="expandAll('area-')">⊞ Expandir</button>
-    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i>Imprimir / PDF</button>
   </div>
 </div>
 
@@ -78,7 +78,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="stats-grid">
 <?php foreach ($byArea as $area => $aData): ?>
 <div class="stat-card">
-  <div class="stat-icon">🔬</div>
+  <div class="stat-icon"><i class="fas fa-flask"></i></div>
   <div>
     <div class="stat-value" style="font-size:20px"><?= fmt($aData['tot'], 1) ?></div>
     <div class="stat-label">
@@ -115,7 +115,7 @@ require_once __DIR__ . '/../includes/header.php';
   ?>
   <tr class="row-section" style="cursor:pointer" data-collapse-trigger="area-<?= $key ?>">
     <td colspan="10">
-      <span class="collapse-icon">▾</span> 🔬 <strong><?= esc($area) ?></strong>
+      <span class="collapse-icon">▾</span> <i class="fas fa-flask me-1"></i><strong><?= esc($area) ?></strong>
       <?php if ($aData['nome']): ?> — <span style="color:var(--gray-500);font-weight:400"><?= esc($aData['nome']) ?></span><?php endif; ?>
     </td>
   </tr>
@@ -127,7 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
     <td><span class="badge badge-blue"><?= esc($r['plano'] ?? '–') ?></span></td>
     <td><?= esc($r['uc_nome']) ?></td>
     <td><span class="badge badge-gray"><?= esc($r['semestre']) ?></span></td>
-    <td style="text-align:center"><?= $r['dsd_por_docente'] ? '✅' : '<span style="color:var(--orange)">❌</span>' ?></td>
+    <td style="text-align:center"><?= $r['dsd_por_docente'] ? '<i class="fas fa-check-circle"></i>' : '<span style="color:var(--orange)"><i class="fas fa-times-circle"></i></span>' ?></td>
     <td class="num"><?= fmt((float)$r['hs'], 2) ?></td>
     <td class="num"><?= fmt((float)$r['f_slef'], 2) ?></td>
     <td class="num" style="color:<?= $r['dsd_por_docente'] ? 'var(--blue)' : 'var(--gray-400)' ?>;font-weight:600">

@@ -8,6 +8,7 @@ $db = getDB();
 $al = getAnoLetivoAtivo();
 $fp = $_GET['fp'] ?? $_POST['fp'] ?? '';
 $fu = $_GET['fu'] ?? $_POST['fu'] ?? '';
+$fs = $_GET['fs'] ?? $_POST['fs'] ?? '';
 
 // ── Criar ocorrência ─────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['criar_uc_id'])) {
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['criar_uc_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $db->prepare("DELETE FROM infodeqb_dsd_uc_ocorrencia WHERE id=?")->execute([(int)$_POST['delete_id']]);
     flash('Ocorrência removida.');
-    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu]));
+    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu,'fs'=>$fs]));
     header('Location: ocorrencias.php' . ($qs ? '?'.$qs : '')); exit;
 }
 
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_ids'])) {
     foreach ($ids as $did)
         $db->prepare("DELETE FROM infodeqb_dsd_uc_ocorrencia WHERE id=?")->execute([$did]);
     flash(count($ids) . ' ocorrência(s) removida(s).');
-    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu]));
+    $qs = http_build_query(array_filter(['fp'=>$fp,'fu'=>$fu,'fs'=>$fs]));
     header('Location: ocorrencias.php' . ($qs ? '?'.$qs : '')); exit;
 }
 
@@ -45,13 +46,15 @@ $ocs = $db->prepare("
            o.horas_T, o.horas_TP, o.horas_L,
            COALESCE(o.horas_Sem, 0) AS horas_Sem,
            o.horas_OT,
-           u.designacao AS uc_nome, u.codigo, u.semestre,
+           u.designacao AS uc_nome, u.codigo, u.semestre, u.ano,
+           u.h_T AS uc_h_T, u.h_TP AS uc_h_TP, u.h_L AS uc_h_L,
+           u.h_Sem AS uc_h_Sem, u.h_OT AS uc_h_OT,
            p.sigla AS plano_sigla
     FROM infodeqb_dsd_uc_ocorrencia o
     JOIN infodeqb_dsd_uc u ON o.uc_id = u.id
     LEFT JOIN infodeqb_dsd_plano_estudo p ON COALESCE(o.plano_id, u.plano_id) = p.id
     WHERE o.ano_letivo_id = ?
-    ORDER BY p.ordem, u.semestre, u.designacao
+    ORDER BY p.ordem, u.ano, u.semestre, u.designacao
 ");
 $ocs->execute([$al['id']]);
 $ocsList = $ocs->fetchAll();
@@ -82,7 +85,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📅 Ocorrências</div>
+    <div class="page-title"><i class="fas fa-calendar-alt me-1"></i>Ocorrências</div>
     <div class="page-sub"><?= count($ocsList) ?> ocorrências · <?= esc($al['designacao']) ?></div>
   </div>
 </div>
@@ -102,7 +105,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="card" style="margin-bottom:12px;border-left:4px solid var(--red)">
   <div style="font-weight:600;font-size:13px;color:var(--red);margin-bottom:10px">
-    ⚠️ <?= count($semSD) ?> UC(s) com ocorrência mas sem serviço atribuído
+    <i class="fas fa-exclamation-triangle me-1"></i><?= count($semSD) ?> UC(s) com ocorrência mas sem serviço atribuído
   </div>
   <?php foreach ($semSdByPlano as $plano => $ucs): ?>
   <div style="margin-bottom:4px">
@@ -121,13 +124,13 @@ require_once __DIR__ . '/../includes/header.php';
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"
               title="<?= esc($o['uc_nome']) ?>"><?= esc($o['uc_nome']) ?></span>
         <span style="display:flex;gap:3px;flex-shrink:0;margin-left:6px">
-          <a href="distribuicao.php?edit_uc=<?= (int)$o['id'] ?>"
+          <a href="ocorrencia-form.php?id=<?= (int)$o['id'] ?>#linhas-servico"
              class="btn btn-primary btn-xs">+ SD</a>
           <form method="post" style="display:inline">
             <input type="hidden" name="delete_id" value="<?= (int)$o['id'] ?>">
             <button class="btn btn-danger btn-xs"
                     data-confirm="Apagar esta ocorrência?"
-                    title="Apagar ocorrência">🗑️</button>
+                    title="Apagar ocorrência"><i class="fas fa-trash"></i></button>
           </form>
         </span>
       </div>
@@ -153,7 +156,7 @@ function toggleOcPlanoSD(id) {
 ?>
 <div class="card" style="padding:10px 12px;border-left:4px solid var(--orange)">
   <div style="font-weight:600;font-size:12px;color:var(--orange);margin-bottom:8px">
-    ➕ Sem ocorrência (<?= count($semOcor) ?>)
+    <i class="fas fa-plus me-1"></i>Sem ocorrência (<?= count($semOcor) ?>)
   </div>
   <?php foreach ($byPlanoOcor as $plano => $ucs): ?>
   <div style="margin-bottom:4px">
@@ -210,6 +213,15 @@ function toggleOcPlano(id) {
         <?php endforeach; ?>
       </select>
     </div>
+    <div class="form-group" style="margin:0;min-width:110px">
+      <label>Semestre</label>
+      <select id="filtro-sem" onchange="filtrarOcor()">
+        <option value="">Todos</option>
+        <option value="1S" <?= $fs==='1S'?'selected':'' ?>>1S</option>
+        <option value="2S" <?= $fs==='2S'?'selected':'' ?>>2S</option>
+        <option value="A" <?= $fs==='A'?'selected':'' ?>>Anual</option>
+      </select>
+    </div>
     <div class="form-group" style="margin:0;flex:1;min-width:200px">
       <label>Pesquisar UC</label>
       <input type="text" id="filtro-uc" placeholder="Nome da UC…" oninput="filtrarOcor()"
@@ -217,11 +229,14 @@ function toggleOcPlano(id) {
     </div>
     <button type="button" class="btn btn-secondary btn-sm"
             onclick="document.getElementById('filtro-plano').value='';
+                     document.getElementById('filtro-sem').value='';
                      document.getElementById('filtro-uc').value='';
-                     filtrarOcor()">✕ Limpar</button>
+                     filtrarOcor()"><i class="fas fa-times me-1"></i>Limpar</button>
     <span style="border-left:1px solid var(--gray-200);margin:0 4px"></span>
     <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarTodos()">⊟ Planos</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="expandirTodos()">⊞ Planos</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarAnos()">⊟ Anos</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="expandirAnos()">⊞ Anos</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="colapsarSemestres()">⊟ Semestres</button>
     <button type="button" class="btn btn-secondary btn-sm" onclick="expandirSemestres()">⊞ Semestres</button>
     <span id="filtro-count" style="font-size:12px;color:var(--gray-500);align-self:center"></span>
@@ -233,8 +248,9 @@ function toggleOcPlano(id) {
   <form method="post" id="bulk-form">
     <input type="hidden" name="fp" id="h-fp" value="<?= esc($fp) ?>">
     <input type="hidden" name="fu" id="h-fu" value="<?= esc($fu) ?>">
+    <input type="hidden" name="fs" id="h-fs" value="<?= esc($fs) ?>">
     <button type="button" class="btn btn-danger btn-sm" onclick="apagarSelecionados()"
-            id="btn-apagar" style="display:none">🗑️ Apagar seleccionados</button>
+            id="btn-apagar" style="display:none"><i class="fas fa-trash me-1"></i>Apagar seleccionados</button>
   </form>
   <span id="sel-count" style="font-size:12px;color:var(--gray-500)"></span>
 </div>
@@ -263,34 +279,52 @@ function toggleOcPlano(id) {
   </thead>
   <tbody>
   <?php
-  // Group by plano → semestre
+  // Group by plano → ano curricular → semestre
   $tree = [];
   foreach ($ocsList as $o) {
       $p   = $o['plano_sigla'] ?? '–';
+      $an  = trim((string)($o['ano'] ?? '')) ?: '–';
       $sem = $o['semestre'] ?: 'A';
-      $tree[$p][$sem][] = $o;
+      $tree[$p][$an][$sem][] = $o;
   }
-  foreach ($tree as $plano => $sems):
+  foreach ($tree as $plano => $anos):
+    $plKey = 'pl-'.md5($plano);
+    $totalPlano = 0;
+    foreach ($anos as $sems) foreach ($sems as $ocs) $totalPlano += count($ocs);
   ?>
   <!-- Plano header -->
-  <tr class="section-plano" data-plano="<?= esc(strtolower($plano)) ?>"
+  <tr class="section-plano" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-200);cursor:pointer"
-      onclick="togglePlanoOcor('pl-<?= md5($plano) ?>')">
+      onclick="togglePlanoOcor('<?= $plKey ?>')">
     <td colspan="13" style="padding:6px 10px;font-weight:700;font-size:13px;color:var(--gray-800)">
-      <span id="icon-pl-<?= md5($plano) ?>">▼</span>
+      <span id="icon-<?= $plKey ?>">▼</span>
       <span class="badge badge-blue" style="margin-left:4px"><?= esc($plano) ?></span>
       <span style="font-weight:400;font-size:11px;margin-left:6px;color:var(--gray-500)">
-        <?= array_sum(array_map('count', $sems)) ?> ocorrência(s)
+        <?= $totalPlano ?> ocorrência(s)
       </span>
+    </td>
+  </tr>
+  <?php foreach ($anos as $ano => $sems):
+    $anoKey = 'an-'.md5($plano.'-'.$ano);
+    $totalAno = array_sum(array_map('count', $sems));
+  ?>
+  <!-- Ano curricular subheader -->
+  <tr class="section-ano <?= $plKey ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      style="background:#eceff1;cursor:pointer"
+      onclick="toggleAnoOcor('<?= $anoKey ?>')">
+    <td colspan="13" style="padding:4px 10px 4px 18px;font-size:11.5px;font-weight:650;color:var(--gray-700)">
+      <span id="icon-<?= $anoKey ?>" style="font-size:10px">▼</span>
+      <?= esc($ano) ?>
+      <span style="font-weight:400">(<?= $totalAno ?>)</span>
     </td>
   </tr>
   <?php foreach ($sems as $sem => $ocs): ?>
   <!-- Semestre subheader -->
-  <?php $semKey = 'sem-'.md5($plano.'-'.$sem); ?>
-  <tr class="section-sem pl-<?= md5($plano) ?>" data-plano="<?= esc(strtolower($plano)) ?>"
+  <?php $semKey = 'sem-'.md5($plano.'-'.$ano.'-'.$sem); ?>
+  <tr class="section-sem <?= $plKey ?> <?= $anoKey ?>" data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
       style="background:var(--gray-100);cursor:pointer"
       onclick="toggleSemOcor('<?= $semKey ?>')">
-    <td colspan="13" style="padding:4px 10px 4px 24px;font-size:11px;font-weight:600;color:var(--gray-600)">
+    <td colspan="13" style="padding:4px 10px 4px 30px;font-size:11px;font-weight:600;color:var(--gray-600)">
       <span id="icon-<?= $semKey ?>" style="font-size:10px">▼</span>
       <?= $sem === 'A' ? 'Anual' : $sem.'º Semestre' ?>
       <span style="font-weight:400">(<?= count($ocs) ?>)</span>
@@ -306,26 +340,32 @@ function toggleOcPlano(id) {
     $falta = $necess['total'] - $atribs['total'];
     $corFalta = abs($falta) < 0.01 ? 'var(--green)' : ($falta > 0 ? 'var(--red)' : 'var(--blue)');
     $tipoVals = [];
+    $horasDiferem = [];
     foreach (['T','TP','L','Sem','OT'] as $k) {
-        $nT = (float)$o['n_turmas_'.$k];
-        $hT = (float)$o['horas_'.$k];
+        $nT  = (float)$o['n_turmas_'.$k];
+        $hT  = (float)$o['horas_'.$k];
+        $hUC = (float)($o['uc_h_'.$k] ?? 0);
         $tipoVals[$k] = $nT > 0 ? fmt($nT,1).'×'.fmt($hT,1) : '–';
+        if ($hUC > 0 && abs($hT - $hUC) > 0.001) {
+            $horasDiferem[] = "$k: " . fmt($hT, 2) . "h nesta ocorrência vs " . fmt($hUC, 2) . "h da UC";
+        }
     }
   ?>
-  <tr class="pl-<?= md5($plano) ?> <?= $semKey ?>"
-      data-plano="<?= esc(strtolower($plano)) ?>"
-      data-sem="<?= esc(strtolower($sem)) ?>"
-      data-uc="<?= esc(strtolower($o['uc_nome'])) ?>">
+  <tr class="<?= $plKey ?> <?= $anoKey ?> <?= $semKey ?>"
+      data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      data-sem="<?= esc(mb_strtolower($sem, 'UTF-8')) ?>"
+      data-uc="<?= esc(mb_strtolower($o['uc_nome'], 'UTF-8')) ?>">
     <td style="text-align:center;padding-left:24px">
       <input type="checkbox" class="row-chk" value="<?= $o['id'] ?>" onchange="updateSel()">
     </td>
     <td>
-      <a href="#" onclick="showDist(<?= (int)$o['id'] ?>, <?= htmlspecialchars(json_encode($o['uc_nome']), ENT_QUOTES) ?>, event)"
+      <a href="#" onclick="toggleDistRow(<?= (int)$o['id'] ?>, this);return false;"
          style="font-weight:600;text-decoration:none;color:inherit;border-bottom:1px dotted var(--gray-400)">
+        <span id="exp-icon-<?= (int)$o['id'] ?>" style="font-size:9px;display:inline-block;width:10px">▶</span>
         <?= esc($o['uc_nome']) ?>
       </a>
       <?php if ($o['outros_planos']): ?>
-        <span style="font-size:10px;color:var(--orange)">⚠️ <?= esc($o['outros_planos']) ?></span>
+        <span style="font-size:10px;color:var(--orange)"><i class="fas fa-exclamation-triangle me-1"></i><?= esc($o['outros_planos']) ?></span>
       <?php endif; ?>
     </td>
     <td class="num"><?= (int)$o['estudantes'] ?: '–' ?></td>
@@ -335,25 +375,41 @@ function toggleOcPlano(id) {
     <td class="num" style="font-size:11px"><?= $tipoVals['L'] ?></td>
     <td class="num" style="font-size:11px"><?= $tipoVals['Sem'] ?></td>
     <td class="num" style="font-size:11px"><?= $tipoVals['OT'] ?></td>
-    <td class="num"><strong><?= fmt($necess['total'], 1) ?></strong></td>
+    <td class="num">
+      <?php if ($horasDiferem): ?>
+      <i class="fas fa-exclamation-triangle" style="color:var(--orange);font-size:10px;margin-right:3px"
+         title="Horas de contacto diferentes das definidas na UC:&#10;<?= implode('&#10;', array_map('esc', $horasDiferem)) ?>"></i>
+      <?php endif; ?>
+      <strong><?= fmt($necess['total'], 1) ?></strong>
+    </td>
     <td class="num"><?= fmt($atribs['total'], 1) ?></td>
     <td class="num" style="color:<?= $corFalta ?>;font-weight:600">
-      <?= abs($falta) < 0.01 ? '✅' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
+      <?= abs($falta) < 0.01 ? '<i class="fas fa-check-circle"></i>' : ($falta > 0 ? '−' : '+') . fmt(abs($falta), 1) ?>
     </td>
     <td style="text-align:center;white-space:nowrap">
-      <a href="ocorrencia-form.php?id=<?= $o['id'] ?>&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fu='.urlencode($fu)) ?>"
-         class="btn btn-secondary btn-xs">✏️</a>
+      <a href="ocorrencia-form.php?id=<?= $o['id'] ?>&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fs='.urlencode($fs).'&fu='.urlencode($fu)) ?>"
+         class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></a>
       <form method="post" style="display:inline">
         <input type="hidden" name="delete_id" value="<?= $o['id'] ?>">
         <input type="hidden" name="fp" value="<?= esc($fp) ?>">
         <input type="hidden" name="fu" value="<?= esc($fu) ?>">
+        <input type="hidden" name="fs" value="<?= esc($fs) ?>">
         <button class="btn btn-danger btn-xs"
-                data-confirm="Remover esta ocorrência e todas as distribuições associadas?">🗑️</button>
+                data-confirm="Remover esta ocorrência e todas as distribuições associadas?"><i class="fas fa-trash"></i></button>
       </form>
     </td>
   </tr>
+  <tr id="exp-<?= (int)$o['id'] ?>" class="<?= $plKey ?> <?= $anoKey ?> <?= $semKey ?>"
+      data-plano="<?= esc(mb_strtolower($plano, 'UTF-8')) ?>"
+      data-sem="<?= esc(mb_strtolower($sem, 'UTF-8')) ?>"
+      data-uc="<?= esc(mb_strtolower($o['uc_nome'], 'UTF-8')) ?>"
+      style="display:none;background:var(--gray-50)">
+    <td></td>
+    <td colspan="12" id="exp-body-<?= (int)$o['id'] ?>" style="padding:10px 14px 14px 24px"></td>
+  </tr>
   <?php endforeach; // ocs ?>
   <?php endforeach; // sems ?>
+  <?php endforeach; // anos ?>
   <?php endforeach; // tree ?>
   <?php if (!$ocsList): ?>
   <tr><td colspan="13" style="text-align:center;padding:30px;color:var(--gray-400)">
@@ -385,6 +441,14 @@ function toggleSemOcor(id) {
   if (icon) icon.textContent = visible ? '▶' : '▼';
 }
 
+function toggleAnoOcor(id) {
+  const rows = document.querySelectorAll('.' + id);
+  const icon = document.getElementById('icon-' + id);
+  const visible = rows.length && rows[0].style.display !== 'none';
+  rows.forEach(r => r.style.display = visible ? 'none' : '');
+  if (icon) icon.textContent = visible ? '▶' : '▼';
+}
+
 function colapsarTodos() {
   document.querySelectorAll('.section-plano').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
@@ -399,15 +463,43 @@ function expandirTodos() {
   document.querySelectorAll('.section-plano').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
-  // Also expand semestres
+  // Also expand anos e semestres
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▼';
+  });
   document.querySelectorAll('.section-sem').forEach(tr => {
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▼';
+  });
+}
+
+function colapsarAnos() {
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = 'none');
+    const icon = document.getElementById('icon-' + m[1]);
+    if (icon) icon.textContent = '▶';
+  });
+}
+
+function expandirAnos() {
+  document.querySelectorAll('.section-ano').forEach(tr => {
+    if (tr.style.display === 'none') return; // skip if plano está colapsado
+    const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
+    if (!m) return;
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
@@ -428,21 +520,24 @@ function expandirSemestres() {
     if (tr.style.display === 'none') return; // skip if plano is collapsed
     const m = tr.getAttribute('onclick')?.match(/'([^']+)'/);
     if (!m) return;
-    document.querySelectorAll('.' + m[1]).forEach(r => r.style.display = '');
+    document.querySelectorAll('.' + m[1]).forEach(r => { if (!r.id.startsWith('exp-')) r.style.display = ''; });
     const icon = document.getElementById('icon-' + m[1]);
     if (icon) icon.textContent = '▼';
   });
 }
+function filtrarOcor() {
   const plano = document.getElementById('filtro-plano').value.toLowerCase();
+  const sem   = document.getElementById('filtro-sem').value.toLowerCase();
   const uc    = document.getElementById('filtro-uc').value.toLowerCase();
   document.getElementById('h-fp').value = document.getElementById('filtro-plano').value;
+  document.getElementById('h-fs').value = document.getElementById('filtro-sem').value;
   document.getElementById('h-fu').value = document.getElementById('filtro-uc').value;
   let visible = 0;
 
   document.querySelectorAll('#tbl-ocor tbody tr').forEach(tr => {
-    if (tr.classList.contains('section-plano') || tr.classList.contains('section-sem')) {
+    if (tr.classList.contains('section-plano') || tr.classList.contains('section-ano') || tr.classList.contains('section-sem')) {
       // Handle section headers based on filter
-      if (!plano && !uc) { tr.style.display = ''; return; }
+      if (!plano && !sem && !uc) { tr.style.display = ''; return; }
       const trPlano = tr.dataset.plano || '';
       const matchPlano = !plano || trPlano === plano;
       tr.style.display = matchPlano ? '' : 'none';
@@ -450,8 +545,14 @@ function expandirSemestres() {
     }
     if (!tr.dataset.uc) return;
     const matchPlano = !plano || (tr.dataset.plano || '') === plano;
+    const matchSem   = !sem   || (tr.dataset.sem || '') === sem;
     const matchUC    = !uc    || (tr.dataset.uc || '').includes(uc);
-    const show = matchPlano && matchUC;
+    const show = matchPlano && matchSem && matchUC;
+    if (tr.id.startsWith('exp-')) {
+      // Linha de expansão: só visível se o filtro deixar passar E o utilizador a tiver aberto
+      tr.style.display = (show && tr.dataset.open === '1') ? '' : 'none';
+      return;
+    }
     tr.style.display = show ? '' : 'none';
     if (show) visible++;
     if (!show) { const c = tr.querySelector('.row-chk'); if (c) c.checked = false; }
@@ -459,7 +560,7 @@ function expandirSemestres() {
 
   const total = <?= count($ocsList) ?>;
   document.getElementById('filtro-count').textContent =
-    (plano || uc) ? visible + ' de ' + total + ' UC(s)' : '';
+    (plano || sem || uc) ? visible + ' de ' + total + ' UC(s)' : '';
   updateSel();
 }
 
@@ -493,52 +594,46 @@ function apagarSelecionados() {
 }
 
 // Apply filter on load if params exist
-if ('<?= esc($fp) ?>' || '<?= esc($fu) ?>') filtrarOcor();
+if ('<?= esc($fp) ?>' || '<?= esc($fs) ?>' || '<?= esc($fu) ?>') filtrarOcor();
 </script>
 
-<!-- Painel lateral de distribuição -->
-<div id="dist-panel" style="display:none;position:fixed;top:0;right:0;width:560px;max-width:95vw;
-     height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);z-index:1000;
-     flex-direction:column;overflow:hidden">
-  <div style="padding:14px 18px;background:var(--rpt-hdr);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-    <div>
-      <div style="font-weight:700;font-size:15px" id="dp-title">Distribuição</div>
-      <div style="font-size:12px;opacity:.8" id="dp-sub"></div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <a id="dp-edit-link" href="#" class="btn btn-secondary btn-sm" style="font-size:12px">✏️ Editar UC</a>
-      <button onclick="closeDist()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 4px">×</button>
-    </div>
-  </div>
-  <div id="dp-body" style="overflow-y:auto;flex:1;padding:16px">
-    <div style="text-align:center;color:var(--gray-400);padding:40px">A carregar…</div>
-  </div>
-</div>
-<div id="dist-overlay" onclick="closeDist()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999"></div>
-
 <script>
-function showDist(ocId, ucNome, evt) {
-  evt.preventDefault();
-  document.getElementById('dp-title').textContent = ucNome;
-  document.getElementById('dp-sub').textContent = 'A carregar distribuição…';
-  document.getElementById('dp-edit-link').href = 'ocorrencia-form.php?id=' + ocId +
-    '&back_url=<?= urlencode('ocorrencias.php?fp='.urlencode($fp).'&fu='.urlencode($fu)) ?>';
-  document.getElementById('dist-panel').style.display = 'flex';
-  document.getElementById('dist-overlay').style.display = 'block';
+function toggleDistRow(ocId, link) {
+  const tr = document.getElementById('exp-' + ocId);
+  const icon = document.getElementById('exp-icon-' + ocId);
+  if (!tr) return;
+  const opening = tr.style.display === 'none';
+  tr.style.display = opening ? '' : 'none';
+  tr.dataset.open = opening ? '1' : '0';
+  if (icon) icon.textContent = opening ? '▼' : '▶';
+  if (opening && !tr.dataset.loaded) {
+    tr.dataset.loaded = '1';
+    loadDistInline(ocId);
+  }
+}
+
+function fmtN1(v) {
+  return (parseFloat(v) || 0).toFixed(1).replace('.', ',');
+}
+function fmtTipo(t, h) {
+  return (parseFloat(t) || 0) > 0 ? fmtN1(t) + '×' + fmtN1(h) : '–';
+}
+
+function loadDistInline(ocId) {
+  const body = document.getElementById('exp-body-' + ocId);
+  body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:10px">A carregar…</div>';
 
   fetch('ajax-dist.php?ocor_id=' + ocId)
     .then(r => r.json())
     .then(data => {
-      document.getElementById('dp-sub').textContent =
-        data.rows.length + ' linha(s) · Nec: ' + data.need.toFixed(2) + ' h/sem · Atr: ' + data.done.toFixed(2) + ' h/sem';
       if (!data.rows.length) {
-        document.getElementById('dp-body').innerHTML =
-          '<p style="text-align:center;color:var(--gray-400);padding:40px">Sem serviço atribuído.</p>';
+        body.innerHTML = '<p style="color:var(--gray-400);margin:0;padding:6px 0">Sem serviço atribuído.</p>';
         return;
       }
-      let html = '<table class="data-table" style="font-size:12px;width:100%">' +
+      let html = '<table class="data-table" style="font-size:12px;width:100%;margin:0">' +
         '<thead><tr><th>Docente</th><th style="text-align:center">Sem.</th>' +
-        '<th style="text-align:center">T/TP/L/S/OT</th>' +
+        '<th style="text-align:center">T</th><th style="text-align:center">TP</th>' +
+        '<th style="text-align:center">L</th><th style="text-align:center">S</th><th style="text-align:center">OT</th>' +
         '<th style="text-align:right">H/s</th><th style="text-align:right">H SLEf</th>' +
         '<th style="text-align:center">DSD</th><th style="text-align:center">R</th>' +
         '</tr></thead><tbody>';
@@ -547,44 +642,30 @@ function showDist(ocId, ucNome, evt) {
         totHs   += r.hs;
         totSlef += r.h_slef;
         html += `<tr>
-          <td>${r.docente}</td>
-          <td style="text-align:center">${r.semanas}</td>
-          <td style="text-align:center;font-size:11px;font-family:monospace">${r.turmas}</td>
-          <td class="num">${r.hs.toFixed(2)}</td>
-          <td class="num" style="color:var(--blue)">${r.h_slef.toFixed(2)}</td>
-          <td style="text-align:center">${r.dsd ? '✅' : '❌'}</td>
-          <td style="text-align:center">${r.reg ? '⭐' : '–'}</td>
+          <td><a href="../reports/por-docente.php?docente=${r.docente_id}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gray-400)">${r.docente}</a></td>
+          <td style="text-align:center">${fmtN1(r.semanas)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_T, r.horas_T)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_TP, r.horas_TP)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_L, r.horas_L)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_Sem, r.horas_Sem)}</td>
+          <td class="num" style="font-size:11px">${fmtTipo(r.turmas_OT, r.horas_OT)}</td>
+          <td class="num">${fmtN1(r.hs)}</td>
+          <td class="num" style="color:var(--blue)">${fmtN1(r.h_slef)}</td>
+          <td style="text-align:center">${r.dsd ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'}</td>
+          <td style="text-align:center">${r.reg ? '<i class="fas fa-star"></i>' : '–'}</td>
         </tr>`;
       });
       html += `<tr style="background:var(--blue-light);font-weight:700">
-        <td colspan="3" style="text-align:right">Total</td>
-        <td class="num">${totHs.toFixed(2)}</td>
-        <td class="num" style="color:var(--blue)">${totSlef.toFixed(2)}</td>
+        <td colspan="7" style="text-align:right">Total</td>
+        <td class="num">${fmtN1(totHs)}</td>
+        <td class="num" style="color:var(--blue)">${fmtN1(totSlef)}</td>
         <td colspan="2"></td>
       </tr></tbody></table>`;
-      html += `<div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-        <a href="distribuicao.php?ocor=${ocId}" class="btn btn-secondary btn-sm">📊 Ver na Distribuição</a>
-        <button onclick="editDistFromPanel(${ocId})" class="btn btn-primary btn-sm">✏️ Editar Serviço</button>
-      </div>`;
-      document.getElementById('dp-body').innerHTML = html;
+      body.innerHTML = html;
     })
     .catch(() => {
-      document.getElementById('dp-body').innerHTML =
-        '<p style="color:var(--red);padding:20px">Erro ao carregar distribuição.</p>';
+      body.innerHTML = '<p style="color:var(--red);margin:0;padding:6px 0">Erro ao carregar distribuição.</p>';
     });
-}
-
-function editDistFromPanel(ocId) {
-  closeDist();
-  // Open the distribuicao modal for this UC
-  // We navigate to distribuicao.php with a trigger to open the edit modal
-  const backUrl = encodeURIComponent('ocorrencias.php?fp=<?= urlencode($fp) ?>&fu=<?= urlencode($fu) ?>');
-  window.location.href = 'distribuicao.php?edit_uc=' + ocId + '&back_url=' + backUrl;
-}
-
-function closeDist() {
-  document.getElementById('dist-panel').style.display = 'none';
-  document.getElementById('dist-overlay').style.display = 'none';
 }
 </script>
 

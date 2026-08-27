@@ -1,32 +1,43 @@
-<!-- EMAIL_SUBTITLE: Registo Efetuado com Sucesso -->
+<!-- EMAIL_SUBTITLE: {valorsubtitle} -->
 {{HEADER}}
-              <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Caro(a) {valornome},</p>
-              <p style="margin:0 0 16px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">O seu registo foi submetido com sucesso. Pode consultar abaixo os dados registados.</p>
+              <p style="margin:0 0 8px 0;font-size:14px;font-family:Arial,sans-serif;">{valorgreeting}</p>
+              <p style="margin:0 0 12px 0;font-size:14px;line-height:21px;font-family:Arial,sans-serif;">{valormsg_intro}</p>
 
-              <div style="color:#ffffff;font-size:16px;line-height:20px;background-color:#36a9e1;padding:10px;margin-bottom:16px;">
-                Por favor <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_PT.pdf" style="color:yellow;">descarregue aqui</a></span> e leia cuidadosamente o desdobrável de segurança.<br><br>
-                <em>Please <span style="color:yellow"><a href="https://deq.fe.up.pt/infodeqb/hr/inc/Safety_EN.pdf" style="color:yellow;">download here</a></span> and read carefully the safety booklet.</em>
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
+                style="width:552px;mso-position-horizontal:left;"
+                arcsize="5%" stroke="t" strokecolor="#f0a500" strokeweight="1pt" fillcolor="#fff3cd">
+                <v:textbox style="mso-fit-shape-to-text:true" inset="16px,12px,22px,12px">
+                  <p style="margin:0;color:#7a4f00;font-family:Arial,sans-serif;font-size:13px;line-height:20px;">&#x26A0; {valormsg_safety}</p>
+                </v:textbox>
+              </v:roundrect>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="22"></td></tr></table>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <div style="font-size:13px;line-height:20px;background:#fff3cd;color:#7a4f00;padding:16px 22px;margin-bottom:22px;border-radius:5px;border-left:4px solid #f0a500;">
+                ⚠ {valormsg_safety}
               </div>
+              <!--<![endif]-->
 
-              <table border="0" cellpadding="3" cellspacing="0" style="color:#000000;font-family:Arial,sans-serif;font-size:15px;line-height:22px;width:100%;margin-bottom:16px;">
+              <table border="0" cellpadding="0" cellspacing="0" style="color:#000;font-family:Arial,sans-serif;font-size:13px;width:100%;margin-bottom:14px;border-collapse:collapse;">
                 <tbody>
-                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Dados pessoais</th></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;width:40%;">Código FEUP:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorcodigo}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Nome:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valornome}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">E-mail:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valormail}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">E-mail alternativo:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoraltemail}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Contacto telefónico:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valortelefone}</td></tr>
+                  <tr><th colspan="2" align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">{valorlabel_section_personal}</th></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;width:40%;">{valorlabel_codigo}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorcodigo}</td></tr>
+                  <tr><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_nome}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valornome}</td></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_email}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valormail}</td></tr>
+                  <tr><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_altemail}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valoraltemail}</td></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_telefone}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valortelefone}</td></tr>
 
-                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Registo</th></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Grupo profissional:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorgrupo}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Categoria:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorcategoria}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Data Início:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorinicio}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Data fim:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorfim}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Responsável do trabalho:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valorresponsavel}</td></tr>
+                  <tr><th colspan="2" align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">{valorlabel_section_registo}</th></tr>
+                  <tr><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_grupo}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorgrupo}</td></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_categoria}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorcategoria}</td></tr>
+                  <tr><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_inicio}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorinicio}</td></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_fim}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorfim}</td></tr>
+                  <tr><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_responsavel}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valorresponsavel}</td></tr>
 
-                  <tr><th colspan="2" align="left" style="background-color:#2475ba;color:#ffffff;padding:8px;">Acessos</th></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Acesso porta norte:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoracessodeq}</td></tr>
-                  <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#555;">Outros acessos:</td><td style="padding:8px;border-bottom:1px solid #eee;">{valoracessos}</td></tr>
+                  <tr><th colspan="2" align="left" style="background:#2475ba;color:#fff;padding:6px 8px;font-size:13px;">{valorlabel_section_acessos}</th></tr>
+                  <tr style="background:#f0f5fb;"><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;color:#555;">{valorlabel_porta_norte}</td><td style="padding:4px 8px;border-bottom:1px solid #dde6f0;">{valoracessodeq}</td></tr>
+                  <tr><td style="padding:4px 8px;color:#555;">{valorlabel_outros}</td><td style="padding:4px 8px;">{valoracessos}</td></tr>
                 </tbody>
               </table>
 {{FOOTER}}

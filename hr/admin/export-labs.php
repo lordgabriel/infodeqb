@@ -39,13 +39,14 @@ if ($tab === 'expire') {
 }
 
 // ── JOIN de labs (se houver filtro) ───────────────────────────────────
-$labJoin  = '';
-$labWhere = '';
+$labJoin   = '';
+$labWhere  = '';
 $labParams = array();
 if (!empty($labs)) {
-    $phs      = implode(',', array_fill(0, count($labs), '?'));
-    $labJoin  = 'JOIN infodeqb_rds_registo_acessos la ON la.registo_id = r.autoid';
-    $labWhere = "AND la.lab_id IN ($phs)";
+    $phLabs   = implode(',', array_fill(0, count($labs), '?'));
+    $labJoin  = 'JOIN infodeqb_rds_registo_acessos ra ON ra.registo_id = r.autoid
+                 JOIN infodeqb_rds_gabinetes gf ON gf.id = ra.lab_id';
+    $labWhere = 'AND gf.deqid IN (' . $phLabs . ')';
     $labParams = $labs;
 }
 

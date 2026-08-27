@@ -223,7 +223,7 @@ if ($isAdmin) {
 
 Database::disconnect();
 
-$pageTitle = 'Qualidade da Água';
+$pageTitle = t('WATER_QC_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -358,7 +358,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <p class="text-center text-muted small mb-0">Sem registos para este mês.</p>
       <?php else: ?>
       <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle" style="font-size:.82rem">
+        <table class="table table-sm table-hover align-middle" style="font-size:.82rem">
           <thead class="text-center">
             <tr>
               <th rowspan="2" class="align-middle">Data</th>
@@ -557,17 +557,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <input type="hidden" name="_acao" value="editar_equip">
         <input type="hidden" name="id" value="<?= (int)$eq['id'] ?>">
         <div class="form-group mb-2">
-          <label class="small mb-1 font-weight-bold">Marca</label>
+          <label class="small mb-1 font-weight-bold"><?= t('WATER_BRAND') ?></label>
           <input type="text" name="marca" class="form-control form-control-sm"
                  value="<?= htmlspecialchars($eq['marca'] ?? '') ?>">
         </div>
         <div class="form-group mb-2">
-          <label class="small mb-1 font-weight-bold">Modelo</label>
+          <label class="small mb-1 font-weight-bold"><?= t('WATER_MODEL') ?></label>
           <input type="text" name="modelo" class="form-control form-control-sm"
                  value="<?= htmlspecialchars($eq['modelo'] ?? '') ?>">
         </div>
         <div class="form-group mb-2">
-          <label class="small mb-1 font-weight-bold">Data de aquisição</label>
+          <label class="small mb-1 font-weight-bold"><?= t('WATER_ACQ_DATE') ?></label>
           <input type="date" name="data_aquisicao" class="form-control form-control-sm"
                  value="<?= htmlspecialchars($eq['data_aquisicao'] ?? '') ?>">
         </div>
@@ -577,9 +577,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </form>
       <?php else: ?>
       <table class="table table-sm mb-0" style="font-size:.85rem">
-        <tr><th class="text-muted">Marca</th><td><?= htmlspecialchars($eq['marca'] ?: '—') ?></td></tr>
-        <tr><th class="text-muted">Modelo</th><td><?= htmlspecialchars($eq['modelo'] ?: '—') ?></td></tr>
-        <tr><th class="text-muted">Aquisição</th>
+        <tr><th class="text-muted"><?= t('WATER_BRAND') ?></th><td><?= htmlspecialchars($eq['marca'] ?: '—') ?></td></tr>
+        <tr><th class="text-muted"><?= t('WATER_MODEL') ?></th><td><?= htmlspecialchars($eq['modelo'] ?: '—') ?></td></tr>
+        <tr><th class="text-muted"><?= t('WATER_ACQ') ?></th>
           <td><?= $eq['data_aquisicao'] ? htmlspecialchars(date('d/m/Y', strtotime($eq['data_aquisicao']))) : '—' ?></td></tr>
       </table>
       <?php endif; ?>

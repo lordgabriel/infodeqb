@@ -89,7 +89,7 @@ foreach ($deqids as $deqid) {
 
 Database::disconnect();
 
-$pageTitle = 'Registo Concluído';
+$pageTitle = t('HR_SUCCESS_TITLE');
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 

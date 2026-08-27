@@ -138,13 +138,14 @@ if (!$selectedPais && !$selectedEmpresa) {
     $allEmpresas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$pageTitle = 'Contactos DIE';
+$pageTitle = t('MOBILE_DIE_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR.'/infodeqb/inc/header.php';
 ?>
 
                 <div class="iq-page-header">
                   <div>
-                    <h1 class="iq-page-title"><i class="fas fa-building me-2 text-primary"></i>Contactos DIE</h1>
+                    <h1 class="iq-page-title"><i class="fas fa-building me-2 text-primary"></i><?= t('MOBILE_DIE_TITLE') ?></h1>
                     <p class="iq-page-sub">Empresas e instituições internacionais</p>
                   </div>
                 </div>
@@ -315,12 +316,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                                     <td><?= htmlspecialchars($c['contacto_feup']) ?></td>
                                     <td>
                                       <?php if($isAdmin || (isset($c['criado_por']) && $c['criado_por'] === $username)): ?>
-                                        <a href="edit_contact.php?id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-primary">✏️</a>
+                                        <a href="edit_contact.php?id=<?= (int)$c['id'] ?>" class="btn btn-xs btn-outline-primary" title="Editar"><i class="fas fa-edit fa-xs"></i></a>
                                         <a href="?<?= $selectedPais
                                                 ? ('pais=' . urlencode($selectedPais) . '&empresa=' . urlencode($selectedEmpresa))
                                                 : ('empresa=' . urlencode($selectedEmpresa)) ?>&delete=<?= (int)$c['id'] ?>"
                                            onclick="return confirm('Apagar contacto?')"
-                                           class="btn btn-sm btn-outline-danger">🗑️</a>
+                                           class="btn btn-xs btn-outline-danger" title="Apagar"><i class="fas fa-trash fa-xs"></i></a>
                                       <?php endif; ?>
                                     </td>
                                   </tr>

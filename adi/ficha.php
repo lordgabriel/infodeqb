@@ -6,7 +6,7 @@ require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 // ── Modo de actualização (bloqueia acesso a não-admins) ───────────
 $modo_atualizacao = false;
 if ($modo_atualizacao && !$isAdmin) {
-    $pageTitle = 'Em actualização';
+    $pageTitle = t('ADI_UPDATING_TITLE');
     include ROOT_DIR . '/infodeqb/inc/header.php';
     echo '<div class="d-flex align-items-center justify-content-center" style="min-height:50vh">
           <div class="card text-center" style="max-width:480px;width:100%">
@@ -149,6 +149,7 @@ function fmt1($v) { return number_format((float)$v, 1, ',', '.'); }
 function fmt2($v) { return number_format((float)$v, 2, ',', '.'); }
 
 $pageTitle = htmlspecialchars($elem['nome']) . ' — Espaços de Investigação';
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -173,7 +174,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 #tab-form thead.table-dark th,
 #tab-trf  thead.table-dark th,
 #tab-ges  thead.table-dark th,
-#tab-proj thead.table-dark th { background:var(--iq-nav-bg)!important; color:#fff!important; }
+#tab-proj thead.table-dark th { background:var(--iq-accent)!important; color:#fff!important; }
 
 /* ── Sub-headings de secção ────────────────────────────────── */
 #tab-pub  h6.font-weight-bold { color:var(--iq-blue); }
@@ -183,9 +184,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </style>
 
 <div class="iq-page-header d-flex align-items-center">
-  <div class="mr-auto">
+  <div class="me-auto">
     <h1><i class="fas fa-user-circle fa-sm me-2 text-muted"></i><?= htmlspecialchars($elem['nome']) ?></h1>
-    <small class="text-muted">Espaços de Investigação · Produção Científica e Gestão 2018–2024</small>
+    <small class="text-muted"><?= t('ADI_SUBTITLE') ?></small>
   </div>
   <div class="d-flex align-items-center" style="gap:8px">
     <?php if ($isAdiAdmin): ?>
@@ -195,7 +196,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <?php endif; ?>
     <a href="<?= HTTP_DIR ?>/infodeqb/adi/Criterios_Espacos_Investigacao_DEQB.pdf"
        class="btn btn-outline-secondary btn-sm" target="_blank" download>
-      <i class="fas fa-file-download me-1"></i>Critérios
+      <i class="fas fa-file-download me-1"></i><?= t('ADI_CRITERIA') ?>
     </a>
   </div>
 </div>
@@ -203,13 +204,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php /* ── Painel de pontuações ────────────────────────────────── */ ?>
 <div class="card shadow-sm mb-4">
   <div class="card-header py-2 iq-header-dark">
-    <strong>Pontuação e Área</strong>
+    <strong><?= t('ADI_SCORE_AREA') ?></strong>
   </div>
   <div class="card-body">
     <div class="row">
       <div class="col-md-6 mb-3 mb-md-0">
         <div class="adi-score-card sc-blue h-100">
-          <div class="mb-2 font-weight-bold" style="color:var(--iq-blue);font-size:.83rem">Produção Científica (P<sub>Ci</sub>)</div>
+          <div class="mb-2 font-weight-bold adi-score-label">Produção Científica (P<sub>Ci</sub>)</div>
           <div class="d-flex align-items-baseline flex-wrap" style="gap:6px;font-size:.82rem">
             <span>P<sub>Pub</sub> = <strong><?= fmt1($elem['publicacoes_i']) ?></strong></span>
             <span class="text-muted">+</span>
@@ -225,38 +226,38 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="row">
           <div class="col-6 col-md-3 mb-2">
             <div class="adi-score-card sc-purple text-center">
-              <div class="small font-weight-bold" style="color:#6f42c1">Gestão (C<sub>g</sub>)</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_MANAGEMENT') ?> (C<sub>g</sub>)</div>
               <div class="adi-score-val"><?= fmt1($elem['Cg']) ?></div>
             </div>
           </div>
           <div class="col-6 col-md-3 mb-2">
             <div class="adi-score-card sc-teal text-center">
-              <div class="small font-weight-bold" style="color:#0e7490">Projetos (P<sub>roj</sub>)</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_PROJECTS') ?> (P<sub>roj</sub>)</div>
               <div class="adi-score-val"><?= fmt1($elem['Proj_i']) ?></div>
             </div>
           </div>
           <div class="col-6 col-md-3 mb-2">
             <div class="adi-score-card sc-green text-center">
-              <div class="small font-weight-bold" style="color:#1e7e34">Área actual (m²)</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_AREA_CURRENT') ?></div>
               <div class="adi-score-val"><?= $isAdiAdmin ? fmt1($elem['area_ocupada']) : '<span class="text-muted" style="font-size:.85rem">N.D.</span>' ?></div>
             </div>
           </div>
           <div class="col-6 col-md-3 mb-2">
             <div class="adi-score-card sc-amber text-center">
-              <div class="small font-weight-bold" style="color:#856404">Área prevista (m²)</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_AREA_FORECAST') ?></div>
               <div class="adi-score-val"><?= $isAdiAdmin ? fmt1($elem['A_atribuir']) : '<span class="text-muted" style="font-size:.85rem">N.D.</span>' ?></div>
             </div>
           </div>
           <?php if ($isAdiAdmin): ?>
           <div class="col-6 col-md-3 mb-0">
             <div class="adi-score-card sc-slate text-center">
-              <div class="small font-weight-bold" style="color:#374151">Pa individual</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_PA_INDIVIDUAL') ?></div>
               <div class="adi-score-val"><?= fmt1($elem['Pa_i']) ?></div>
             </div>
           </div>
           <div class="col-6 col-md-3 mb-0">
             <div class="adi-score-card sc-slate text-center">
-              <div class="small font-weight-bold" style="color:#374151">Pa total dept.</div>
+              <div class="small font-weight-bold adi-score-label"><?= t('ADI_PA_TOTAL') ?></div>
               <div class="adi-score-val"><?= fmt1($pa_total) ?></div>
             </div>
           </div>
@@ -274,19 +275,19 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="nav flex-column nav-pills adi-tabs me-3" id="adiTab" role="tablist"
        style="min-width:130px;position:sticky;top:10px">
     <a class="nav-link active" data-bs-toggle="pill" href="#tab-pub"    role="tab">
-      <i class="fas fa-newspaper fa-xs me-1"></i>Publicações
+      <i class="fas fa-newspaper fa-xs me-1"></i><?= t('ADI_PUBLICATIONS') ?>
     </a>
     <a class="nav-link" data-bs-toggle="pill" href="#tab-form"   role="tab">
-      <i class="fas fa-graduation-cap fa-xs me-1"></i>Formação
+      <i class="fas fa-graduation-cap fa-xs me-1"></i><?= t('ADI_TRAINING') ?>
     </a>
     <a class="nav-link" data-bs-toggle="pill" href="#tab-trf"    role="tab">
-      <i class="fas fa-lightbulb fa-xs me-1"></i>Transferência
+      <i class="fas fa-lightbulb fa-xs me-1"></i><?= t('ADI_TRANSFER') ?>
     </a>
     <a class="nav-link" data-bs-toggle="pill" href="#tab-ges"    role="tab">
-      <i class="fas fa-tasks fa-xs me-1"></i>Gestão
+      <i class="fas fa-tasks fa-xs me-1"></i><?= t('ADI_MANAGEMENT') ?>
     </a>
     <a class="nav-link" data-bs-toggle="pill" href="#tab-proj"   role="tab">
-      <i class="fas fa-project-diagram fa-xs me-1"></i>Projetos
+      <i class="fas fa-project-diagram fa-xs me-1"></i><?= t('ADI_PROJECTS') ?>
     </a>
   </div>
 
@@ -330,8 +331,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               echo '<h6 class="font-weight-bold mt-3 mb-2">' . htmlspecialchars($nome_ref) . '</h6>';
               echo '<div class="table-responsive"><small><table class="table table-sm  mb-3">';
               echo '<thead class="table-dark"><tr>';
-              echo '<th >Publicação</th>';
-              echo '<th class="text-center" style="width:6em">Aut. DEQB</th>';
+              echo '<th>' . t('ADI_PUB_HEADER') . '</th>';
+              echo '<th class="text-center" style="width:6em">' . t('ADI_DEQ_AUTHORS') . '</th>';
               echo '<th class="text-center" style="width:5em">Total</th>';
               echo '<th class="text-end" style="width:4em">Pi</th>';
               echo '</tr></thead><tbody>';
@@ -339,7 +340,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               foreach ($rows as $linha) {
                   $ano = (string)$linha['year'];
                   if ($ano !== $ultimo_ano) {
-                      echo '<tr class="table-active font-weight-bold">';
+                      echo '<tr class="iq-tbl-group-2">';
                       echo '<td colspan="3">' . htmlspecialchars($ano) . '</td>';
                       echo '<td class="text-end">' . fmt2($totais_ano[$ano]) . '</td>';
                       echo '</tr>';
@@ -362,7 +363,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
     <?php /* ── Formação ─────────────────────────────────────────── */ ?>
     <div class="tab-pane fade" id="tab-form" role="tabpanel">
-      <div class="alert alert-secondary py-2 mb-3" style="font-size:.8rem">
+      <div class="alert alert-secondary py-2 mb-3 text-start" style="font-size:.8rem">
         <i class="fas fa-info-circle me-1"></i>
         As pontuações de doutoramentos concluídos são atribuídas ao orientador, ficando a cargo deste decidir o peso a dividir pelo(s) coorientador(es).
       </div>
@@ -381,13 +382,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               echo '<h6 class="font-weight-bold text-primary mt-3 mb-2">' . htmlspecialchars($nome_ref) . '</h6>';
               echo '<div class="table-responsive"><small><table class="table table-sm  mb-3">';
               echo '<thead class="table-dark"><tr>';
-              echo '<th>Estudante</th><th>Papel</th><th class="text-center">Contrib.</th><th>Título</th><th class="text-center">Curso</th><th class="text-end" style="width:4em">Pi</th>';
+              echo '<th>' . t('ADI_STUDENT') . '</th><th>' . t('ADI_ROLE') . '</th><th class="text-center">' . t('ADI_CONTRIB') . '</th><th>' . t('ADI_TITLE_HDR') . '</th><th class="text-center">' . t('COURSE') . '</th><th class="text-end" style="width:4em">Pi</th>';
               echo '</tr></thead><tbody>';
               $ultimo_ano = null;
               foreach ($rows as $linha) {
                   $ano = $linha['ano_defesa'];
                   if ($ano !== $ultimo_ano) {
-                      echo '<tr class="table-active font-weight-bold">';
+                      echo '<tr class="iq-tbl-group-2">';
                       echo '<td colspan="5">' . htmlspecialchars($ano) . '</td>';
                       echo '<td class="text-end">' . fmt1($totais_ano[$ano]) . '</td>';
                       echo '</tr>';
@@ -450,7 +451,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   }
                   echo '</tr>';
               endforeach;
-              echo '<tr class="table-active font-weight-bold"><td class="text-end" colspan="' . ($is_spinoff ? 5 : 8) . '">Total: ' . fmt1($sub) . '</td></tr>';
+              echo '<tr class="iq-tbl-group-3"><td class="text-end" colspan="' . ($is_spinoff ? 5 : 8) . '">Total: ' . fmt1($sub) . '</td></tr>';
               echo '</tbody></table></small></div>';
           endforeach;
       }
@@ -469,7 +470,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               echo '<h6 class="font-weight-bold text-primary mt-3 mb-2">' . htmlspecialchars($grupo) . '</h6>';
               echo '<div class="table-responsive"><small><table class="table table-sm  mb-3">';
               echo '<thead class="table-dark"><tr>';
-              echo '<th>Função</th><th style="width:8em">Início</th><th style="width:8em">Fim</th><th class="text-center" style="width:7em">Fracção (Anos)</th><th class="text-end" style="width:4em">Pi</th>';
+              echo '<th>' . t('ADI_FUNCTION') . '</th><th style="width:8em">Início</th><th style="width:8em">Fim</th><th class="text-center" style="width:7em">Fracção (Anos)</th><th class="text-end" style="width:4em">Pi</th>';
               echo '</tr></thead><tbody>';
               $sub = 0;
               foreach ($rows as $linha) {
@@ -482,7 +483,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   echo '</tr>';
                   $sub += (float)$linha['Pi'];
               }
-              echo '<tr class="table-active font-weight-bold"><td class="text-end" colspan="5">Total: ' . fmt1($sub) . '</td></tr>';
+              echo '<tr class="iq-tbl-group-3"><td class="text-end" colspan="5">Total: ' . fmt1($sub) . '</td></tr>';
               echo '</tbody></table></small></div>';
           endforeach;
       }
@@ -491,7 +492,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
     <?php /* ── Projetos ─────────────────────────────────────────── */ ?>
     <div class="tab-pane fade" id="tab-proj" role="tabpanel">
-      <div class="alert alert-secondary py-2 mb-3" style="font-size:.8rem">
+      <div class="alert alert-secondary py-2 mb-3 text-start" style="font-size:.8rem">
         <i class="fas fa-info-circle me-1"></i>
         Para os projetos foi utilizada a percentagem de trabalho constante na ficha do projeto no SIGARRA.
       </div>
@@ -523,7 +524,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               echo '</tr>';
               $sub += (float)$p['Pi'];
           }
-          echo '<tr class="table-active font-weight-bold"><td class="text-end" colspan="9">Total: ' . fmt2($sub) . '</td></tr>';
+          echo '<tr class="iq-tbl-group-3"><td class="text-end" colspan="9">Total: ' . fmt2($sub) . '</td></tr>';
           echo '</tbody></table></small></div>';
       }
       ?>

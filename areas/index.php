@@ -3,7 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include ROOT_DIR . '/infodeqb/session.php';
 
 if (!isset($_SESSION['user']) || empty($_SESSION['user'])) {
-    header('Location: ' . HTTP_DIR . '/infodeqb/error.php');
+    header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
     exit();
 }
 
@@ -20,7 +20,7 @@ if (!$isAreasAdmin) {
     $chk = $sth->fetch(PDO::FETCH_ASSOC);
     Database::disconnect();
     if (!$chk) {
-        header('Location: ' . HTTP_DIR . '/infodeqb/error.php');
+        header('Location: ' . HTTP_DIR . '/infodeqb/denied.php');
         exit();
     }
 }
@@ -28,34 +28,43 @@ if (!$isAreasAdmin) {
 $codigo_inquirido = preg_replace('/\D/', '', $_SESSION['Code'] ?? $_SESSION['user'] ?? '');
 $nomeUtilizador   = $_SESSION['CommonName'] ?? $_SESSION['DisplayName'] ?? '';
 
+// ── Estado do formulário (aberto/fechado) ─────────────────────────────────
+$_formStateFile = ROOT_DIR . '/infodeqb/areas/.form_state';
+$formClosed = (is_file($_formStateFile) && trim(file_get_contents($_formStateFile)) === 'closed');
+
 // ── POST: guardar infodeqb_respostas ───────────────────────────────────────
 $flashMsg  = '';
 $flashType = 'success';
 
 if (!empty($_POST) && isset($_POST['valores'])) {
-    try {
-        $pdo = Database::connect();
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $ci     = preg_replace('/\D/', '', trim($_POST['codigo_inquirido'] ?? ''));
-        $valores = $_POST['valores'];
-        $pdo->prepare('DELETE FROM infodeqb_respostas WHERE codigo_inquirido = ?')->execute([$ci]);
-        $stmt = $pdo->prepare(
-            'INSERT INTO infodeqb_respostas (codigo_inquirido, area_id, subarea_id, valor) VALUES (?,?,?,?)'
-        );
-        foreach ($valores as $subarea_id => $areas) {
-            foreach ($areas as $area_id => $valor) {
-                $v = (int)$valor;
-                if ($v > 0) $stmt->execute([$ci, (int)$area_id, (int)$subarea_id, $v]);
-            }
-        }
-        Database::disconnect();
-        $_SESSION['_areas_flash'] = ['Dados guardados com sucesso.', 'success'];
-        header('Location: ' . $_SERVER['PHP_SELF']);
-        exit();
-    } catch (PDOException $e) {
-        $flashMsg  = 'Erro ao guardar os dados.';
+    if ($formClosed && !$isAreasAdmin) {
+        $flashMsg  = t('AREAS_FORM_BLOCKED');
         $flashType = 'danger';
-        error_log('areas/index.php: ' . $e->getMessage());
+    } else {
+        try {
+            $pdo = Database::connect();
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $ci     = preg_replace('/\D/', '', trim($_POST['codigo_inquirido'] ?? ''));
+            $valores = $_POST['valores'];
+            $pdo->prepare('DELETE FROM infodeqb_respostas WHERE codigo_inquirido = ?')->execute([$ci]);
+            $stmt = $pdo->prepare(
+                'INSERT INTO infodeqb_respostas (codigo_inquirido, area_id, subarea_id, valor) VALUES (?,?,?,?)'
+            );
+            foreach ($valores as $subarea_id => $areas) {
+                foreach ($areas as $area_id => $valor) {
+                    $v = (int)$valor;
+                    if ($v > 0) $stmt->execute([$ci, (int)$area_id, (int)$subarea_id, $v]);
+                }
+            }
+            Database::disconnect();
+            $_SESSION['_areas_flash'] = [t('SUCCESS_SAVED'), 'success'];
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit();
+        } catch (PDOException $e) {
+            $flashMsg  = t('ERROR_SAVE');
+            $flashType = 'danger';
+            error_log('areas/index.php: ' . $e->getMessage());
+        }
     }
 }
 
@@ -163,7 +172,8 @@ if ($isAreasAdmin) {
 
 Database::disconnect();
 
-$pageTitle = 'Áreas Disciplinares';
+$pageTitle = t('AREAS_TITLE');
+$mainClass  = 'iq-hr-page';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
@@ -185,19 +195,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 #tblAreas input[type=number]:focus {
     outline: none; border-color: var(--iq-blue); box-shadow: 0 0 0 2px rgba(11,110,115,.15);
 }
-/* heatmap — escala de intensidade por ETI (degradê petróleo, claro→escuro) */
-.hm-cell { font-size: .78rem; font-weight: 600; }
-.hm-0  { background: var(--iq-gray-50); color: var(--iq-subtle); }
-.hm-low  { background: var(--iq-blue-light); color: var(--iq-blue-dark); }
-.hm-mid  { background: #7fc2c5; color: #073f42; }
-.hm-high { background: #1f9298; color: #fff; }
-.hm-top  { background: var(--iq-blue-dark); color: #fff; }
 </style>
 
 <div class="iq-page-header d-flex align-items-center">
   <div class="mr-auto">
     <h1><i class="fas fa-sitemap fa-sm me-2 text-muted"></i><?= t('AREAS_TITLE') ?></h1>
-    <small class="text-muted">Associação dos docentes e investigadores de carreira</small>
+    <small class="text-muted"><?= t('AREAS_SUBTITLE') ?></small>
   </div>
 </div>
 
@@ -206,6 +209,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <i class="fas fa-<?= $flashType==='success'?'check-circle':'exclamation-circle' ?> me-2"></i>
   <?= htmlspecialchars($flashMsg) ?>
   <button type="button" class="btn-close" data-bs-dismiss="alert"><span>&times;</span></button>
+</div>
+<?php endif; ?>
+
+<?php if ($formClosed && !$isAreasAdmin): ?>
+<div class="alert alert-warning mb-4" role="alert" style="font-size:.88rem">
+  <div><i class="fas fa-lock me-2"></i><strong><?= t('AREAS_FORM_CLOSED') ?></strong></div>
+  <div style="margin-top:4px"><?= t('AREAS_FORM_CLOSED_MSG') ?></div>
+</div>
+<?php elseif ($formClosed && $isAreasAdmin): ?>
+<div class="alert alert-info mb-3" role="alert" style="font-size:.84rem">
+  <i class="fas fa-lock me-2"></i><?= t('AREAS_FORM_ADMIN_NOTE') ?>
 </div>
 <?php endif; ?>
 
@@ -219,7 +233,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div style="border:2px solid var(--iq-blue);border-radius:8px;overflow:hidden">
     <div class="d-flex align-items-center px-3 py-2" style="background:var(--iq-blue)">
       <i class="fas fa-edit text-white me-2"></i>
-      <strong class="text-white me-auto">A minha resposta</strong>
+      <strong class="text-white me-auto"><?= t('AREAS_MY_RESPONSE') ?></strong>
       <?php if ($teminfodeqb_respostas): ?>
       <span class="badge badge-light me-3" style="font-weight:500;font-size:.75rem">
         <i class="fas fa-check me-1 text-success"></i><?= t('AREAS_SUBMITTED') ?>
@@ -244,9 +258,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <table id="tblAreas">
             <thead>
               <tr>
-                <th>Subárea</th>
+                <th><?= t('AREAS_SUBAREA') ?></th>
                 <?php foreach ($areas as $a): ?><th><?= htmlspecialchars($a['nome']) ?></th><?php endforeach; ?>
-                <th style="background:#e9ecef">Subtotal</th>
+                <th style="background:#e9ecef"><?= t('AREAS_SUBTOTAL') ?></th>
               </tr>
             </thead>
             <tbody>
@@ -300,7 +314,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <div class="card flex-fill shadow-sm text-center" style="min-width:140px">
     <div class="card-body py-3">
-      <div class="text-muted small mb-1">Pendentes</div>
+      <div class="text-muted small mb-1"><?= t('AREAS_MISSING') ?></div>
       <div class="h4 mb-0 font-weight-bold <?= $totalPend > 0 ? 'text-warning' : 'text-success' ?>">
         <?= $totalPend ?>
       </div>
@@ -327,9 +341,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="col-md-5">
     <div class="card shadow-sm h-100">
       <div class="card-header py-2">
-        <strong>ETI por área</strong>
+        <strong><?= t('AREAS_DIST') ?></strong>
         <small class="text-muted ms-1 d-block" style="font-size:.75rem">
-          Barras: ETI total por área &nbsp;|&nbsp; Ponto ●: ETI da área principal
+          <?= t('AREAS_CHART_DESC') ?>
         </small>
       </div>
       <div class="card-body">
@@ -375,9 +389,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               </td>
               <td class="align-middle text-center">
                 <?php if ($p['respondeu']): ?>
-                <span class="badge badge-success"><i class="fas fa-check fa-xs me-1"></i>Submetida</span>
+                <span class="badge badge-success"><i class="fas fa-check fa-xs me-1"></i><?= t('AREAS_SUBMITTED') ?></span>
                 <?php else: ?>
-                <span class="badge badge-warning">Pendente</span>
+                <span class="badge badge-warning"><?= t('SERVDOC_PENDING_U') ?></span>
                 <?php endif; ?>
               </td>
             </tr>
@@ -396,14 +410,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <small class="text-muted ms-1">(cada pessoa = 1 ETI distribuído proporcionalmente pelo %)</small>
   </div>
   <div class="card-body p-0" style="overflow-x:auto">
-    <table class="table table-sm mb-0 iq-heatmap" style="font-size:.8rem">
-      <thead class="">
+    <table class="table table-sm table-hover mb-0" style="font-size:.8rem">
+      <thead>
         <tr>
-          <th style="min-width:160px">Subárea</th>
+          <th style="min-width:160px"><?= t('AREAS_SUBAREA') ?></th>
           <?php foreach ($areas as $a): ?>
           <th class="text-center" style="min-width:65px"><?= htmlspecialchars($a['nome']) ?></th>
           <?php endforeach; ?>
-          <th class="text-center iq-heatmap-total font-weight-700" style="min-width:60px">Total</th>
+          <th class="text-center" style="min-width:60px;background:var(--iq-gray-200)!important"><?= t('TOTAL') ?></th>
         </tr>
       </thead>
       <tbody>
@@ -411,31 +425,23 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <tr>
           <td><?= htmlspecialchars($sub['nome']) ?></td>
           <?php foreach ($areas as $a):
-            $v   = $heatMap[$sub['id']][$a['id']] ?? 0;
-            $pct = $v / $heatMax;
-            $cls = $v == 0 ? 'hm-0' : ($pct < .2 ? 'hm-low' : ($pct < .45 ? 'hm-mid' : ($pct < .7 ? 'hm-high' : 'hm-top')));
+            $v = $heatMap[$sub['id']][$a['id']] ?? 0;
           ?>
-          <td class="text-center hm-cell <?= $cls ?>">
-            <?= $v > 0 ? number_format($v, 2) : '—' ?>
-          </td>
+          <td class="text-center"><?= $v > 0 ? number_format($v, 2) : '—' ?></td>
           <?php endforeach; ?>
-          <td class="text-center font-weight-bold iq-heatmap-total">
+          <td class="text-center" style="font-weight:700;background:var(--iq-gray-100)">
             <?= number_format($heatRowTotals[$sub['id']] ?? 0, 2) ?>
           </td>
         </tr>
       <?php endforeach; ?>
       </tbody>
       <tfoot>
-        <tr class="iq-heatmap-total font-weight-700">
+        <tr style="font-weight:700;background:var(--iq-gray-200)!important">
           <td>Total</td>
           <?php foreach ($areas as $a): ?>
-          <td class="text-center">
-            <?= number_format($heatColTotals[$a['id']] ?? 0, 2) ?>
-          </td>
+          <td class="text-center"><?= number_format($heatColTotals[$a['id']] ?? 0, 2) ?></td>
           <?php endforeach; ?>
-          <td class="text-center">
-            <?= number_format($heatGrandTotal, 2) ?>
-          </td>
+          <td class="text-center"><?= number_format($heatGrandTotal, 2) ?></td>
         </tr>
       </tfoot>
     </table>
@@ -447,7 +453,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header py-2">
-        <h5 class="modal-title" id="modalRespostaTitulo">Resposta</h5>
+        <h5 class="modal-title" id="modalRespostaTitulo"><?= t('AREAS_RESPONSE') ?></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body p-0" id="modalRespostaBody" style="overflow-x:auto"></div>
@@ -458,9 +464,84 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <?php endif; // $isAreasAdmin ?>
 
 <?php /* ═══════════════════════════════════════════════════════════
-       FORMULÁRIO — utilizadores normais (mostrado directamente)
+       UTILIZADORES NORMAIS
        ═══════════════════════════════════════════════════════════ */ ?>
 <?php if (!$isAreasAdmin): ?>
+
+<?php if ($formClosed && $teminfodeqb_respostas): ?>
+<?php /* ── Vista read-only quando form fechado mas já tem resposta ── */ ?>
+<?php
+// Pré-calcular totais para a tabela read-only
+$_roColTotals = [];
+$_roGrandTotal = 0;
+$_roRowTotals  = [];
+foreach ($infodeqb_subareas as $sub) {
+    $rowSum = 0;
+    foreach ($areas as $ai => $a) {
+        $v = (int)($respIndex[$sub['id']][$a['id']] ?? 0);
+        $rowSum += $v;
+        $_roColTotals[$ai] = ($_roColTotals[$ai] ?? 0) + $v;
+    }
+    $_roRowTotals[$sub['id']] = $rowSum;
+    $_roGrandTotal += $rowSum;
+}
+?>
+<div class="card shadow-sm">
+  <div class="card-header py-2 d-flex align-items-center">
+    <i class="fas fa-lock text-muted me-2"></i>
+    <strong class="mr-auto"><?= t('AREAS_MY_RESPONSE') ?></strong>
+    <span class="badge badge-success ms-2"><i class="fas fa-check me-1"></i><?= t('AREAS_SUBMITTED') ?></span>
+  </div>
+  <div class="card-body p-0" style="overflow-x:auto">
+    <table class="table table-sm table-hover mb-0" style="font-size:.82rem;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th style="min-width:170px;border:1px solid var(--iq-border2)"><?= t('AREAS_SUBAREA') ?></th>
+          <?php foreach ($areas as $a): ?>
+          <th class="text-center" style="min-width:70px;border:1px solid var(--iq-border2)"><?= htmlspecialchars($a['nome']) ?></th>
+          <?php endforeach; ?>
+          <th class="text-center" style="background:var(--iq-gray-200);min-width:60px;border:1px solid var(--iq-border2)"><?= t('AREAS_SUBTOTAL') ?></th>
+        </tr>
+      </thead>
+      <tbody>
+      <?php foreach ($infodeqb_subareas as $sub): ?>
+        <tr>
+          <td style="border:1px solid var(--iq-border2)"><?= htmlspecialchars($sub['nome']) ?></td>
+          <?php foreach ($areas as $a):
+            $v = (int)($respIndex[$sub['id']][$a['id']] ?? 0);
+            if ($v > 0) {
+                $opacity = 0.15 + $v / 100 * 0.65;
+                $textColor = $v >= 60 ? '#fff' : '#1e3a8a';
+                $cellStyle = "background:rgba(59,130,246,{$opacity});color:{$textColor};font-weight:600;border:1px solid var(--iq-border2)";
+            } else {
+                $cellStyle = "color:#adb5bd;border:1px solid var(--iq-border2)";
+            }
+          ?>
+          <td class="text-center" style="<?= $cellStyle ?>"><?= $v > 0 ? $v . '%' : '—' ?></td>
+          <?php endforeach; ?>
+          <td class="text-center font-weight-bold" style="background:var(--iq-gray-100);border:1px solid var(--iq-border2)">
+            <?= $_roRowTotals[$sub['id']] > 0 ? $_roRowTotals[$sub['id']] . '%' : '—' ?>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--iq-gray-200);font-weight:700">
+          <td style="border:1px solid var(--iq-border2)">Total</td>
+          <?php foreach ($areas as $ai => $a): ?>
+          <td class="text-center" style="border:1px solid var(--iq-border2)">
+            <?= ($_roColTotals[$ai] ?? 0) > 0 ? $_roColTotals[$ai] . '%' : '—' ?>
+          </td>
+          <?php endforeach; ?>
+          <td class="text-center" style="border:1px solid var(--iq-border2)"><?= $_roGrandTotal ?>%</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<?php elseif (!$formClosed): ?>
+<?php /* ── Form editável (normal) ────────────────────────────────── */ ?>
 <div class="card shadow-sm">
   <div class="card-body">
     <div class="d-flex align-items-center mb-3">
@@ -487,9 +568,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <table id="tblAreas">
           <thead>
             <tr>
-              <th>Subárea</th>
+              <th><?= t('AREAS_SUBAREA') ?></th>
               <?php foreach ($areas as $a): ?><th><?= htmlspecialchars($a['nome']) ?></th><?php endforeach; ?>
-              <th style="background:#e9ecef">Subtotal</th>
+              <th style="background:#e9ecef"><?= t('AREAS_SUBTOTAL') ?></th>
             </tr>
           </thead>
           <tbody>
@@ -529,6 +610,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </form>
   </div>
 </div>
+<?php endif; // $formClosed / !$formClosed ?>
+
 <?php endif; // !$isAreasAdmin ?>
 
 <?php if ($teminfodeqb_respostas): ?>
@@ -580,7 +663,7 @@ new Chart(document.getElementById('chartAreas'), {
         datasets: [
             {
                 type: 'bar',
-                label: 'Com % nesta área',
+                label: <?= json_encode(t('AREAS_CHART_WITH_PCT')) ?>,
                 data: dataPessoas,
                 backgroundColor: 'rgba(59,130,246,0.65)',
                 borderColor: 'rgb(59,130,246)',
@@ -590,7 +673,7 @@ new Chart(document.getElementById('chartAreas'), {
             },
             {
                 type: 'line',
-                label: 'Área principal',
+                label: <?= json_encode(t('AREAS_CHART_MAIN_AREA')) ?>,
                 data: dataPrincipal,
                 showLine: false,
                 pointStyle: 'circle',
@@ -651,7 +734,7 @@ $(document).on('click', 'tr.btn-ver-resposta', function () {
 
     var resp = todasinfodeqb_respostas[codigo] || {};
     var html = '<table class="table table-sm mb-0" style="font-size:.8rem;border-collapse:collapse">';
-    html += '<thead class=""><tr><th style="min-width:150px">Subárea</th>';
+    html += '<thead class=""><tr><th style="min-width:150px">' + <?= json_encode(t('AREAS_SUBAREA')) ?> + '</th>';
     areaLabels.forEach(function(a) { html += '<th class="text-center" style="min-width:65px">' + a + '</th>'; });
     html += '<th class="text-center" style="background:#e9ecef;min-width:60px">Total</th></tr></thead><tbody>';
 

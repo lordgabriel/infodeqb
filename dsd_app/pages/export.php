@@ -208,7 +208,7 @@ $anos = $db->query("SELECT * FROM infodeqb_dsd_ano_letivo ORDER BY id DESC")->fe
 ?>
 <div class="page-header">
   <div>
-    <div class="page-title">📤 Exportar Dados</div>
+    <div class="page-title"><i class="fas fa-file-export me-1"></i>Exportar Dados</div>
     <div class="page-sub">Backup e exportação de dados do DSD</div>
   </div>
   <a href="admin.php" class="btn btn-secondary">← Administração</a>
@@ -218,27 +218,27 @@ $anos = $db->query("SELECT * FROM infodeqb_dsd_ano_letivo ORDER BY id DESC")->fe
 
   <!-- Backup SQL -->
   <div class="card" style="grid-column:1/-1">
-    <div class="card-title">🗄️ Backup Completo (SQL)</div>
+    <div class="card-title"><i class="fas fa-database me-1"></i>Backup Completo (SQL)</div>
     <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">
       Exporta toda a base de dados em formato SQL — pode ser importado directamente no phpMyAdmin para restaurar.
       Inclui estrutura e dados de todas as tabelas.
     </p>
-    <a href="export.php?tipo=sql" class="btn btn-primary">⬇️ Download Backup SQL</a>
+    <a href="export.php?tipo=sql" class="btn btn-primary"><i class="fas fa-download me-1"></i>Download Backup SQL</a>
   </div>
 
   <!-- Catálogo (sem ano) -->
   <div class="card">
-    <div class="card-title">📚 Catálogo de UCs</div>
+    <div class="card-title"><i class="fas fa-book me-1"></i>Catálogo de UCs</div>
     <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">
       Exporta o catálogo permanente de UCs — independente do ano letivo.
       Compatível com o template de importação "Catálogo de UCs".
     </p>
-    <a href="export.php?tipo=csv_catalogo" class="btn btn-secondary">⬇️ Exportar Catálogo</a>
+    <a href="export.php?tipo=csv_catalogo" class="btn btn-secondary"><i class="fas fa-download me-1"></i>Exportar Catálogo</a>
   </div>
 
   <!-- Por ano letivo -->
   <div class="card">
-    <div class="card-title">📅 Dados por Ano Letivo</div>
+    <div class="card-title"><i class="fas fa-calendar-alt me-1"></i>Dados por Ano Letivo</div>
     <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">
       Exporta ocorrências, docentes ou distribuição de um ano letivo específico.
     </p>
@@ -255,9 +255,9 @@ $anos = $db->query("SELECT * FROM infodeqb_dsd_ano_letivo ORDER BY id DESC")->fe
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-      <button onclick="dl('csv_ucs')"  class="btn btn-secondary">⬇️ Ocorrências</button>
-      <button onclick="dl('csv_doc')"  class="btn btn-secondary">⬇️ Docentes</button>
-      <button onclick="dl('csv_dist')" class="btn btn-secondary">⬇️ Distribuição</button>
+      <button onclick="dl('csv_ucs')"  class="btn btn-secondary"><i class="fas fa-download me-1"></i>Ocorrências</button>
+      <button onclick="dl('csv_doc')"  class="btn btn-secondary"><i class="fas fa-download me-1"></i>Docentes</button>
+      <button onclick="dl('csv_dist')" class="btn btn-secondary"><i class="fas fa-download me-1"></i>Distribuição</button>
     </div>
   </div>
 

@@ -40,7 +40,8 @@ if (!isset($_SESSION[$_cacheKey]) || (time() - ($_SESSION[$_cacheTs] ?? 0)) > 30
     }
 }
 
-$_iqAdminsHr     = $_SESSION[$_cacheKey]['hr']     ?? [];
+$_iqAdminsHr     = $_SESSION[$_cacheKey]['hr']      ?? [];
+$_iqAdminsHrList = $_SESSION[$_cacheKey]['hr_list'] ?? [];
 $_iqAdminsWater  = $_SESSION[$_cacheKey]['water']  ?? [];
 $_iqAdminsExam   = $_SESSION[$_cacheKey]['exam']   ?? [];
 $_iqAdminsMobile = $_SESSION[$_cacheKey]['mobile'] ?? [];
