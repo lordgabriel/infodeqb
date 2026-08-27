@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^(.*)$ /infodeqb/$1 [R=301,L]

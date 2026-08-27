@@ -4,14 +4,22 @@ inc/deqbwww.php
 # Estado runtime dos formulários
 **/.form_state
 
+# Logs de email de desenvolvimento
+hr/email_dev/
+hr/email_dev.log
+
+# Dumps de dados (schema em 001_ está ok; dados em 002_ não)
+sql/migrations/002_data.sql
+
 # Dumps e backups de BD
 sql/dump_*.sql
 
 # Ficheiros de utilizador
 files/
 
-# Notas de sessão
+# Notas de sessão (CLAUDE.md é excluído da regra genérica)
 *.md
+!CLAUDE.md
 hr/SESSION_SUMMARY.md
 resumo.md
 
