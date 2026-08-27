@@ -1,38 +1,19 @@
-# ── Dependências ─────────────────────────────────────
-vendor/
-node_modules/
+# Credenciais — copiar manualmente para cada servidor
+inc/deqbwww.php
 
-# ── Uploads e ficheiros gerados ───────────────────────
-uploads/
-tmp/
-*.tmp
-*.log
+# Estado runtime dos formulários
+**/.form_state
 
-# ── Emails de desenvolvimento (interceptados em localhost) ──
-hr/email_dev/*.html
+# Dumps e backups de BD
+sql/dump_*.sql
 
-# ── Deploy local (contém credenciais reais) ───────────
-_deploy/
+# Ficheiros de utilizador
+files/
 
-# ── Configuração sensível ─────────────────────────────
-# (deqbwww.php está em htdocs/, fora deste repo)
-# Se houver config local dentro da pasta:
-config.local.php
-.env
+# Notas de sessão
+*.md
+hr/SESSION_SUMMARY.md
+resumo.md
 
-# ── Backups e exportações ─────────────────────────────
-*.sql.gz
-*.zip
-sql/migrate_rds_acessos_run.php
-
-# ── OS / editor ───────────────────────────────────────
-.DS_Store
-Thumbs.db
-desktop.ini
-.vscode/
-.idea/
-*.swp
-*~
-
-# ── PHP cache ─────────────────────────────────────────
-*.cache
+# Imagens de backup
+img/*_old.png
