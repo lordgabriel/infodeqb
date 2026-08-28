@@ -841,10 +841,12 @@ function loadTOC(de, ate) {
     });
 
     function toMonthlyPoints(sumsByMonth) {
-        return Object.keys(sumsByMonth).sort().map(function (mes) {
-            var s = sumsByMonth[mes];
-            return { x: mes + '-01', y: s.n ? (s.total / s.n) : null };
-        });
+        return Object.keys(sumsByMonth).sort()
+            .filter(function(mes) { return sumsByMonth[mes].n > 0; })
+            .map(function(mes) {
+                var s = sumsByMonth[mes];
+                return { x: mes + '-01', y: s.total / s.n };
+            });
     }
 
     var d_toc = toMonthlyPoints(sums[2]);
