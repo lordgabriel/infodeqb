@@ -43,7 +43,7 @@ if (empty($_SESSION['ids'])) {
                     'codigo'      => $row['codigo'],
                     'nome'        => $row['nome'],
                     'mail'        => $row['email'],
-                    'fim'         => $row['datafim'],
+                    'fim'         => ($row['datafim'] ? date('d/m/Y', strtotime($row['datafim'])) : ''),
                     'responsavel' => ($row['responsavel'] == 0 ? $row['outroresponsavel'] : $row['respespaco']),
                     'acessos'     => ($row['acessodeq'] == 1 ? 'Porta Norte; ' : '') . $result,
             );
