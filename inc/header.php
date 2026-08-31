@@ -225,6 +225,11 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 
   </ul>
 
+  <!-- Hambúrguer — só visível em mobile -->
+  <button class="iq-tn-hamburger" type="button" aria-label="Menu" aria-expanded="false" id="iqHamburger">
+    <i class="fas fa-bars"></i>
+  </button>
+
   <!-- User — Bootstrap 5 dropdown nativo (sem Alpine.js, sem jQuery) -->
   <div class="iq-tn-user dropdown">
     <button class="iq-tn-user-btn dropdown-toggle" type="button"

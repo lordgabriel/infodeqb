@@ -1643,6 +1643,105 @@ i.fas.fa-eraser { color: #e02424 !important; }
 .badge.bg-orange     { background-color:#fd7e14 !important; color:#000; }
 
 /* ─────────────────────────────────────────
+   MOBILE RESPONSIVE — Nível 1 global
+   ───────────────────────────────────────── */
+
+/* Hambúrguer — oculto em desktop */
+.iq-tn-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--iq-nav-bg-hover);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background .13s;
+}
+.iq-tn-hamburger:hover { background: var(--iq-nav-bg-active); }
+
+@media (max-width: 768px) {
+  /* ── Navbar ── */
+  .iq-topnav         { padding: 0 12px; gap: 10px; }
+  .iq-tn-links       { display: none; }
+  .iq-tn-hamburger   { display: flex; margin-left: auto; }
+  .iq-tn-user-name   { display: none; }
+  .iq-tn-brand-sub   { display: none; }
+
+  /* Mobile drawer: .iq-tn-links converte-se em painel vertical quando aberto */
+  .iq-tn-links.is-open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: var(--iq-tn-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    overflow-y: auto;
+    background: var(--iq-nav-bg);
+    z-index: 999;
+    padding: 6px 0 48px;
+    align-items: stretch;
+    gap: 0;
+  }
+  .iq-tn-links.is-open > li {
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .iq-tn-links.is-open > li > a {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+
+  /* Submenus no mobile: estáticos, controlados por JS */
+  .iq-tn-has-menu:hover .iq-tn-menu { display: none; }
+  .iq-tn-menu.is-open {
+    display: block !important;
+    position: static !important;
+    min-width: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: rgba(0,0,0,.18) !important;
+    padding: 4px 0 !important;
+  }
+  .iq-tn-menu.is-open li a {
+    padding: 11px 20px 11px 36px !important;
+    white-space: normal !important;
+    color: rgba(255,255,255,.78) !important;
+    background: transparent !important;
+  }
+  .iq-tn-menu.is-open li a:hover { background: var(--iq-nav-bg-hover) !important; color: #fff !important; }
+  .iq-tn-menu.is-open .iq-tn-grp { padding-left: 36px !important; color: rgba(255,255,255,.4) !important; }
+  .iq-tn-menu.is-open .iq-tn-sep { background: rgba(255,255,255,.1) !important; }
+
+  /* ── Conteúdo principal ── */
+  .iq-main { padding: 16px 16px 32px; }
+
+  /* ── Page header — empilhar acções ── */
+  .iq-page-header { flex-direction: column; align-items: flex-start; gap: .4rem; }
+  .iq-page-header .iq-page-header-actions { margin-left: 0; flex-wrap: wrap; }
+
+  /* ── Form inline — empilhar controlo ── */
+  .iq-form-inline { flex-wrap: wrap; }
+  .iq-form-inline .form-control { max-width: 100%; }
+
+  /* ── Botões — alvos de toque maiores ── */
+  .btn { min-height: 38px; }
+}
+
+@media (max-width: 480px) {
+  .iq-tn-brand img      { height: 34px; }
+  .iq-tn-brand-title    { font-size: 13px; }
+}
+
+/* ─────────────────────────────────────────
    PRINT
    ───────────────────────────────────────── */
 @media print {
