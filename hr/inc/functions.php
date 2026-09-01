@@ -347,21 +347,6 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
  * Espaços sem responsável definido são ignorados (não bloqueiam).
  * Retorna o número de emails enviados.
  */
-/**
- * Labs isentos do processo de validação (auto-aprovados).
- * O responsável destes labs tem código 246398 mas outros labs
- * desse mesmo responsável continuam a requerer validação.
- */
-function _labsIsentos() {
-    return array(
-        'E-177B','E-177D','E-177B|E-177D',
-        'E-102','E107','E108','E109','E111','E113',
-        'E-140','E-172','E220','E221','E224','E275',
-        'E307','E319','E320','E321','E322','E324',
-        'E375','E406','E416','E417','E418','E419','E421',
-        'INESC ENTRADA',
-    );
-}
 
 /**
  * Indica se um registo já tem TODAS as validações concluídas ("Validado")
@@ -421,76 +406,67 @@ function _registoTotalmenteValidado($pdo, $registo_id) {
 
 function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $datainicio, $datafim, $colab_codigo = '', $resp_trabalho = '') {
 
-    $labsIsentos = _labsIsentos();
-
-    // 1. Resolver responsável de cada deqid e agrupar por resp_codigo
-    // Eliminar duplicados antes de processar
     $deqids = array_unique(array_map('trim', array_map('strval', $deqids)));
 
-    // Labs isentos → criar validação auto-aprovada (sem email)
-    foreach ($deqids as $deqid) {
-        $deqid = trim((string)$deqid);
-        if (!in_array($deqid, $labsIsentos)) continue;
-
-        // Verificar se já existe
-        if ($pedido_id !== null) {
-            $chkI = $pdo->prepare("SELECT id FROM infodeqb_rds_validacao WHERE pedido_id=? AND deq_id=? LIMIT 1");
-            $chkI->execute([$pedido_id, $deqid]);
-        } else {
-            $chkI = $pdo->prepare("SELECT id FROM infodeqb_rds_validacao WHERE registo_id=? AND deq_id=? LIMIT 1");
-            $chkI->execute([$registo_id, $deqid]);
-        }
-        if ($chkI->fetchColumn()) continue;
-
-        $qGabI = $pdo->prepare("SELECT nomegab FROM infodeqb_rds_gabinetes WHERE deqid=? LIMIT 1");
-        $qGabI->execute([$deqid]);
-        $gabNome = $qGabI->fetchColumn() ?: $deqid;
-
-        $pdo->prepare(
-            "INSERT INTO infodeqb_rds_validacao
-             (pedido_id, registo_id, deq_id, gab_nome, labs_json,
-              resp_codigo, resp_nome, token, status, respondido_em)
-             VALUES (?,?,?,?,?,?,?,?,'Validado', NOW())"
-        )->execute([
-            $pedido_id, $registo_id,
-            $deqid, $gabNome,
-            json_encode([['deq_id'=>$deqid,'gab_nome'=>$gabNome]], JSON_UNESCAPED_UNICODE),
-            '246398', 'Isento (auto-validado)',
-            bin2hex(random_bytes(16)),
-        ]);
-    }
-
-    // Remover labs isentos da lista que vai para validação normal
-    $deqids = array_values(array_filter($deqids, function($d) use ($labsIsentos) {
-        return !in_array(trim($d), $labsIsentos);
-    }));
-
-    $byResp = array(); // resp_codigo => ['resp_nome'=>..., 'labs'=>[...]]
+    // Resolver responsável (com flag auto_valida) de cada deqid e agrupar por resp_codigo
+    $byResp = array(); // resp_codigo => ['resp_nome'=>..., 'auto_valida'=>..., 'labs'=>[...]]
     foreach ($deqids as $deqid) {
         $deqid = trim((string)$deqid);
         if ($deqid === '') continue;
 
         $qGab = $pdo->prepare(
-            "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
+            "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome,
+                    COALESCE(r.auto_valida, 0) AS auto_valida
              FROM infodeqb_rds_gabinetes g
              LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
              WHERE g.deqid = ?"
         );
         $qGab->execute([$deqid]);
         foreach ($qGab->fetchAll(PDO::FETCH_ASSOC) as $gab) {
-            if (empty($gab['resp_codigo'])) continue; // sem responsável: skip
-
+            if (empty($gab['resp_codigo'])) continue;
             $rc = (string)$gab['resp_codigo'];
             if (!isset($byResp[$rc])) {
-                $byResp[$rc] = array('resp_nome' => $gab['resp_nome'], 'labs' => array());
+                $byResp[$rc] = array(
+                    'resp_nome'   => $gab['resp_nome'],
+                    'auto_valida' => (int)$gab['auto_valida'],
+                    'labs'        => array(),
+                );
             }
             $byResp[$rc]['labs'][] = array('deq_id' => $deqid, 'gab_nome' => $gab['nomegab']);
         }
     }
 
-    // 2. Um registo + um email por responsável
     $enviados = 0;
     foreach ($byResp as $respCodigo => $respData) {
+        $labs     = $respData['labs'];
+        $firstId  = $labs[0]['deq_id'];
+        $labNames = substr(implode(', ', array_column($labs, 'gab_nome')), 0, 490);
+        $labsJson = json_encode($labs, JSON_UNESCAPED_UNICODE);
+
+        if ($respData['auto_valida']) {
+            // Auto-aprovar sem email — verificar se já existe
+            if ($pedido_id !== null) {
+                $chkI = $pdo->prepare("SELECT id FROM infodeqb_rds_validacao WHERE pedido_id=? AND resp_codigo=? LIMIT 1");
+                $chkI->execute([$pedido_id, $respCodigo]);
+            } else {
+                $chkI = $pdo->prepare("SELECT id FROM infodeqb_rds_validacao WHERE registo_id=? AND resp_codigo=? LIMIT 1");
+                $chkI->execute([$registo_id, $respCodigo]);
+            }
+            if ($chkI->fetchColumn()) continue;
+
+            $pdo->prepare(
+                "INSERT INTO infodeqb_rds_validacao
+                 (pedido_id, registo_id, deq_id, gab_nome, labs_json,
+                  resp_codigo, resp_nome, token, status, respondido_em, nota)
+                 VALUES (?,?,?,?,?,?,?,?,'Validado',NOW(),'Auto-validado')"
+            )->execute([
+                $pedido_id, $registo_id,
+                $firstId, $labNames, $labsJson,
+                $respCodigo, $respData['resp_nome'],
+                bin2hex(random_bytes(16)),
+            ]);
+            continue;
+        }
 
         // Não duplicar se já existe validação Pendente deste responsável
         if ($pedido_id !== null) {
@@ -508,12 +484,8 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
         }
         if ($chk->fetchColumn()) continue;
 
-        $labs     = $respData['labs'];
-        $firstId  = $labs[0]['deq_id'];
-        $labNames = substr(implode(', ', array_column($labs, 'gab_nome')), 0, 490);
-        $labsJson = json_encode($labs, JSON_UNESCAPED_UNICODE);
-        $token    = bin2hex(random_bytes(32));
-        $expira   = date('Y-m-d H:i:s', strtotime('+30 days'));
+        $token  = bin2hex(random_bytes(32));
+        $expira = date('Y-m-d H:i:s', strtotime('+30 days'));
 
         $pdo->prepare(
             "INSERT INTO infodeqb_rds_validacao

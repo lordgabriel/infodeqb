@@ -76,13 +76,15 @@ if (!empty($_POST['action'])) {
             if ((int)$chk->fetchColumn() > 0) {
                 $msg = 'Já existe um responsável com esse código.'; $msgType = 'danger';
             } else {
-                $pdo->prepare("INSERT INTO infodeqb_rds_responsaveis (Codigo,respespaco,Sigla) VALUES (?,?,?)")
-                    ->execute([$codigo,$nome,$sigla]);
+                $autoVal = isset($_POST['auto_valida']) ? 1 : 0;
+                $pdo->prepare("INSERT INTO infodeqb_rds_responsaveis (Codigo,respespaco,Sigla,auto_valida) VALUES (?,?,?,?)")
+                    ->execute([$codigo,$nome,$sigla,$autoVal]);
                 $msg = 'Responsável criado.';
             }
         } else {
-            $pdo->prepare("UPDATE infodeqb_rds_responsaveis SET respespaco=?,Sigla=? WHERE Codigo=?")
-                ->execute([$nome,$sigla,$codigo]);
+            $autoVal = isset($_POST['auto_valida']) ? 1 : 0;
+            $pdo->prepare("UPDATE infodeqb_rds_responsaveis SET respespaco=?,Sigla=?,auto_valida=? WHERE Codigo=?")
+                ->execute([$nome,$sigla,$autoVal,$codigo]);
             $msg = 'Responsável actualizado.';
         }
         header('Location: espacos.php?tab=resp&msg=' . urlencode($msg) . '&t=' . $msgType); exit;
@@ -105,7 +107,7 @@ if (!empty($_POST['action'])) {
 
 // ── Dados ─────────────────────────────────────────────────────────────────────
 $gabs = $pdo->query(
-    "SELECT g.*, r.respespaco AS resp_nome
+    "SELECT g.*, r.respespaco AS resp_nome, COALESCE(r.auto_valida, 0) AS auto_valida
      FROM infodeqb_rds_gabinetes g
      LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
      ORDER BY g.edificio, g.piso, g.nomegab"
@@ -239,7 +241,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <td><?= htmlspecialchars($g['nomegab']) ?></td>
       <td><?= htmlspecialchars($g['nomegab_en']) ?></td>
       <td><?= htmlspecialchars($g['resp_nome'] ?? '—') ?></td>
-      <td class="text-center"><?= $g['visible'] ? '✓' : '<span class="text-danger">✗</span>' ?></td>
+      <?php
+        $ttVis = $g['visible'] ? 'Visível' : 'Não visível';
+        $ttCell = !empty($g['auto_valida']) ? 'Auto-validado (sem email ao responsável) · ' . $ttVis : $ttVis;
+      ?>
+      <td class="text-center" title="<?= htmlspecialchars($ttCell) ?>">
+        <?php if (!empty($g['auto_valida'])): ?>⚡ <?php endif; ?>
+        <?= $g['visible'] ? '✓' : '<span class="text-danger">✗</span>' ?>
+      </td>
       <td style="white-space:nowrap">
         <button class="btn btn-xs btn-outline-primary"
                 onclick="gabEdit(<?= htmlspecialchars(json_encode($g)) ?>)"
@@ -267,7 +276,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
   <table class="table table-sm table-bordered table-hover" style="font-size:.85rem">
     <thead class="table-light">
-      <tr><th>Código UP</th><th>Nome completo</th><th>Sigla</th><th class="text-center">Espaços</th><th style="width:1%">Ações</th></tr>
+      <tr><th>Código UP</th><th>Nome completo</th><th>Sigla</th><th class="text-center" title="Auto-validação (sem email ao responsável)">Auto-val.</th><th class="text-center">Espaços</th><th style="width:1%">Ações</th></tr>
     </thead>
     <tbody>
     <?php foreach ($resps as $r): ?>
@@ -275,6 +284,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <td>up<?= htmlspecialchars($r['Codigo']) ?></td>
       <td><?= htmlspecialchars($r['respespaco']) ?></td>
       <td><?= htmlspecialchars($r['Sigla'] ?? '') ?></td>
+      <td class="text-center">
+        <?php if (!empty($r['auto_valida'])): ?>
+          <span class="badge bg-info text-dark" title="Espaços atribuídos a este responsável são automaticamente validados">✓ auto</span>
+        <?php endif; ?>
+      </td>
       <td class="text-center"><?= (int)$r['n_espacos'] ?></td>
       <td style="white-space:nowrap">
         <button class="btn btn-xs btn-outline-primary"
@@ -393,6 +407,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <label class="form-label form-label-sm">Sigla</label>
               <input type="text" name="sigla" id="resp_sigla" class="form-control form-control-sm">
             </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="auto_valida" id="resp_auto_valida" value="1">
+                <label class="form-check-label form-label-sm" for="resp_auto_valida">
+                  Auto-validação
+                  <span class="text-muted">(espaços deste responsável ficam validados sem enviar email)</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -469,18 +492,20 @@ function gabEdit(g) {
 }
 function respNew() {
   document.getElementById('modalRespTitle').textContent = 'Novo responsável';
-  document.getElementById('resp_is_new').value  = '1';
-  document.getElementById('resp_codigo').value  = '';
-  document.getElementById('resp_nome').value    = '';
-  document.getElementById('resp_sigla').value   = '';
+  document.getElementById('resp_is_new').value       = '1';
+  document.getElementById('resp_codigo').value       = '';
+  document.getElementById('resp_nome').value         = '';
+  document.getElementById('resp_sigla').value        = '';
+  document.getElementById('resp_auto_valida').checked = false;
   document.getElementById('resp_codigo').removeAttribute('readonly');
 }
 function respEdit(r) {
   document.getElementById('modalRespTitle').textContent = 'Editar responsável';
-  document.getElementById('resp_is_new').value  = '';
-  document.getElementById('resp_codigo').value  = r.Codigo;
-  document.getElementById('resp_nome').value    = r.respespaco;
-  document.getElementById('resp_sigla').value   = r.Sigla || '';
+  document.getElementById('resp_is_new').value       = '';
+  document.getElementById('resp_codigo').value       = r.Codigo;
+  document.getElementById('resp_nome').value         = r.respespaco;
+  document.getElementById('resp_sigla').value        = r.Sigla || '';
+  document.getElementById('resp_auto_valida').checked = (r.auto_valida == 1);
   document.getElementById('resp_codigo').setAttribute('readonly', 'readonly');
 }
 </script>

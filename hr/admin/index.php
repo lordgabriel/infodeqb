@@ -397,8 +397,9 @@ $qSemPedido = $pdo->query(
            SELECT 1
            FROM infodeqb_rds_gabinetes g
            JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id AND ra.registo_id = r.autoid
+           LEFT JOIN infodeqb_rds_responsaveis rv ON rv.Codigo = g.responsavel
            WHERE g.responsavel IS NOT NULL AND g.responsavel != 0
-             AND g.responsavel != 246398
+             AND COALESCE(rv.auto_valida, 0) = 0
              AND NOT EXISTS (
                  SELECT 1 FROM infodeqb_rds_validacao v
                  WHERE v.registo_id = r.autoid
@@ -1013,8 +1014,9 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                    SELECT 1
                    FROM infodeqb_rds_gabinetes g
                    JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id AND ra.registo_id = r.autoid
+                   LEFT JOIN infodeqb_rds_responsaveis rv ON rv.Codigo = g.responsavel
                    WHERE g.responsavel IS NOT NULL AND g.responsavel != 0
-                     AND g.responsavel != 246398
+                     AND COALESCE(rv.auto_valida, 0) = 0
                      AND NOT EXISTS (
                          SELECT 1 FROM infodeqb_rds_validacao v
                          WHERE v.registo_id = r.autoid

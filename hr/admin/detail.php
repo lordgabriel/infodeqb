@@ -255,8 +255,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           // Acessos sem pedido de validação agrupados por responsável
           $semPedido = array();
           if ($temLabs) {
-              $labsIsentos = _labsIsentos();
-
               // Conjunto de deqids já cobertos por algum pedido de validação
               // (Pendente/Validado/Rejeitado), independentemente do responsável.
               // Cada validação pode cobrir vários espaços (labs_json).
@@ -277,10 +275,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
               foreach ($fAcessosReg as $_deqid) {
                   $_deqid = trim($_deqid);
-                  if (in_array($_deqid, $labsIsentos)) continue;
                   if (in_array($_deqid, $deqidsComPedido)) continue;
                   $qGSP = $pdo->prepare(
-                      "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome
+                      "SELECT g.nomegab, r.Codigo AS resp_codigo, r.respespaco AS resp_nome,
+                              COALESCE(r.auto_valida, 0) AS auto_valida
                        FROM infodeqb_rds_gabinetes g
                        LEFT JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
                        WHERE g.deqid = ?"
@@ -288,6 +286,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   $qGSP->execute([$_deqid]);
                   foreach ($qGSP->fetchAll(PDO::FETCH_ASSOC) as $gSP) {
                       if (empty($gSP['resp_codigo'])) continue;
+                      if (!empty($gSP['auto_valida'])) continue;
                       $_rc = (string)$gSP['resp_codigo'];
                       if (!isset($semPedido[$_rc])) {
                           $semPedido[$_rc] = array('resp_nome' => $gSP['resp_nome'], 'labs' => array());
