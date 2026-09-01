@@ -354,7 +354,7 @@ function send_email ($to, $body, $subject, $cc_list = [], $bcc_list = [], $file1
  */
 function _labsIsentos() {
     return array(
-        'E-177B','E-177D',
+        'E-177B','E-177D','E-177B|E-177D',
         'E-102','E107','E108','E109','E111','E113',
         'E-140','E-172','E220','E221','E224','E275',
         'E307','E319','E320','E321','E322','E324',

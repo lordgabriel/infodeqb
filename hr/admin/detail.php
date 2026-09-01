@@ -538,12 +538,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </td>
         </tr>
         <?php endif; ?>
-        <?php if (!empty($histReg) || !empty($rVals)):
+        <?php if (!empty($histReg)):
           $htid = 'ht' . (int)$row['autoid'];
           $tipoLabel = array('alteracao_sigarra' => 'Alteração SIGARRA');
           $origemLabel = array('secretariado' => 'Secretariado', 'utilizador' => 'Utilizador');
           $histStatusBadge = array('Pendente'=>'warning','Aguarda_SIGARRA'=>'info','Aprovado'=>'success','Concluido'=>'success','Rejeitado'=>'danger');
-          $valBadge = array('Validado'=>'success','Rejeitado'=>'danger','Pendente'=>'warning');
         ?>
         <tr>
           <td colspan="8" style="padding:0 0 6px 0;border-top:none;background:#fafafa;">
@@ -551,84 +550,36 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               <summary style="cursor:pointer;font-size:.78rem;color:#888;padding:3px 0;user-select:none;display:flex;align-items:center;gap:8px;list-style:none">
                 <span class="iq-arrow" style="font-size:.65rem;color:#aaa">&#9654;</span>
                 <i class="far fa-clipboard" style="font-size:.74rem"></i>
-                <?php if (!empty($rVals)): ?>
-                <span onclick="iqHistPill(event,'<?= $htid ?>','<?= $htid ?>-val')"
-                      class="iq-htxt<?= empty($histReg) ? ' iq-htxt-active' : '' ?>" data-htid="<?= $htid ?>">Validações (<?= count($rVals) ?>)</span>
-                <?php endif; ?>
-                <?php if (!empty($rVals) && !empty($histReg)): ?><span style="color:#ccc">&middot;</span><?php endif; ?>
-                <?php if (!empty($histReg)): ?>
-                <span onclick="iqHistPill(event,'<?= $htid ?>','<?= $htid ?>-ped')"
-                      class="iq-htxt<?= empty($rVals) ? ' iq-htxt-active' : '' ?>" data-htid="<?= $htid ?>">Pedidos (<?= count($histReg) ?>)</span>
-                <?php endif; ?>
+                <span class="iq-htxt iq-htxt-active" data-htid="<?= $htid ?>">Pedidos (<?= count($histReg) ?>)</span>
               </summary>
               <div style="padding-bottom:4px">
-                <!-- Pedidos -->
-                <?php if (!empty($histReg)): ?>
-                <div id="<?= $htid ?>-ped" style="display:none">
-                  <table class="table table-sm table-bordered mb-0" style="font-size:.78rem;">
-                    <thead class="table-light">
-                      <tr>
-                        <th style="width:130px">Data</th>
-                        <th style="width:120px">Tipo</th>
-                        <th style="width:90px">Origem</th>
-                        <th style="width:100px">Estado</th>
-                        <th style="width:130px">Processado em</th>
-                        <th style="width:90px">Por</th>
-                        <th>Notas</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php foreach ($histReg as $hp):
-                        $hb = isset($histStatusBadge[$hp['status']]) ? $histStatusBadge[$hp['status']] : 'secondary'; ?>
-                      <tr>
-                        <td><?= htmlspecialchars(substr($hp['criado_em'], 0, 16)) ?></td>
-                        <td><?= htmlspecialchars(isset($tipoLabel[$hp['tipo']]) ? $tipoLabel[$hp['tipo']] : $hp['tipo']) ?></td>
-                        <td><?= htmlspecialchars(isset($origemLabel[$hp['origem']]) ? $origemLabel[$hp['origem']] : $hp['origem']) ?></td>
-                        <td><span class="badge badge-<?= $hb ?>" style="font-size:.75rem"><?= htmlspecialchars($hp['status']) ?></span></td>
-                        <td><?= $hp['processado_em'] ? htmlspecialchars(substr($hp['processado_em'], 0, 16)) : '—' ?></td>
-                        <td><?= $hp['processado_por'] ? htmlspecialchars($hp['processado_por']) : '—' ?></td>
-                        <td><?= $hp['notas_admin'] ? htmlspecialchars($hp['notas_admin']) : '<span class="text-muted">—</span>' ?></td>
-                      </tr>
-                      <?php endforeach; ?>
-                    </tbody>
-                  </table>
-                </div>
-                <?php endif; ?>
-                <!-- Validações -->
-                <?php if (!empty($rVals)): ?>
-                <div id="<?= $htid ?>-val">
-                  <table class="table table-sm table-bordered mb-0" style="font-size:.78rem;">
-                    <thead class="table-light">
-                      <tr>
-                        <th style="width:130px">Data</th>
-                        <th>Espaço</th>
-                        <th style="width:160px">Responsável</th>
-                        <th style="width:90px">Estado</th>
-                        <th>Nota</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php foreach ($rVals as $rv):
-                        $vb = isset($valBadge[$rv['status']]) ? $valBadge[$rv['status']] : 'secondary';
-                        $espaco = $rv['gab_nome'] ?: $rv['deq_id'];
-                        if ($rv['labs_json']) {
-                            $labs = json_decode($rv['labs_json'], true);
-                            if (is_array($labs) && count($labs) > 1)
-                                $espaco = implode(', ', array_map(function($l){ return isset($l['gab_nome']) ? $l['gab_nome'] : $l['deq_id']; }, $labs));
-                        }
-                      ?>
-                      <tr>
-                        <td><?= $rv['respondido_em'] ? htmlspecialchars(substr($rv['respondido_em'], 0, 16)) : '<span class="text-muted">Pendente</span>' ?></td>
-                        <td><?= htmlspecialchars($espaco) ?></td>
-                        <td><?= htmlspecialchars($rv['resp_nome'] ?: $rv['resp_codigo']) ?></td>
-                        <td><span class="badge badge-<?= $vb ?>" style="font-size:.75rem"><?= htmlspecialchars($rv['status']) ?></span></td>
-                        <td><?= $rv['nota'] ? htmlspecialchars($rv['nota']) : '<span class="text-muted">—</span>' ?></td>
-                      </tr>
-                      <?php endforeach; ?>
-                    </tbody>
-                  </table>
-                </div>
-                <?php endif; ?>
+                <table class="table table-sm table-bordered mb-0" style="font-size:.78rem;">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:130px">Data</th>
+                      <th style="width:120px">Tipo</th>
+                      <th style="width:90px">Origem</th>
+                      <th style="width:100px">Estado</th>
+                      <th style="width:130px">Processado em</th>
+                      <th style="width:90px">Por</th>
+                      <th>Notas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($histReg as $hp):
+                      $hb = isset($histStatusBadge[$hp['status']]) ? $histStatusBadge[$hp['status']] : 'secondary'; ?>
+                    <tr>
+                      <td><?= htmlspecialchars(substr($hp['criado_em'], 0, 16)) ?></td>
+                      <td><?= htmlspecialchars(isset($tipoLabel[$hp['tipo']]) ? $tipoLabel[$hp['tipo']] : $hp['tipo']) ?></td>
+                      <td><?= htmlspecialchars(isset($origemLabel[$hp['origem']]) ? $origemLabel[$hp['origem']] : $hp['origem']) ?></td>
+                      <td><span class="badge badge-<?= $hb ?>" style="font-size:.75rem"><?= htmlspecialchars($hp['status']) ?></span></td>
+                      <td><?= $hp['processado_em'] ? htmlspecialchars(substr($hp['processado_em'], 0, 16)) : '—' ?></td>
+                      <td><?= $hp['processado_por'] ? htmlspecialchars($hp['processado_por']) : '—' ?></td>
+                      <td><?= $hp['notas_admin'] ? htmlspecialchars($hp['notas_admin']) : '<span class="text-muted">—</span>' ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
               </div>
             </details>
           </td>
