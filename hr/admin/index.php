@@ -694,34 +694,46 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 				</div>
 
 				<div class="iq-stat-grid">
-				  <div class="iq-stat iq-stat-green">
+				  <a class="iq-stat iq-stat-green" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				     onclick="document.querySelector('#pills-new-tab').click();document.querySelector('#pills-new-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
 				    <div class="iq-stat-icon"><i class="fas fa-file-alt"></i></div>
 				    <div>
 				      <div class="iq-stat-value"><?php echo $newrecords; ?></div>
 				      <div class="iq-stat-label"><?= t('DASH_NEW_RECORDS') ?></div>
 				    </div>
-				  </div>
-				  <div class="iq-stat iq-stat-yellow">
+				  </a>
+				  <a class="iq-stat iq-stat-yellow" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				     onclick="document.querySelector('#pills-pendent-tab').click();document.querySelector('#pills-pendent-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
 				    <div class="iq-stat-icon"><i class="fas fa-clock"></i></div>
 				    <div>
 				      <div class="iq-stat-value"><?php echo $pendentrecords; ?></div>
 				      <div class="iq-stat-label"><?= t('DASH_PENDING') ?></div>
 				    </div>
-				  </div>
-				  <div class="iq-stat iq-stat-red">
+				  </a>
+				  <a class="iq-stat iq-stat-red" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				     onclick="document.querySelector('#pills-expire-tab').click();document.querySelector('#pills-expire-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
 				    <div class="iq-stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
 				    <div>
 				      <div class="iq-stat-value"><?php echo $expirerecords; ?></div>
 				      <div class="iq-stat-label"><?= t('DASH_EXPIRING') ?></div>
 				    </div>
-				  </div>
-				  <div class="iq-stat iq-stat-blue">
+				  </a>
+				  <a class="iq-stat iq-stat-blue" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				     onclick="document.querySelector('#pills-active-tab').click();document.querySelector('#pills-active-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
 				    <div class="iq-stat-icon"><i class="fas fa-users"></i></div>
 				    <div>
 				      <div class="iq-stat-value"><?php echo $activerecords; ?></div>
 				      <div class="iq-stat-label"><?= t('DASH_ACTIVE') ?></div>
 				    </div>
-				  </div>
+				  </a>
+				  <a class="iq-stat <?= ($pedidosCount > 0) ? 'iq-stat-orange' : 'iq-stat-gray' ?>" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				     onclick="document.querySelector('#pills-pedidos-tab').click();document.querySelector('#pills-pedidos-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
+				    <div class="iq-stat-icon"><i class="fas fa-inbox"></i></div>
+				    <div>
+				      <div class="iq-stat-value"><?= $pedidosCount ?></div>
+				      <div class="iq-stat-label"><?= t('DASH_PEDIDOS') ?></div>
+				    </div>
+				  </a>
 				</div>
 
 				<div class="card mb-3">
@@ -1489,17 +1501,17 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 
 <!-- flash messages shown above tabs -->
 
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center gap-2" style="font-size:.85rem;padding:10px 14px">
+    <i class="fas fa-clock text-primary"></i>
+    <strong>Pedidos em curso</strong>
+    <?php if (!empty($pedidos)): ?><span class="badge badge-primary ms-1"><?= count($pedidos) ?></span><?php endif; ?>
+  </div>
+  <div class="card-body p-0">
 <?php if (empty($pedidos)): ?>
-  <p class="text-muted py-3 text-center"><i class="fas fa-check-circle text-success me-1"></i>Sem pedidos pendentes.</p>
+  <p class="text-muted py-3 text-center mb-0"><i class="fas fa-check-circle text-success me-1"></i>Sem pedidos pendentes.</p>
 <?php else: ?>
-  <table class="table table-sm table-hover mt-1">
-    <thead class="">
-      <tr>
-        <th>Código</th><th>Nome</th><th>Tipo</th>
-        <th>Submetido</th><th>Observações</th><th>Campos alterados</th><th>Ação</th>
-      </tr>
-    </thead>
-    <tbody>
+  <div class="p-2">
     <?php
     $tipoLabels = array(
         'novo'               => 'Novo registo',
@@ -1562,154 +1574,176 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
           }
       }
     ?>
-    <tr>
-      <td><?= htmlspecialchars($ped['codigo']) ?></td>
-      <td><?= htmlspecialchars($ped['nome_colab'] ?? ($dPed['nome'] ?? '—')) ?></td>
-      <td><span class="badge <?= $tipoBadge ?>"><?= $tipoLabel ?></span></td>
-      <td><?= htmlspecialchars(substr($ped['criado_em'],0,16)) ?></td>
-      <td><?= htmlspecialchars($ped['observacoes'] ?? '—') ?></td>
-      <td>
-        <?php if ($cPed): ?>
-          <small class="text-muted"><?= htmlspecialchars(implode(', ', $cPed)) ?></small>
-        <?php elseif (in_array($ped['tipo'], array('novo_registo','novo'))): ?>
-          <small class="text-muted"><em>registo completo</em></small>
-        <?php elseif ($ped['tipo'] === 'alteracao_datafim'): ?>
-          <?php $dj = json_decode($ped['dados_json'],true) ?: array(); ?>
-          <small class="text-muted"><?= htmlspecialchars($dj['datafim_antigo']??'') ?> → <strong><?= htmlspecialchars($dj['datafim_novo']??'') ?></strong></small>
-        <?php else: ?>—<?php endif; ?>
-      </td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-outline-secondary me-1"
-          onclick='verPedido(<?= (int)$ped["id"] ?>,
-            <?= json_encode($ped["dados_json"]) ?>,
-            <?= json_encode($ped["dados_anteriores"] ?? "null") ?>,
-            <?= json_encode($ped["campos_alterados"] ?? "null") ?>)'>
-          <i class="fas fa-eye fa-sm"></i> Ver
-        </button>
-        <?php if ($precisaVal && $nVal === 0): ?>
-          <!-- Ainda não foram solicitadas validações -->
-          <form method="post" action="validacao-action.php" style="display:inline">
-            <input type="hidden" name="val_acao"  value="solicitar_pedido">
-            <input type="hidden" name="pedido_id" value="<?= (int)$ped['id'] ?>">
-            <input type="hidden" name="redirect"  value="index.php">
-            <button class="btn btn-sm btn-outline-warning me-1"
-                    title="Solicitar validação aos responsáveis dos espaços"
-                    onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
-              <i class="fas fa-user-check fa-xs"></i> Solicitar validações
-            </button>
-          </form>
+    <div class="card mb-2 shadow-sm" style="border:1px solid rgba(0,0,0,.09)">
+      <div class="card-header d-flex align-items-center gap-2 py-2 pe-3"
+           style="cursor:pointer;background:#fff;border-bottom:none"
+           data-bs-toggle="collapse"
+           data-bs-target="#ped-<?= $ped['id'] ?>"
+           aria-expanded="false">
+        <code style="font-size:.78rem;color:var(--iq-muted);min-width:68px;flex-shrink:0"><?= htmlspecialchars($ped['codigo']) ?></code>
+        <strong style="flex:1;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= htmlspecialchars($ped['nome_colab'] ?? ($dPed['nome'] ?? '—')) ?></strong>
+        <span class="badge <?= $tipoBadge ?>" style="font-size:.72rem;flex-shrink:0"><?= $tipoLabel ?></span>
+        <span class="text-muted ms-1 d-none d-sm-inline" style="font-size:.77rem;flex-shrink:0"><?= htmlspecialchars(substr($ped['criado_em'],0,16)) ?></span>
+        <?php if ($bloqueado): ?>
+          <span class="badge badge-warning ms-1" style="font-size:.7rem;flex-shrink:0"><i class="fas fa-lock fa-xs"></i> Val.</span>
+        <?php elseif ($todosOk && $nVal > 0): ?>
+          <span class="badge badge-success ms-1" style="font-size:.7rem;flex-shrink:0">✓ OK</span>
         <?php endif; ?>
-        <form method="post" style="display:inline"
-              onsubmit="return confirm('<?= addslashes($confirmMsg) ?>')">
-          <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
-          <input type="hidden" name="pedido_action" value="Aprovado">
-          <?php if ($bloqueado): ?>
-            <button class="btn btn-sm btn-success me-1" disabled
-                    title="Aguarda validação dos responsáveis de espaço">
-              <i class="fas fa-lock fa-xs"></i> Aprovar
-            </button>
-          <?php else: ?>
-            <button class="btn btn-sm btn-success me-1">✓ Aprovar</button>
+        <i class="fas fa-chevron-down iq-ped-chev ms-2" style="font-size:.65rem;opacity:.4;transition:transform .2s;flex-shrink:0"></i>
+      </div>
+      <div class="collapse" id="ped-<?= $ped['id'] ?>">
+        <div class="card-body pt-2 pb-3" style="border-top:1px solid rgba(0,0,0,.07)">
+          <?php if (!empty($ped['observacoes']) && $ped['observacoes'] !== '—'): ?>
+          <div class="mb-2">
+            <small class="d-block text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">Observações</small>
+            <span style="font-size:.85rem"><?= htmlspecialchars($ped['observacoes']) ?></span>
+          </div>
           <?php endif; ?>
-        </form>
-        <form method="post" style="display:inline"
-              onsubmit="return rejeitarPedido(this)">
-          <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
-          <input type="hidden" name="pedido_action" value="Rejeitado">
-          <input type="hidden" name="notas_admin"   value="">
-          <button class="btn btn-sm btn-danger">✗ Rejeitar</button>
-        </form>
-      </td>
-    </tr>
-    <?php if ($precisaVal && $nVal > 0): ?>
-    <tr>
-      <td colspan="7" style="background:#f8f9fa;padding:6px 16px 10px 16px;border-top:none;">
-        <small class="d-block mb-1 text-muted font-weight-bold">
-          <i class="fas fa-user-check me-1"></i>Validações de espaço
-          <?php if ($todosOk): ?>
-            <span class="badge badge-success ms-1">Todas validadas ✓</span>
-          <?php elseif ($temRejeitado): ?>
-            <span class="badge badge-danger ms-1">Com rejeição</span>
-          <?php else: ?>
-            <span class="badge badge-warning ms-1">A aguardar resposta</span>
+          <?php if ($cPed || in_array($ped['tipo'], array('novo_registo','novo')) || $ped['tipo'] === 'alteracao_datafim'): ?>
+          <div class="mb-2">
+            <small class="d-block text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">Campos alterados</small>
+            <span style="font-size:.85rem">
+              <?php if ($cPed): echo htmlspecialchars(implode(', ', $cPed));
+              elseif (in_array($ped['tipo'], array('novo_registo','novo'))): ?><em class="text-muted">registo completo</em><?php
+              elseif ($ped['tipo'] === 'alteracao_datafim'):
+                $dj = json_decode($ped['dados_json'],true) ?: array();
+                echo htmlspecialchars($dj['datafim_antigo']??'') . ' → <strong>' . htmlspecialchars($dj['datafim_novo']??'') . '</strong>';
+              endif; ?>
+            </span>
+          </div>
           <?php endif; ?>
-        </small>
-        <table class="table table-xs table-hover mb-1" style="font-size:.8rem;background:#fff;">
-          <thead class="">
-            <tr>
-              <th>Espaço</th><th>Responsável</th><th><?= t('STATUS') ?></th><th>Nota</th><th style="width:1%"><?= t('ACTIONS') ?></th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($pedVals as $vv):
-            $vBadge = array('Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger');
-            $vIcon  = array('Pendente'=>'⏳','Validado'=>'✅','Rejeitado'=>'❌');
-          ?>
-          <tr>
-            <td><?= htmlspecialchars($vv['gab_nome'] ?? $vv['deq_id']) ?></td>
-            <td><?= htmlspecialchars($vv['resp_nome'] ?? '') ?>
-                <small class="text-muted">(up<?= htmlspecialchars($vv['resp_codigo']) ?>)</small></td>
-            <td><span class="badge <?= $vBadge[$vv['status']] ?? 'badge-secondary' ?>">
-                <?= ($vIcon[$vv['status']] ?? '') . ' ' . $vv['status'] ?></span>
-                <?php if ($vv['respondido_em']): ?>
-                  <br><small class="text-muted"><?= htmlspecialchars(substr($vv['respondido_em'],0,16)) ?></small>
-                <?php endif; ?>
-            </td>
-            <td><?= htmlspecialchars($vv['nota'] ?? '—') ?></td>
-            <td style="white-space:nowrap">
-              <?php if ($vv['status'] !== 'Validado'): ?>
-              <form method="post" action="validacao-action.php" style="display:inline">
-                <input type="hidden" name="val_acao" value="reabrir">
-                <input type="hidden" name="val_id"   value="<?= (int)$vv['id'] ?>">
-                <input type="hidden" name="redirect"  value="index.php">
-                <button class="btn btn-xs btn-outline-primary" title="Reenviar novo link"
-                        onclick="return confirm('Reenviar pedido de validação ao responsável?')">
-                  <i class="fas fa-redo fa-xs"></i>
-                </button>
-              </form>
+          <?php if ($precisaVal && $nVal === 0): ?>
+          <div class="mb-3">
+            <form method="post" action="validacao-action.php" style="display:inline">
+              <input type="hidden" name="val_acao"  value="solicitar_pedido">
+              <input type="hidden" name="pedido_id" value="<?= (int)$ped['id'] ?>">
+              <input type="hidden" name="redirect"  value="index.php">
+              <button class="btn btn-sm btn-outline-warning"
+                      onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
+                <i class="fas fa-user-check fa-xs me-1"></i>Solicitar validações
+              </button>
+            </form>
+          </div>
+          <?php endif; ?>
+          <?php if ($precisaVal && $nVal > 0): ?>
+          <div class="mb-3 rounded" style="background:#f8f9fa;padding:8px 12px">
+            <small class="d-block mb-2" style="font-weight:600;color:var(--iq-muted)">
+              <i class="fas fa-user-check me-1"></i>Validações de espaço
+              <?php if ($todosOk): ?><span class="badge badge-success ms-1">Todas validadas ✓</span>
+              <?php elseif ($temRejeitado): ?><span class="badge badge-danger ms-1">Com rejeição</span>
+              <?php else: ?><span class="badge badge-warning ms-1">A aguardar resposta</span>
               <?php endif; ?>
-              <form method="post" action="validacao-action.php" style="display:inline">
-                <input type="hidden" name="val_acao" value="cancelar">
-                <input type="hidden" name="val_id"   value="<?= (int)$vv['id'] ?>">
-                <input type="hidden" name="redirect"  value="index.php">
-                <button class="btn btn-xs btn-outline-danger" title="Apagar esta validação"
-                        onclick="return confirm('Apagar esta validação? O responsável não será notificado.')">
-                  <i class="fas fa-trash fa-xs"></i>
+            </small>
+            <table class="table table-xs table-hover mb-1" style="font-size:.8rem;background:#fff">
+              <thead><tr>
+                <th>Espaço</th><th>Responsável</th><th><?= t('STATUS') ?></th><th>Nota</th><th style="width:1%"><?= t('ACTIONS') ?></th>
+              </tr></thead>
+              <tbody>
+              <?php foreach ($pedVals as $vv):
+                $vBadge = array('Pendente'=>'badge-warning','Validado'=>'badge-success','Rejeitado'=>'badge-danger');
+                $vIcon  = array('Pendente'=>'⏳','Validado'=>'✅','Rejeitado'=>'❌');
+              ?>
+              <tr>
+                <td><?= htmlspecialchars($vv['gab_nome'] ?? $vv['deq_id']) ?></td>
+                <td><?= htmlspecialchars($vv['resp_nome'] ?? '') ?>
+                    <small class="text-muted">(up<?= htmlspecialchars($vv['resp_codigo']) ?>)</small></td>
+                <td><span class="badge <?= $vBadge[$vv['status']] ?? 'badge-secondary' ?>"><?= ($vIcon[$vv['status']] ?? '') . ' ' . $vv['status'] ?></span>
+                    <?php if ($vv['respondido_em']): ?><br><small class="text-muted"><?= htmlspecialchars(substr($vv['respondido_em'],0,16)) ?></small><?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars($vv['nota'] ?? '—') ?></td>
+                <td style="white-space:nowrap">
+                  <?php if ($vv['status'] !== 'Validado'): ?>
+                  <form method="post" action="validacao-action.php" style="display:inline">
+                    <input type="hidden" name="val_acao" value="reabrir">
+                    <input type="hidden" name="val_id"   value="<?= (int)$vv['id'] ?>">
+                    <input type="hidden" name="redirect"  value="index.php">
+                    <button class="btn btn-xs btn-outline-primary" title="Reenviar novo link ao responsável"
+                            onclick="return confirm('Reenviar pedido de validação ao responsável?')">
+                      <i class="fas fa-redo fa-xs"></i>
+                    </button>
+                  </form>
+                  <form method="post" action="validacao-action.php" style="display:inline">
+                    <input type="hidden" name="val_acao" value="forcar_validacao">
+                    <input type="hidden" name="val_id"   value="<?= (int)$vv['id'] ?>">
+                    <input type="hidden" name="redirect"  value="index.php">
+                    <button class="btn btn-xs btn-success" title="Forçar aprovação (sem aguardar o responsável)"
+                            onclick="return confirm('Forçar aprovação desta validação sem aguardar resposta do responsável?')">
+                      <i class="fas fa-check fa-xs"></i>
+                    </button>
+                  </form>
+                  <?php endif; ?>
+                  <form method="post" action="validacao-action.php" style="display:inline">
+                    <input type="hidden" name="val_acao" value="cancelar">
+                    <input type="hidden" name="val_id"   value="<?= (int)$vv['id'] ?>">
+                    <input type="hidden" name="redirect"  value="index.php">
+                    <button class="btn btn-xs btn-outline-danger" title="Apagar esta validação"
+                            onclick="return confirm('Apagar esta validação? O responsável não será notificado.')">
+                      <i class="fas fa-trash fa-xs"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+              </tbody>
+            </table>
+            <?php if (!$todosOk): ?>
+            <form method="post" action="validacao-action.php" style="display:inline">
+              <input type="hidden" name="val_acao"  value="solicitar_pedido">
+              <input type="hidden" name="pedido_id" value="<?= (int)$ped['id'] ?>">
+              <input type="hidden" name="redirect"  value="index.php">
+              <button class="btn btn-xs btn-outline-warning"
+                      onclick="return confirm('Solicitar validações para espaços ainda sem pedido?')">
+                <i class="fas fa-plus fa-xs"></i> Solicitar validações em falta
+              </button>
+            </form>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
+          <div class="d-flex gap-2 flex-wrap pt-1">
+            <button class="btn btn-sm btn-outline-secondary"
+              onclick='verPedido(<?= (int)$ped["id"] ?>,
+                <?= json_encode($ped["dados_json"]) ?>,
+                <?= json_encode($ped["dados_anteriores"] ?? "null") ?>,
+                <?= json_encode($ped["campos_alterados"] ?? "null") ?>)'>
+              <i class="fas fa-eye fa-sm me-1"></i>Ver
+            </button>
+            <form method="post" style="display:inline"
+                  onsubmit="return confirm('<?= addslashes($confirmMsg) ?>')">
+              <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
+              <input type="hidden" name="pedido_action" value="Aprovado">
+              <?php if ($bloqueado): ?>
+                <button class="btn btn-sm btn-success" disabled title="Aguarda validação dos responsáveis de espaço">
+                  <i class="fas fa-lock fa-xs me-1"></i>Aprovar
                 </button>
-              </form>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-        <?php if ($precisaVal && !$todosOk): ?>
-        <form method="post" action="validacao-action.php" style="display:inline">
-          <input type="hidden" name="val_acao"  value="solicitar_pedido">
-          <input type="hidden" name="pedido_id" value="<?= (int)$ped['id'] ?>">
-          <input type="hidden" name="redirect"  value="index.php">
-          <button class="btn btn-xs btn-outline-warning"
-                  title="Enviar pedido de validação para espaços ainda sem resposta"
-                  onclick="return confirm('Solicitar validações para espaços ainda sem pedido?')">
-            <i class="fas fa-plus fa-xs"></i> Solicitar validações em falta
-          </button>
-        </form>
-        <?php endif; ?>
-      </td>
-    </tr>
-    <?php endif; ?>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
+              <?php else: ?>
+                <button class="btn btn-sm btn-success">✓ Aprovar</button>
+              <?php endif; ?>
+            </form>
+            <form method="post" style="display:inline" onsubmit="return rejeitarPedido(this)">
+              <input type="hidden" name="pedido_id"     value="<?= (int)$ped['id'] ?>">
+              <input type="hidden" name="pedido_action" value="Rejeitado">
+              <input type="hidden" name="notas_admin"   value="">
+              <button class="btn btn-sm btn-danger">✗ Rejeitar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <?php endforeach; // foreach pedido ?>
+  </div>
 <?php endif; ?>
+  </div>
+</div>
 
 <?php if (!empty($pedidosAguarda)): ?>
-<hr class="my-3">
-<h6 class="text-muted mb-2">
-  <i class="fas fa-hourglass-half me-1"></i>
-  A aguardar confirmação do SIGARRA
-  <span class="badge badge-secondary ms-1"><?= $pedidosAguardaCount ?></span>
-</h6>
-<table class="table table-sm table-hover">
+<div class="card mt-3">
+  <div class="card-header d-flex align-items-center gap-2" style="font-size:.85rem;padding:10px 14px">
+    <i class="fas fa-hourglass-half text-warning"></i>
+    <strong>A aguardar confirmação do SIGARRA</strong>
+    <span class="badge badge-secondary ms-1"><?= $pedidosAguardaCount ?></span>
+  </div>
+  <div class="card-body p-0">
+<table class="table table-sm table-hover mb-0">
   <thead class="">
     <tr>
       <th>Código</th><th>Nome</th><th>Tipo</th>
@@ -1754,6 +1788,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
   <?php endforeach; ?>
   </tbody>
 </table>
+  </div>
+</div>
 <?php endif; ?>
 
 </div></div>

@@ -120,6 +120,7 @@ $lang['DASH_NEW_RECORDS']   = 'Novos registos';
 $lang['DASH_PENDING']       = 'Pendentes';
 $lang['DASH_EXPIRING']      = 'A caducar (30 dias)';
 $lang['DASH_ACTIVE']        = 'Registos ativos';
+$lang['DASH_PEDIDOS']       = 'Pedidos';
 $lang['DASH_NO_EXPIRING']   = 'Nenhum contrato a expirar';
 $lang['DASH_SEE_ALL']       = 'Ver todos';
 $lang['DASH_MY_RECORD']     = 'Registo de colaborador';

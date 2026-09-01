@@ -120,6 +120,7 @@ $lang['DASH_NEW_RECORDS']   = 'New records';
 $lang['DASH_PENDING']       = 'Pending';
 $lang['DASH_EXPIRING']      = 'Expiring (30 days)';
 $lang['DASH_ACTIVE']        = 'Active records';
+$lang['DASH_PEDIDOS']       = 'Requests';
 $lang['DASH_NO_EXPIRING']   = 'No contracts expiring';
 $lang['DASH_SEE_ALL']       = 'See all';
 $lang['DASH_MY_RECORD']     = 'Staff registration';
