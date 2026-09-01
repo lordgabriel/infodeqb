@@ -1,0 +1,37 @@
+{
+  "email": "gases@fe.up.pt",
+  "contrato": "Air Liquide (Arlíquido) · Contrato FEUP em vigor desde 1/11/2023",
+  "instrucoes_extra": "",
+  "ficheiro": {
+    "nome": "Encomenda_gases_especiais.xlsx",
+    "descricao": "Utilizar obrigatoriamente este ficheiro Excel para submeter o pedido. Inclui campos para gás em garrafa e azoto líquido.",
+    "data_atualizacao": "abril de 2025"
+  },
+  "gases_garrafa": [
+    {"gas": "Acetileno",             "pureza": "99,5%",   "designacao": "industrial (N25)", "garrafa": "B20", "prazo": 10, "preco": "26,35"},
+    {"gas": "Acetileno",             "pureza": "99,6%",   "designacao": "N26",              "garrafa": "B40", "prazo": 10, "preco": "91,65"},
+    {"gas": "AR sintético (N2+O2)",  "pureza": "99,999%", "designacao": "Alphagaz 1 (N50)", "garrafa": "B50", "prazo": 4,  "preco": "29,70"},
+    {"gas": "Árgon",                 "pureza": "99,999%", "designacao": "Alphagaz 1 (N50)", "garrafa": "B50", "prazo": 4,  "preco": "47,25"},
+    {"gas": "Azoto",                 "pureza": "99,999%", "designacao": "N50",              "garrafa": "B10", "prazo": 10, "preco": "35,00"},
+    {"gas": "Azoto",                 "pureza": "99,999%", "designacao": "Alphagaz 1 (N50)", "garrafa": "B50", "prazo": 4,  "preco": "28,20"},
+    {"gas": "CO",                    "pureza": "99,9%",   "designacao": "N30",              "garrafa": "B10", "prazo": 10, "preco": "70,00"},
+    {"gas": "CO2",                   "pureza": "99,998%", "designacao": "N48",              "garrafa": "B50", "prazo": 4,  "preco": "119,00"},
+    {"gas": "CO2 com tubo de pesca", "pureza": "99,998%", "designacao": "N48",              "garrafa": "B50", "prazo": 10, "preco": "119,00"},
+    {"gas": "CO2/Árgon",             "pureza": "18%/82%", "designacao": "ARCAL Force",      "garrafa": "B20", "prazo": 10, "preco": "44,00"},
+    {"gas": "Etano",                 "pureza": "99,95%",  "designacao": "N35",              "garrafa": "B20", "prazo": 60, "preco": "250,00"},
+    {"gas": "H2/Árgon",              "pureza": "5%/95%",  "designacao": "—",                "garrafa": "B50", "prazo": 10, "preco": "105,64"},
+    {"gas": "Hélio",                 "pureza": "99,999%", "designacao": "Alphagaz 1 (N50)", "garrafa": "B50", "prazo": 4,  "preco": "218,40"},
+    {"gas": "Hélio",                 "pureza": "99,9999%","designacao": "Alphagaz 2 (N60)", "garrafa": "B50", "prazo": 4,  "preco": "300,30"},
+    {"gas": "Hidrogénio",            "pureza": "99,999%", "designacao": "Alphagaz 1 (N50)", "garrafa": "B50", "prazo": 4,  "preco": "52,80"},
+    {"gas": "Isobutano",             "pureza": "99,5%",   "designacao": "N25",              "garrafa": "B83", "prazo": 60, "preco": "375,00"},
+    {"gas": "Metano",                "pureza": "99,95%",  "designacao": "N35",              "garrafa": "B50", "prazo": 10, "preco": "250,95"},
+    {"gas": "Metano",                "pureza": "99,995%", "designacao": "N45",              "garrafa": "B10", "prazo": 10, "preco": "55,25"},
+    {"gas": "N2O",                   "pureza": "99,5%",   "designacao": "Alphagaz 1 (N25)", "garrafa": "B50", "prazo": 10, "preco": "245,00"},
+    {"gas": "Oxigénio",              "pureza": "99,5%",   "designacao": "industrial (N25)", "garrafa": "B20", "prazo": 10, "preco": "14,70"},
+    {"gas": "Oxigénio",              "pureza": "99,995%", "designacao": "Alphagaz 1 (N45)", "garrafa": "B50", "prazo": 4,  "preco": "53,00"},
+    {"gas": "Propano",               "pureza": "99,95%",  "designacao": "N35",              "garrafa": "B20", "prazo": 60, "preco": "160,00"}
+  ],
+  "gases_liquefeitos": [
+    {"gas": "Azoto líquido", "pureza": "99,8% (N28)", "recipiente": "Fornecido pela FEUP", "prazo": 4, "preco": "1,00", "unidade": "L"}
+  ]
+}

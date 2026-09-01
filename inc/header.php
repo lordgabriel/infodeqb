@@ -181,6 +181,7 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
       <a href="#"><?php echo t('NAV_RESOURCES'); ?> <i class="fas fa-chevron-down fa-xs" style="opacity:.6;margin-left:2px"></i></a>
       <ul class="iq-tn-menu">
         <li><a href="<?php echo $_base; ?>/equipments/"><?php echo t('NAV_EQUIPMENT'); ?></a></li>
+        <li><a href="<?php echo $_base; ?>/gases/encomendas.php"><?php echo t('NAV_GAS_ORDERS'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/reagentes/"><?php echo t('NAV_REAGENTS'); ?></a></li>
         <li><a href="<?php echo $_base; ?>/booking" target="_blank"><?php echo t('NAV_BOOKING'); ?> <i class="fa fa-external-link fa-xs ms-1"></i></a></li>
         <li><a href="<?php echo $_base; ?>/water/waterqc.php"><?php echo t('NAV_WATER_QUALITY'); ?></a></li>

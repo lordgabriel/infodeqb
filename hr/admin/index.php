@@ -726,11 +726,12 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 				      <div class="iq-stat-label"><?= t('DASH_ACTIVE') ?></div>
 				    </div>
 				  </a>
-				  <a class="iq-stat <?= ($pedidosCount > 0) ? 'iq-stat-orange' : 'iq-stat-gray' ?>" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
+				  <?php $pedidosTotalCount = $pedidosCount + $pedidosAguardaCount; ?>
+				  <a class="iq-stat <?= ($pedidosTotalCount > 0) ? 'iq-stat-orange' : 'iq-stat-gray' ?>" href="javascript:void(0)" style="text-decoration:none;color:inherit;cursor:pointer"
 				     onclick="document.querySelector('#pills-pedidos-tab').click();document.querySelector('#pills-pedidos-tab').scrollIntoView({behavior:'smooth',block:'nearest'})">
 				    <div class="iq-stat-icon"><i class="fas fa-inbox"></i></div>
 				    <div>
-				      <div class="iq-stat-value"><?= $pedidosCount ?></div>
+				      <div class="iq-stat-value"><?= $pedidosTotalCount ?></div>
 				      <div class="iq-stat-label"><?= t('DASH_PEDIDOS') ?></div>
 				    </div>
 				  </a>
@@ -925,13 +926,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
           ⏳ <?= $notifPendCount ?>
         </span>
       <?php endif; ?>
-      <?php if ($pedidosAguardaCount > 0): ?>
-        <span class="tab-badge" id="badge-aguarda-sig"
-              style="background:#dbeafe;color:#1d4ed8;cursor:pointer;"
-              title="Clique para ver só os registos a aguardar resposta do SIGARRA">
-          📨 <?= $pedidosAguardaCount ?>
-        </span>
-      <?php endif; ?>
     </a>
   </li>
   <li class="nav-item">
@@ -946,8 +940,8 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
        data-bs-toggle="pill" href="#pills-pedidos" role="tab"
        aria-controls="pills-pedidos" aria-selected="false">
       Pedidos
-      <?php if ($pedidosCount > 0): ?>
-        <span class="tab-badge tab-badge-yellow"><?= $pedidosCount ?></span>
+      <?php if ($pedidosTotalCount > 0): ?>
+        <span class="tab-badge tab-badge-yellow"><?= $pedidosTotalCount ?></span>
       <?php endif; ?>
     </a>
   </li>
@@ -1319,11 +1313,6 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                     ⏳ Ver <span id="notif-count"><?= $notifPendCount ?></span> pendente<?php echo $notifPendCount > 1 ? 's' : ''; ?>
                   </button>
                   <?php endif; ?>
-                  <?php if ($pedidosAguardaCount > 0): ?>
-                  <button type="button" id="btn-filter-aguarda" class="btn btn-sm btn-outline-primary me-2" title="Ver só registos a aguardar resposta do SIGARRA">
-                    📨 Ver <span id="aguarda-count"><?= $pedidosAguardaCount ?></span> a aguardar SIGARRA
-                  </button>
-                  <?php endif; ?>
 															<form action="index.php" method="post" id="export-form" style="display:inline-block;">
 																<input type="submit"
 																	class="btn btn-info  btn-sm text-white"
@@ -1351,13 +1340,10 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
                 'Ativo'
         ])) {
             while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $isPend    = !empty($row['notif_pendente']);
-                $isAguarda = in_array((int)$row['autoid'], $aguardaRegistoIds, true);
-                $trStyle   = $isPend    ? ' style="background:#fffdf0;"'
-                           : ($isAguarda ? ' style="background:#eff6ff;"' : '');
+                $isPend  = !empty($row['notif_pendente']);
+                $trStyle = $isPend ? ' style="background:#fffdf0;"' : '';
                 echo '<tr data-row-id="' . $row['codigo'] . '"'
-                    . ($isPend    ? ' data-notif-pend="1"'  : '')
-                    . ($isAguarda ? ' data-aguarda-sig="1"' : '')
+                    . ($isPend ? ' data-notif-pend="1"' : '')
                     . $getLabsAttr($row['autoid'])
                     . $trStyle . '>';
                 echo '<td class="text-start"><input name="selector[' .
@@ -2088,48 +2074,7 @@ window._labIdToName = <?= json_encode($labIdToNameMap, JSON_UNESCAPED_UNICODE) ?
     });
   }
 
-  // ── Filtro "Aguarda SIGARRA" no tab Ativos ────────────────────────────────
-  var btnFilterAg  = document.getElementById('btn-filter-aguarda');
-  var badgeAg      = document.getElementById('badge-aguarda-sig');
-  var _filteredAg  = false;
-  var _btnAgHtmlOn = btnFilterAg ? btnFilterAg.innerHTML : '';
 
-  $(document).ready(function () {
-    if (window.jQuery && $.fn.dataTable) {
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-        if (!_filteredAg || settings.nTable.id !== 'active') return true;
-        var aoRow = settings.aoData ? settings.aoData[dataIndex] : null;
-        var nTr   = aoRow ? aoRow.nTr : null;
-        return !!(nTr && nTr.getAttribute('data-aguarda-sig') === '1');
-      });
-    }
-  });
-
-  function applyFilterAg(on) {
-    _filteredAg = on;
-    if (on) {
-      if (btnFilterAg) { btnFilterAg.classList.replace('btn-outline-primary', 'btn-primary'); btnFilterAg.innerHTML = '✕ Limpar filtro'; }
-    } else {
-      if (btnFilterAg) { btnFilterAg.classList.replace('btn-primary', 'btn-outline-primary'); btnFilterAg.innerHTML = _btnAgHtmlOn; }
-    }
-    if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#active')) {
-      $('#active').DataTable().draw();
-    }
-  }
-
-  function activateAndFilterAg() {
-    if (activeTab && typeof bootstrap !== 'undefined') {
-      bootstrap.Tab.getOrCreateInstance(activeTab).show();
-    } else if (activeTab) { activeTab.click(); }
-    setTimeout(function () { applyFilterAg(true); }, 80);
-  }
-
-  if (btnFilterAg) {
-    btnFilterAg.addEventListener('click', function (e) { e.stopPropagation(); applyFilterAg(!_filteredAg); });
-  }
-  if (badgeAg) {
-    badgeAg.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); activateAndFilterAg(); });
-  }
 }());
 </script>
 

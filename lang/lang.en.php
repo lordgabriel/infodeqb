@@ -87,6 +87,7 @@ $lang['NAV_STAFF_LIST']     = 'Active staff list';
 $lang['NAV_STAFF_ADMIN']    = 'Queries & management';
 $lang['NAV_RESOURCES']      = 'Resources';
 $lang['NAV_EQUIPMENT']      = 'Equipment';
+$lang['NAV_GAS_ORDERS']     = 'Special gases';
 $lang['NAV_REAGENTS']       = 'Reagents';
 $lang['NAV_BOOKING']        = 'Resource booking';
 $lang['NAV_WATER_QUALITY']  = 'Water quality';
