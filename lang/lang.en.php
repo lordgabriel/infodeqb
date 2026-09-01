@@ -176,6 +176,7 @@ $lang['PROGROUP']           = 'Professional Group:';
 $lang['BUILDING']           = 'Building';
 $lang['DEQ_ACCESS']         = 'Request DEQB access (north door)?';
 $lang['LAB_ACCESS']         = 'Choose the labs / offices you want to access:';
+$lang['LAB_ACCESS_NOTE']    = 'When a space appears with more than one designation, select only the option whose supervisor matches the work supervisor.';
 $lang['REQUESTED_ACCESS']   = 'Requested accesses:';
 $lang['DOOR_ID']            = 'Door ID(s):';
 $lang['SIGNATURE']          = 'Signature:';

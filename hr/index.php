@@ -402,22 +402,33 @@ foreach ($gabByEdificio as $edificio => $edRows) {
     $open     = $edSel > 0 ? ' show' : '';
     $expanded = $edSel > 0 ? 'true' : 'false';
     $badge    = '<span class="iq-lab-sel-count"' . ($edSel > 0 ? '' : ' style="display:none"') . '>' . ($edSel > 0 ? $edSel : '') . '</span>';
+    // Pre-agrupar por piso (preserva ordem de inserção)
+    $byPiso = array();
+    foreach ($edRows as $r) { $byPiso[$r['piso']][] = $r; }
     $gabChecks .= '<div class="iq-lab-building">'
         . '<button type="button" class="iq-lab-building-header" data-bs-toggle="collapse" data-bs-target="#' . $edId . '" aria-expanded="' . $expanded . '">'
         . '<span>' . t('BUILDING') . ' ' . htmlspecialchars($edificio) . '</span>' . $badge
         . '<i class="fas fa-chevron-down ms-auto"></i></button>'
         . '<div class="collapse' . $open . '" id="' . $edId . '">';
-    $curPiso = '';
-    foreach ($edRows as $rowgab) {
-        if ($rowgab['piso'] !== $curPiso) {
-            if ($curPiso !== '') $gabChecks .= '</div>';
-            $gabChecks .= '<div class="iq-checkgroup"><span class="iq-checkgroup-label">' . htmlspecialchars($rowgab['piso']) . '</span>';
-            $curPiso = $rowgab['piso'];
+    $pisoIdx = 0;
+    foreach ($byPiso as $piso => $pisoRows) {
+        $pisoId  = $edId . '-p' . $pisoIdx++;
+        $pisoSel = 0;
+        foreach ($pisoRows as $r) { if (in_array($r['deqid'], $selectedAcessos)) $pisoSel++; }
+        $pisoOpen = $pisoSel > 0 ? ' show' : '';
+        $pisoExp  = $pisoSel > 0 ? 'true' : 'false';
+        $gabChecks .= '<div class="iq-checkgroup">'
+            . '<button type="button" class="iq-piso-header" data-bs-toggle="collapse" data-bs-target="#' . $pisoId . '" aria-expanded="' . $pisoExp . '">'
+            . '<i class="fas fa-layer-group fa-xs me-1"></i>'
+            . htmlspecialchars($piso)
+            . '<i class="fas fa-chevron-down ms-auto iq-piso-chevron"></i></button>'
+            . '<div class="collapse iq-piso-body' . $pisoOpen . '" id="' . $pisoId . '">';
+        foreach ($pisoRows as $rowgab) {
+            $checked = in_array($rowgab['deqid'], $selectedAcessos) ? ' checked' : '';
+            $gabChecks .= '<label><input type="checkbox" name="acessos[]" value="' . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> ' . htmlspecialchars($rowgab['nomegab']) . '</label>';
         }
-        $checked = in_array($rowgab['deqid'], $selectedAcessos) ? ' checked' : '';
-        $gabChecks .= '<label><input type="checkbox" name="acessos[]" value="' . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> ' . htmlspecialchars($rowgab['nomegab']) . '</label>';
+        $gabChecks .= '</div></div>';
     }
-    if ($curPiso !== '') $gabChecks .= '</div>';
     $gabChecks .= '</div></div>';
 }
 
@@ -656,6 +667,17 @@ $_SESSION['_hr_submit_token'] = bin2hex(random_bytes(16));
 
     <div class="form-group iq-fill">
       <label><?php echo $lang['LAB_ACCESS']; ?></label>
+      <p class="form-text mt-0 mb-1" style="font-size:.78rem;color:#92400e;background:#fefce8;border-left:3px solid #ca8a04;border-radius:3px;padding:.28rem .55rem">
+        <i class="fas fa-info-circle fa-xs me-1" style="color:#ca8a04"></i><?php echo $lang['LAB_ACCESS_NOTE']; ?>
+      </p>
+      <div class="d-flex justify-content-end gap-2 mb-1">
+        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="labsExpandAll(true)">
+          <i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo
+        </button>
+        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="labsExpandAll(false)">
+          <i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo
+        </button>
+      </div>
       <div class="iq-checkboxlist" id="acessos-list">
         <?php echo $gabChecks; ?>
       </div>
@@ -685,6 +707,14 @@ var gruposSemCategoria = [2, 3, 4, 6, 7];
 var allCatOptions      = document.getElementById('category')
     ? document.getElementById('category').innerHTML : '';
 
+function labsExpandAll(expand) {
+  var el = document.getElementById('acessos-list');
+  if (!el) return;
+  el.querySelectorAll('.collapse').forEach(function(c) {
+    var bsc = bootstrap.Collapse.getOrCreateInstance(c, {toggle: false});
+    expand ? bsc.show() : bsc.hide();
+  });
+}
 function filtrarCategorias(grupoId) {
     var sel  = document.getElementById('category');
     var wrap = document.getElementById('cat-col-wrap');
