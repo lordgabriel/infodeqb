@@ -546,14 +546,15 @@ elseif ($acao === 'solicitar_acessos' && !empty($_POST['registo_id'])) {
         exit;
     }
 
-    // 2. Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
+    // 2. Bloquear se existirem labs com responsável (não auto-validado) mas sem pedido de validação
     $qSemVal = $pdo->prepare(
         "SELECT COUNT(*)
          FROM infodeqb_rds_gabinetes g
          JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
+         JOIN infodeqb_rds_responsaveis resp ON resp.Codigo = g.responsavel
          WHERE ra.registo_id = ?
            AND g.responsavel IS NOT NULL AND g.responsavel != 0
-           AND g.responsavel != 246398
+           AND COALESCE(resp.auto_valida, 0) = 0
            AND NOT EXISTS (
                SELECT 1 FROM infodeqb_rds_validacao v
                WHERE v.registo_id = ra.registo_id AND v.resp_codigo = g.responsavel

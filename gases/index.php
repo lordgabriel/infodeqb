@@ -57,6 +57,24 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
 </div>
 
+<!-- App móvel Android -->
+<div class="card shadow-sm mb-4" style="border-radius:var(--iq-r2);border-left:3px solid #3ddc84">
+  <div class="card-body d-flex align-items-center flex-wrap" style="gap:1.2rem;padding:.9rem 1.1rem">
+    <i class="fab fa-android" style="font-size:2rem;color:#3ddc84;flex-shrink:0"></i>
+    <div style="flex:1;min-width:200px">
+      <div class="fw-semibold mb-1" style="font-size:.9rem">App GasTrack DEQB <span class="badge bg-secondary ms-1" style="font-size:.7rem">Android</span></div>
+      <div style="font-size:.82rem;color:var(--iq-subtle)">
+        Aplicação para registo de leituras sincronizada com esta base de dados.
+        Pode ser necessário activar <em>Instalar apps de fontes desconhecidas</em> nas definições do dispositivo.
+      </div>
+    </div>
+    <a href="<?= HTTP_DIR ?>/infodeqb/files/GasTrack_DEQB.apk" download
+       class="btn btn-success btn-sm d-flex align-items-center" style="gap:.4rem;white-space:nowrap;flex-shrink:0">
+      <i class="fab fa-android"></i> Descarregar APK
+    </a>
+  </div>
+</div>
+
 <!-- Gas cards grid -->
 <div class="row g-3" id="gas-grid">
 <?php foreach ($gases as $gasId => $g): ?>

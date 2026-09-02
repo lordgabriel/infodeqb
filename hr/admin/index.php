@@ -150,13 +150,15 @@ if (! empty($_POST)) {
                     continue;
                 }
 
-                // Bloquear se existirem labs com responsável mas sem qualquer pedido de validação
+                // Bloquear se existirem labs com responsável (não auto-validado) mas sem pedido de validação
                 $qSemVal = $pdo->prepare(
                     "SELECT COUNT(*)
                      FROM infodeqb_rds_gabinetes g
                      JOIN infodeqb_rds_registo_acessos ra ON ra.lab_id = g.id
+                     JOIN infodeqb_rds_responsaveis resp ON resp.Codigo = g.responsavel
                      WHERE ra.registo_id = ?
                        AND g.responsavel IS NOT NULL AND g.responsavel != 0
+                       AND COALESCE(resp.auto_valida, 0) = 0
                        AND NOT EXISTS (
                            SELECT 1 FROM infodeqb_rds_validacao v
                            WHERE v.registo_id = ra.registo_id AND v.resp_codigo = g.responsavel
@@ -775,13 +777,13 @@ include ROOT_DIR.'/infodeqb/inc/header.php';
 				</div>
 				<?php unset($_SESSION['val_info']); unset($_SESSION['val_result']); endif; ?>
 				<?php if (!empty($_SESSION['pedido_err'])): ?>
-				<div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+				<div class="alert alert-warning alert-dismissible fade show mb-3 text-start" role="alert">
 				  <i class="fas fa-exclamation-triangle me-1"></i><?= htmlspecialchars($_SESSION['pedido_err']) ?>
 				  <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 				</div>
 				<?php unset($_SESSION['pedido_err']); endif; ?>
 				<?php if (!empty($_GET['created'])): ?>
-<div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+<div class="alert alert-success alert-dismissible fade show mb-3 text-start" role="alert">
   <i class="fas fa-check-circle me-1"></i>Registo criado com sucesso.
   <button type="button" class="btn-close" data-bs-dismiss="alert">&times;</button>
 </div>
