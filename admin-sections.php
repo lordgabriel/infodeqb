@@ -82,7 +82,7 @@ if (!empty($_POST)) {
     }
 }
 
-$_activeTab = in_array($_GET['tab'] ?? '', ['admins', 'forms', 'email']) ? $_GET['tab'] : 'admins';
+$_activeTab = in_array($_GET['tab'] ?? '', ['admins', 'forms', 'email', 'equip']) ? $_GET['tab'] : 'admins';
 
 if (isset($_SESSION['_sec_flash'])) {
     list($flashMsg, $flashType) = $_SESSION['_sec_flash'];
@@ -156,6 +156,12 @@ $_configFile  = '/deqbwww.php';
       <?php if ($_testMode): ?>
       <span class="badge" style="background:#7c2615;font-size:.7rem;vertical-align:middle">TESTE</span>
       <?php endif; ?>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?= $_activeTab === 'equip' ? 'active' : '' ?>"
+       href="?tab=equip">
+      <i class="fas fa-microscope me-1"></i>Equipamentos
     </a>
   </li>
 </ul>
@@ -360,6 +366,70 @@ foreach ($_formCards as $_fc):
       Em localhost o modo teste está <strong>sempre activo</strong> independentemente de <code>MAIL_TEST_MODE</code>.
     </p>
   </div>
+</div>
+
+<?php /* ════════════════════════════════════════
+         TAB: EQUIPAMENTOS
+         ════════════════════════════════════════ */ ?>
+<?php elseif ($_activeTab === 'equip'): ?>
+
+<?php
+// Carregar contagens para o resumo
+$_pdo2 = Database::connect();
+$_labRespCount = (int)$_pdo2->query("SELECT COUNT(*) FROM infodeqb_lab_responsibles")->fetchColumn();
+$_eqAccessCount = (int)$_pdo2->query("SELECT COUNT(*) FROM infodeqb_equipmentdeq_access")->fetchColumn();
+Database::disconnect();
+?>
+
+<div class="alert alert-secondary mb-4" style="display:block;font-size:.84rem">
+  <i class="fas fa-info-circle me-1"></i>
+  As permissões de edição de equipamentos são geridas numa página dedicada. Aqui pode ver o resumo e aceder à gestão.
+</div>
+
+<div class="row" style="max-width:700px">
+  <div class="col-sm-6 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-start" style="gap:12px">
+        <div style="font-size:1.6rem;color:#0891b2;line-height:1">
+          <i class="fas fa-flask"></i>
+        </div>
+        <div>
+          <div class="fw-semibold" style="font-size:.88rem">Por laboratório</div>
+          <div class="text-muted" style="font-size:.8rem">Responsáveis com acesso a todos os equipamentos de um lab</div>
+          <div class="mt-1">
+            <span class="badge bg-primary"><?= $_labRespCount ?> associações</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-start" style="gap:12px">
+        <div style="font-size:1.6rem;color:#7c3aed;line-height:1">
+          <i class="fas fa-microscope"></i>
+        </div>
+        <div>
+          <div class="fw-semibold" style="font-size:.88rem">Por equipamento</div>
+          <div class="text-muted" style="font-size:.8rem">Excepções: acesso a equipamentos específicos fora do lab</div>
+          <div class="mt-1">
+            <span class="badge bg-secondary"><?= $_eqAccessCount ?> acessos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex gap-2 mt-1">
+  <a href="<?= HTTP_DIR ?>/infodeqb/equipments/admin-permissions.php?tab=lab"
+     class="btn btn-primary btn-sm">
+    <i class="fas fa-key me-1"></i>Gerir permissões por laboratório
+  </a>
+  <a href="<?= HTTP_DIR ?>/infodeqb/equipments/admin-permissions.php?tab=eq"
+     class="btn btn-outline-secondary btn-sm">
+    <i class="fas fa-microscope me-1"></i>Gerir acessos por equipamento
+  </a>
 </div>
 
 <?php endif; ?>

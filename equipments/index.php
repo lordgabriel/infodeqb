@@ -14,8 +14,14 @@ $podeGerir  = !empty($labsDoUser);
 
 // ── Dados ─────────────────────────────────────────────────────────
 $labs = $pdo->query(
-    'SELECT lab_id, designacao FROM infodeqb_labs_ensino ORDER BY designacao'
+    'SELECT lab_id, designacao FROM infodeqb_labs_ensino'
 )->fetchAll(PDO::FETCH_ASSOC);
+usort($labs, function($a, $b) {
+    $aE = strncmp($a['lab_id'], 'E-', 2) === 0;
+    $bE = strncmp($b['lab_id'], 'E-', 2) === 0;
+    if ($aE !== $bE) return $aE ? -1 : 1;
+    return strnatcasecmp($a['lab_id'], $b['lab_id']);
+});
 
 $equipamentos = $pdo->query(
     'SELECT e.equipment_id, e.Laboratorio, e.Equipamento, e.Marca,
@@ -23,17 +29,24 @@ $equipamentos = $pdo->query(
             COALESCE(l.designacao, e.Laboratorio) AS lab_nome
      FROM infodeqb_equipmentdeq e
      LEFT JOIN infodeqb_labs_ensino l ON l.lab_id = e.Laboratorio
-     ORDER BY lab_nome ASC, e.Equipamento ASC'
+     ORDER BY e.Laboratorio ASC, e.Equipamento ASC'
 )->fetchAll(PDO::FETCH_ASSOC);
 
 Database::disconnect();
 
-// Agrupar por lab
+// Agrupar por lab_id
 $porLab = [];
 foreach ($equipamentos as $eq) {
-    $porLab[$eq['lab_nome']][] = $eq;
+    $porLab[$eq['Laboratorio']][] = $eq;
 }
-ksort($porLab);
+
+// Ordenar: labs E- primeiro, depois ordem natural por código
+uksort($porLab, function($a, $b) {
+    $aE = strncmp($a, 'E-', 2) === 0;
+    $bE = strncmp($b, 'E-', 2) === 0;
+    if ($aE !== $bE) return $aE ? -1 : 1;
+    return strnatcasecmp($a, $b);
+});
 
 $pageTitle  = t('EQUIP_TITLE');
 $mainClass  = 'iq-hr-page';
@@ -48,6 +61,11 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <?php if ($podeGerir): ?>
   <a href="edit_equipment.php" class="btn btn-primary btn-sm">
     <i class="fas fa-plus me-1"></i><?= t('EQUIP_ADD') ?>
+  </a>
+  <?php endif; ?>
+  <?php if ($isAdmin): ?>
+  <a href="admin-permissions.php" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-key me-1"></i>Permissões
   </a>
   <?php endif; ?>
 </div>
@@ -72,7 +90,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <option value=""><?= t('EQUIP_ALL_LABS') ?></option>
           <?php foreach ($labs as $l): ?>
           <option value="<?= htmlspecialchars($l['designacao']) ?>">
-            <?= htmlspecialchars($l['designacao']) ?>
+            <?= htmlspecialchars($l['lab_id']) ?> · <?= htmlspecialchars($l['designacao']) ?>
           </option>
           <?php endforeach; ?>
         </select>
@@ -84,15 +102,17 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 <?php /* ── Equipamentos agrupados por lab ─────────────────────────── */ ?>
 <div id="equipList">
-<?php foreach ($porLab as $labNome => $eqs):
-  $labId = $eqs[0]['Laboratorio'] ?? '';
+<?php foreach ($porLab as $_labKey => $eqs):
+  $labId   = $eqs[0]['Laboratorio'] ?? $_labKey;
+  $labNome = $eqs[0]['lab_nome']    ?? $labId;
   $podeAdicionarAqui = $isAdmin || in_array($labId, $labsDoUser);
 ?>
 <div class="lab-group mb-4" data-lab="<?= htmlspecialchars($labNome) ?>">
   <div class="d-flex align-items-center mb-0 px-3 py-2 rounded-top"
        style="background:var(--iq-accent)">
     <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:#fff">
-      <i class="fas fa-flask fa-xs me-1"></i><?= htmlspecialchars($labNome) ?>
+      <i class="fas fa-flask fa-xs me-1"></i>
+      <span style="opacity:.75;font-size:.8em;margin-right:.3em"><?= htmlspecialchars($labId) ?></span><?= htmlspecialchars($labNome) ?>
     </h6>
     <?php if ($podeAdicionarAqui): ?>
     <a href="edit_equipment.php?lab=<?= urlencode($labId) ?>"
@@ -136,10 +156,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 title="<?= t('EQUIP_VIEW_DETAIL') ?>">
                 <i class="fas fa-eye fa-s"></i>
               </a>
-             <a href="edit_equipment.php?id=<?= (int)$eq['equipment_id'] ?>"
-                  title="Editar">
+              <?php if ($podeAdicionarAqui): ?>
+              <a href="edit_equipment.php?id=<?= (int)$eq['equipment_id'] ?>"
+                 title="Editar">
                 <i class="fas fa-edit fa-s"></i>
               </a>
+              <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>
