@@ -390,10 +390,11 @@ function _registoTotalmenteValidado($pdo, $registo_id) {
     if (!empty($deqids)) {
         $ph = implode(',', array_fill(0, count($deqids), '?'));
         $qG = $pdo->prepare(
-            "SELECT deqid FROM infodeqb_rds_gabinetes
-             WHERE deqid IN ($ph)
-               AND responsavel IS NOT NULL AND responsavel != 0
-               AND responsavel != 246398"
+            "SELECT g.deqid FROM infodeqb_rds_gabinetes g
+             JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+             WHERE g.deqid IN ($ph)
+               AND g.responsavel IS NOT NULL AND g.responsavel != 0
+               AND COALESCE(r.auto_valida, 0) = 0"
         );
         $qG->execute($deqids);
         foreach ($qG->fetchAll(PDO::FETCH_COLUMN) as $_deqid) {
@@ -468,17 +469,17 @@ function _criarValidacoes($pdo, $pedido_id, $registo_id, $deqids, $colab_nome, $
             continue;
         }
 
-        // Não duplicar se já existe validação Pendente deste responsável
+        // Não duplicar se já existe qualquer validação (Pendente ou Validado) deste responsável
         if ($pedido_id !== null) {
             $chk = $pdo->prepare(
                 "SELECT id FROM infodeqb_rds_validacao
-                 WHERE pedido_id=? AND resp_codigo=? AND status='Pendente' LIMIT 1"
+                 WHERE pedido_id=? AND resp_codigo=? AND status IN ('Pendente','Validado') LIMIT 1"
             );
             $chk->execute([$pedido_id, $respCodigo]);
         } else {
             $chk = $pdo->prepare(
                 "SELECT id FROM infodeqb_rds_validacao
-                 WHERE registo_id=? AND resp_codigo=? AND status='Pendente' LIMIT 1"
+                 WHERE registo_id=? AND resp_codigo=? AND status IN ('Pendente','Validado') LIMIT 1"
             );
             $chk->execute([$registo_id, $respCodigo]);
         }

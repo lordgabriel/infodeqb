@@ -522,17 +522,38 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
               </form>
               <?php endif; ?>
             <?php else: ?>
-            <form method="post" action="validacao-action.php">
-              <input type="hidden" name="val_acao"    value="solicitar_registo">
-              <input type="hidden" name="registo_id"  value="<?= (int)$row['autoid'] ?>">
-              <input type="hidden" name="redirect"
-                     value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
-              <button class="btn btn-xs btn-outline-warning"
-                      onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
-                <i class="fas fa-user-check fa-xs me-1"></i>
-                <?= ($rNVal === 0 && !$temSemPedido) ? 'Solicitar validações' : 'Solicitar validações em falta' ?>
+            <div class="d-flex flex-wrap align-items-center" style="gap:.4rem">
+              <?php if ($temSemPedido || ($rNVal === 0 && !$temSemPedido)): ?>
+              <form method="post" action="validacao-action.php">
+                <input type="hidden" name="val_acao"    value="solicitar_registo">
+                <input type="hidden" name="registo_id"  value="<?= (int)$row['autoid'] ?>">
+                <input type="hidden" name="redirect"
+                       value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
+                <button class="btn btn-xs btn-outline-warning"
+                        onclick="return confirm('Enviar pedido de validação aos responsáveis dos espaços?')">
+                  <i class="fas fa-user-check fa-xs me-1"></i>
+                  <?= ($rNVal === 0 && !$temSemPedido) ? 'Solicitar validações' : 'Solicitar validações em falta' ?>
+                </button>
+              </form>
+              <?php else: ?>
+              <button class="btn btn-xs btn-outline-secondary" disabled
+                      title="Todos os responsáveis já foram notificados — aguarda resposta">
+                <i class="fas fa-user-check fa-xs me-1"></i>Solicitar validações em falta
               </button>
-            </form>
+              <?php endif; ?>
+              <?php if ($rNPend > 0): ?>
+              <form method="post" action="validacao-action.php"
+                    onsubmit="return confirm('Reenviar link de validação a todos os responsáveis com pedido pendente?')">
+                <input type="hidden" name="val_acao"   value="reenviar_pendentes">
+                <input type="hidden" name="registo_id" value="<?= (int)$row['autoid'] ?>">
+                <input type="hidden" name="redirect"
+                       value="detail.php?id=<?= urlencode($id) ?><?= $statusFiltro ? '&amp;status=' . urlencode($statusFiltro) : '' ?>">
+                <button class="btn btn-xs btn-outline-info">
+                  <i class="fas fa-redo fa-xs me-1"></i>Reenviar link (<?= $rNPend ?>)
+                </button>
+              </form>
+              <?php endif; ?>
+            </div>
             <?php endif; ?>
           </td>
         </tr>

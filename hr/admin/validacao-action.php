@@ -519,6 +519,23 @@ elseif ($acao === 'reabrir' && !empty($_POST['val_id'])) {
     $_SESSION['val_info'] = 'Novo pedido de validação enviado ao responsável.';
 }
 
+// ── Reenviar link a todos os pendentes deste registo ──────────────────
+elseif ($acao === 'reenviar_pendentes' && !empty($_POST['registo_id'])) {
+    $rid = (int)$_POST['registo_id'];
+    $qP  = $pdo->prepare(
+        "SELECT id FROM infodeqb_rds_validacao WHERE registo_id=? AND status='Pendente'"
+    );
+    $qP->execute([$rid]);
+    $ids = $qP->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($ids as $vid) {
+        _reabrirValidacao($pdo, (int)$vid);
+    }
+    $n = count($ids);
+    $_SESSION['val_info'] = $n > 0
+        ? 'Link reenviado a ' . $n . ' responsável(is) pendente(s).'
+        : 'Sem validações pendentes para reenviar.';
+}
+
 // ── Forçar validação (admin aprova sem resposta do responsável) ────────
 elseif ($acao === 'forcar_validacao' && !empty($_POST['val_id'])) {
     $pdo->prepare(
