@@ -905,4 +905,18 @@ function buildGabAccordion(PDO $pdo, array $selectedDeqids, $inputName = 'acesso
     return $html;
 }
 
+/**
+ * Retorna array de deqids de laboratórios cujo responsável tem auto_valida=1.
+ * Estes labs são auto-aprovados e não entram no fluxo de validação normal.
+ */
+function _labsIsentos() {
+    global $pdo;
+    $q = $pdo->query(
+        "SELECT g.deqid FROM infodeqb_rds_gabinetes g
+         JOIN infodeqb_rds_responsaveis r ON r.Codigo = g.responsavel
+         WHERE COALESCE(r.auto_valida, 0) = 1"
+    );
+    return $q ? $q->fetchAll(PDO::FETCH_COLUMN) : array();
+}
+
 ?>
