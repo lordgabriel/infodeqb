@@ -572,7 +572,7 @@ function _enviarEmailValidacao($gab, $token, $colab_nome, $datainicio, $datafim,
         send_email(
             array($respEmail),
             $body,
-            'Acessos DEQB: Pedido de validacao de acesso - ' . $colab_nome,
+            'Acessos DEQB: Pedido de validação de acesso — ' . $colab_nome,
             array('deqdir@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -729,7 +729,7 @@ function _notificarRejeicaoValidacao($val, $colab_nome) {
         send_email(
             array('deqdir@fe.up.pt'),
             $body,
-            'Acessos DEQB: Validacao rejeitada - ' . $colab_nome,
+            'Acessos DEQB: Validação rejeitada — ' . $colab_nome,
             array('fmartins@fe.up.pt')
         );
     } catch (Exception $e) {
@@ -831,7 +831,7 @@ function _emailSigarra($pdo, $ped, $d) {
         'alteracoes'  => $alteracoes ?: '<p style="color:#555;font-family:Arial,sans-serif;">Sem alterações de detalhe disponíveis.</p>',
     );
     $body    = format_email($info, 'mail_alteracao_sigarra.html');
-    $subject = 'Acessos DEQB: Atualizacao de acessos - ' . $reg['nome'];
+    $subject = 'Acessos DEQB: Atualização de acessos — ' . $reg['nome'];
     try {
         send_email(
             array('sigarra@fe.up.pt'),

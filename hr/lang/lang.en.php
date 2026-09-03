@@ -78,7 +78,7 @@ $lang['OTHER_ACCESS'] = 'Other accesses:';
 $lang['HEADER1'] = '<h2>1. Personal Data</h2>';
 $lang['HEADER2'] = '<h2>2. Register</h2>';
 $lang['HEADER3'] = '<h2>3. Accesses</h2>';
-$lang['SUBJECT'] = 'Successful registration';
+$lang['SUBJECT'] = 'Acessos DEQB: Registo efetuado com sucesso';
 
 
 ?>
