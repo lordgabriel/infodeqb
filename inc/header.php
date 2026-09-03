@@ -260,7 +260,9 @@ $_logoutUrl = (in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']))
 <?php
 $_isLocalhost = defined('HTTP_DIR') && strpos(HTTP_DIR, 'localhost') !== false;
 $_testMode    = $_isLocalhost || (defined('MAIL_TEST_MODE') && MAIL_TEST_MODE === true);
-if ($_testMode && ($isAdmin ?? false)):
+$_isAnyAdmin = ($isAdmin ?? false)
+    || (isset($_iqAdminsHr, $_iqCurrentUser) && in_array($_iqCurrentUser, $_iqAdminsHr));
+if ($_testMode && $_isAnyAdmin):
     $_testLabel    = $_isLocalhost ? 'DEV / LOCALHOST' : 'PRODUÇÃO — MODO TESTE';
     $_testRecip    = (defined('MAIL_TEST_RECIPIENTS') && !empty(MAIL_TEST_RECIPIENTS))
                         ? implode(', ', MAIL_TEST_RECIPIENTS)

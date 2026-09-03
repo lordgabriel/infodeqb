@@ -177,6 +177,19 @@ $_configFile  = '/deqbwww.php';
   Esta página gere apenas admins de módulos específicos.
 </div>
 
+<div class="d-flex justify-content-end mb-2" style="gap:.5rem">
+  <button class="btn btn-xs btn-outline-secondary" id="expandAllBtn" onclick="
+    document.querySelectorAll('#modAccordion .accordion-collapse:not(.show)').forEach(function(el){
+      bootstrap.Collapse.getOrCreateInstance(el).show();
+    });
+  "><i class="fas fa-expand-alt fa-xs me-1"></i>Expandir tudo</button>
+  <button class="btn btn-xs btn-outline-secondary" id="collapseAllBtn" onclick="
+    document.querySelectorAll('#modAccordion .accordion-collapse.show').forEach(function(el){
+      bootstrap.Collapse.getOrCreateInstance(el).hide();
+    });
+  "><i class="fas fa-compress-alt fa-xs me-1"></i>Colapsar tudo</button>
+</div>
+
 <div class="accordion" id="modAccordion">
 <?php foreach ($modules as $modKey => $modInfo):
   $_modAdmins = $byModule[$modKey] ?? [];
@@ -198,7 +211,7 @@ $_configFile  = '/deqbwww.php';
     </button>
   </h2>
   <div id="<?= $_accId ?>" class="accordion-collapse collapse <?= $_modOpen ? 'show' : '' ?>"
-       aria-labelledby="hd-<?= $_accId ?>" data-bs-parent="#modAccordion">
+       aria-labelledby="hd-<?= $_accId ?>">
     <div class="accordion-body p-0">
       <?php if (!empty($_modAdmins)): ?>
       <table class="table table-sm mb-0" style="font-size:.83rem">
