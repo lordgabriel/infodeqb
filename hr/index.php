@@ -298,12 +298,6 @@ if (! empty($_POST)) {
         $body    = format_email($info, 'mail_register.html');
         $subject = $lang['SUBJECT'];
 
-        $deq_bcc_ids = array(
-            'E301MFP','E301AMTS','E302JMO','E302AMTS','E302JDF',
-            'E302MFP','E303MFP','E303JMO','E306JIM','E306MFP',
-            'E304BMFP','E402','E403N','E403S','E405JDF','E405MEM','F103A'
-        );
-
         $raw_deqid     = $_SESSION['deqid'] ?? [];
         $selected_deqids = [];
         foreach ((array)$raw_deqid as $v) {
@@ -318,10 +312,20 @@ if (! empty($_POST)) {
 
         $cc_list  = array('deqdir@fe.up.pt', 'fmartins@fe.up.pt');
         $bcc_list = array();
-        if (!empty(array_intersect($selected_deqids, $deq_bcc_ids))) {
-            $bcc_list[] = 'lucilia@fe.up.pt';
-            $bcc_list[] = 'rsribeiro@fe.up.pt';
-            $bcc_list[] = 'mjsampaio@fe.up.pt';
+
+        // Aplicar regras de notificação configuradas na BD
+        $qRegras = $pdo->query(
+            "SELECT tipo, labs_json, emails FROM infodeqb_rds_notif_regras WHERE ativo=1 AND evento='novo_registo'"
+        );
+        foreach ($qRegras->fetchAll(PDO::FETCH_ASSOC) as $_regra) {
+            $_rLabs = json_decode($_regra['labs_json'], true) ?: [];
+            if (empty(array_intersect($selected_deqids, $_rLabs))) continue;
+            $_rEmails = array_filter(array_map('trim', explode(',', $_regra['emails'])));
+            if ($_regra['tipo'] === 'cc') {
+                $cc_list = array_unique(array_merge($cc_list, $_rEmails));
+            } else {
+                $bcc_list = array_unique(array_merge($bcc_list, $_rEmails));
+            }
         }
 
         $file1 = ROOT_DIR . '/infodeqb/hr/inc/Safety_PT.pdf';

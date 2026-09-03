@@ -2,6 +2,7 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
 include ROOT_DIR . '/infodeqb/session.php';
 require_once ROOT_DIR . '/infodeqb/inc/admins.php';
+require_once ROOT_DIR . '/infodeqb/hr/inc/functions.php';
 
 if (!$isAdmin) {
     header('Location: ' . HTTP_DIR . '/infodeqb/denied.php'); exit;
@@ -378,6 +379,179 @@ foreach ($_formCards as $_fc):
       <i class="fas fa-info-circle me-1"></i>
       Em localhost o modo teste está <strong>sempre activo</strong> independentemente de <code>MAIL_TEST_MODE</code>.
     </p>
+  </div>
+</div>
+
+<?php
+// ── Regras de notificação ──────────────────────────────────────────────
+$_notifRegras = $pdo->query(
+    "SELECT * FROM infodeqb_rds_notif_regras ORDER BY ativo DESC, nome"
+)->fetchAll(PDO::FETCH_ASSOC);
+
+// Regra em edição (passada via GET ?edit_rule=ID)
+$_editRule = null;
+if (!empty($_GET['edit_rule'])) {
+    foreach ($_notifRegras as $_nr) {
+        if ((int)$_nr['id'] === (int)$_GET['edit_rule']) { $_editRule = $_nr; break; }
+    }
+}
+$_editLabs = $_editRule ? (json_decode($_editRule['labs_json'], true) ?: []) : [];
+$_editEmails = $_editRule ? $_editRule['emails'] : '';
+$_showForm = isset($_GET['new_rule']) || $_editRule !== null;
+?>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-header py-2 d-flex align-items-center justify-content-between">
+    <span><i class="fas fa-bell me-1"></i><strong>Regras de notificação</strong>
+      <small class="text-muted ms-1">— CC/BCC automáticos por espaço no evento "novo registo HR"</small>
+    </span>
+    <?php if (!$_showForm): ?>
+    <a href="?tab=email&new_rule=1" class="btn btn-xs btn-outline-primary">
+      <i class="fas fa-plus fa-xs me-1"></i>Nova regra
+    </a>
+    <?php endif; ?>
+  </div>
+  <div class="card-body p-0">
+
+  <?php if (!empty($_notifRegras)): ?>
+  <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
+    <thead class="table-light">
+      <tr>
+        <th style="width:32px"></th>
+        <th>Nome</th>
+        <th style="width:50px">Tipo</th>
+        <th>Emails</th>
+        <th style="width:60px">Labs</th>
+        <th style="width:90px"></th>
+      </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($_notifRegras as $_nr):
+      $_nrLabs = json_decode($_nr['labs_json'], true) ?: [];
+    ?>
+    <tr style="<?= $_nr['ativo'] ? '' : 'opacity:.45' ?>">
+      <td class="text-center">
+        <form method="post" action="hr/admin/notif-rules-action.php" style="display:inline">
+          <input type="hidden" name="nr_acao"  value="toggle">
+          <input type="hidden" name="nr_id"    value="<?= (int)$_nr['id'] ?>">
+          <input type="hidden" name="redirect" value="<?= htmlspecialchars(HTTP_DIR) ?>/infodeqb/admin-sections.php?tab=email">
+          <button class="btn btn-xs <?= $_nr['ativo'] ? 'btn-success' : 'btn-outline-secondary' ?>" title="<?= $_nr['ativo'] ? 'Activa — clique para desactivar' : 'Inactiva — clique para activar' ?>" style="padding:1px 5px">
+            <i class="fas fa-<?= $_nr['ativo'] ? 'check' : 'times' ?>"></i>
+          </button>
+        </form>
+      </td>
+      <td><?= htmlspecialchars($_nr['nome']) ?></td>
+      <td><span class="badge <?= $_nr['tipo'] === 'cc' ? 'bg-info' : 'bg-secondary' ?>"><?= strtoupper($_nr['tipo']) ?></span></td>
+      <td style="word-break:break-all"><?= htmlspecialchars($_nr['emails']) ?></td>
+      <td class="text-center">
+        <span class="badge bg-light text-dark border" title="<?= htmlspecialchars(implode(', ', $_nrLabs)) ?>">
+          <?= count($_nrLabs) ?> lab<?= count($_nrLabs) !== 1 ? 's' : '' ?>
+        </span>
+      </td>
+      <td class="text-end" style="white-space:nowrap">
+        <a href="?tab=email&edit_rule=<?= (int)$_nr['id'] ?>" class="btn btn-xs btn-outline-primary" title="Editar"><i class="fas fa-edit fa-xs"></i></a>
+        <form method="post" action="hr/admin/notif-rules-action.php" style="display:inline"
+              onsubmit="return confirm('Eliminar esta regra?')">
+          <input type="hidden" name="nr_acao"  value="delete">
+          <input type="hidden" name="nr_id"    value="<?= (int)$_nr['id'] ?>">
+          <input type="hidden" name="redirect" value="<?= htmlspecialchars(HTTP_DIR) ?>/infodeqb/admin-sections.php?tab=email">
+          <button class="btn btn-xs btn-outline-danger" title="Eliminar"><i class="fas fa-trash fa-xs"></i></button>
+        </form>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
+  <?php else: ?>
+  <p class="text-muted p-3 mb-0" style="font-size:.84rem">Nenhuma regra definida.</p>
+  <?php endif; ?>
+
+  <?php if ($_showForm):
+    $_nrGabHtml = buildGabAccordion($pdo, $_editLabs, 'notif_labs[]', 'nrlab');
+  ?>
+  <div class="border-top p-3" style="background:#f8f9fa">
+    <h6 class="mb-3"><?= $_editRule ? 'Editar regra' : 'Nova regra' ?></h6>
+    <form method="post" action="hr/admin/notif-rules-action.php">
+      <input type="hidden" name="nr_acao"  value="save">
+      <input type="hidden" name="nr_id"    value="<?= $_editRule ? (int)$_editRule['id'] : 0 ?>">
+      <input type="hidden" name="redirect" value="<?= htmlspecialchars(HTTP_DIR) ?>/infodeqb/admin-sections.php?tab=email">
+
+      <div class="row g-2 mb-2">
+        <div class="col-md-5">
+          <label class="form-label form-label-sm mb-1">Nome / descrição</label>
+          <input type="text" name="nr_nome" class="form-control form-control-sm"
+                 value="<?= htmlspecialchars($_editRule['nome'] ?? '') ?>" required
+                 placeholder="Ex: Notificação piso 3 Edifício E">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label form-label-sm mb-1">Tipo</label>
+          <select name="nr_tipo" class="form-select form-select-sm">
+            <option value="bcc" <?= (!$_editRule || $_editRule['tipo']==='bcc') ? 'selected' : '' ?>>BCC</option>
+            <option value="cc"  <?= ($_editRule && $_editRule['tipo']==='cc')  ? 'selected' : '' ?>>CC</option>
+          </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end pb-1">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="nr_ativo" id="nrAtivo"
+                   <?= (!$_editRule || $_editRule['ativo']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="nrAtivo" style="font-size:.82rem">Activa</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label form-label-sm mb-1">Emails (separados por vírgula)</label>
+        <input type="text" name="nr_emails" class="form-control form-control-sm"
+               value="<?= htmlspecialchars($_editEmails) ?>" required
+               placeholder="lucilia@fe.up.pt, rsribeiro@fe.up.pt">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label form-label-sm mb-1">
+          Laboratórios que disparam esta regra
+          <span id="nrLabCount" class="badge bg-primary ms-1" style="font-size:.7rem">
+            <?= count($_editLabs) > 0 ? count($_editLabs) . ' seleccionados' : '0' ?>
+          </span>
+        </label>
+        <div class="iq-lab-list" id="nrLabList" style="max-height:320px;overflow-y:auto;border:1px solid #dee2e6;border-radius:4px;background:#fff">
+          <?= $_nrGabHtml ?>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="fas fa-save fa-xs me-1"></i><?= $_editRule ? 'Guardar alterações' : 'Criar regra' ?>
+        </button>
+        <a href="?tab=email" class="btn btn-sm btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+
+    <script>
+    (function() {
+      var list   = document.getElementById('nrLabList');
+      var count  = document.getElementById('nrLabCount');
+      if (!list || !count) return;
+      function update() {
+        var n = list.querySelectorAll('input[type=checkbox]:checked').length;
+        count.textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
+      }
+      list.addEventListener('change', update);
+      // badge counts on building accordion buttons
+      list.addEventListener('change', function(e) {
+        if (!e.target.matches('input[type=checkbox]')) return;
+        var building = e.target.closest('.iq-lab-building');
+        if (!building) return;
+        var badge = building.querySelector('.iq-lab-sel-count');
+        if (!badge) return;
+        var n = building.querySelectorAll('input[type=checkbox]:checked').length;
+        badge.textContent = n || '';
+        badge.style.display = n ? '' : 'none';
+      });
+    })();
+    </script>
+  </div>
+  <?php endif; ?>
+
   </div>
 </div>
 

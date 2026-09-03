@@ -845,4 +845,64 @@ function _emailSigarra($pdo, $ped, $d) {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// ACCORDION DE LABORATÓRIOS (reutilizável)
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Constrói o HTML do accordion de checkboxes de laboratórios.
+ * $selectedDeqids : array de deqid já seleccionados
+ * $inputName      : nome do campo HTML (ex: 'acessos[]' ou 'notif_labs[]')
+ * $idPrefix       : prefixo único para os IDs dos colapsos (ex: 'lab', 'notif')
+ */
+function buildGabAccordion(PDO $pdo, array $selectedDeqids, $inputName = 'acessos[]', $idPrefix = 'lab') {
+    $gabRows = $pdo->query(
+        'SELECT * FROM infodeqb_rds_gabinetes WHERE visible != 0 ORDER BY edificio, piso, nomegab'
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    $gabByEdificio = array();
+    foreach ($gabRows as $r) { $gabByEdificio[$r['edificio']][] = $r; }
+
+    $html = '';
+    foreach ($gabByEdificio as $edificio => $edRows) {
+        $edId    = $idPrefix . '-ed-' . preg_replace('/[^a-z0-9]/i', '', $edificio);
+        $edSel   = 0;
+        foreach ($edRows as $r) { if (in_array($r['deqid'], $selectedDeqids)) $edSel++; }
+        $open    = $edSel > 0 ? ' show' : '';
+        $expd    = $edSel > 0 ? 'true' : 'false';
+        $badge   = '<span class="iq-lab-sel-count"' . ($edSel > 0 ? '' : ' style="display:none"') . '>'
+                 . ($edSel > 0 ? $edSel : '') . '</span>';
+        $byPiso  = array();
+        foreach ($edRows as $r) { $byPiso[$r['piso']][] = $r; }
+
+        $html .= '<div class="iq-lab-building">'
+              . '<button type="button" class="iq-lab-building-header" data-bs-toggle="collapse" data-bs-target="#' . $edId . '" aria-expanded="' . $expd . '">'
+              . '<span>Edifício ' . htmlspecialchars($edificio) . '</span>' . $badge
+              . '<i class="fas fa-chevron-down ms-auto"></i></button>'
+              . '<div class="collapse' . $open . '" id="' . $edId . '">';
+        $pisoIdx = 0;
+        foreach ($byPiso as $piso => $pisoRows) {
+            $pisoId  = $edId . '-p' . $pisoIdx++;
+            $pisoSel = 0;
+            foreach ($pisoRows as $r) { if (in_array($r['deqid'], $selectedDeqids)) $pisoSel++; }
+            $pisoOpen = $pisoSel > 0 ? ' show' : '';
+            $pisoExp  = $pisoSel > 0 ? 'true' : 'false';
+            $html .= '<div class="iq-checkgroup">'
+                  . '<button type="button" class="iq-piso-header" data-bs-toggle="collapse" data-bs-target="#' . $pisoId . '" aria-expanded="' . $pisoExp . '">'
+                  . '<i class="fas fa-layer-group fa-xs me-1"></i>' . htmlspecialchars($piso)
+                  . '<i class="fas fa-chevron-down ms-auto iq-piso-chevron"></i></button>'
+                  . '<div class="collapse iq-piso-body' . $pisoOpen . '" id="' . $pisoId . '">';
+            foreach ($pisoRows as $rowgab) {
+                $checked = in_array($rowgab['deqid'], $selectedDeqids) ? ' checked' : '';
+                $html .= '<label><input type="checkbox" name="' . htmlspecialchars($inputName) . '" value="'
+                       . htmlspecialchars($rowgab['deqid']) . '"' . $checked . '> '
+                       . htmlspecialchars($rowgab['nomegab']) . '</label>';
+            }
+            $html .= '</div></div>';
+        }
+        $html .= '</div></div>';
+    }
+    return $html;
+}
+
 ?>
