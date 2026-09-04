@@ -341,9 +341,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <i class="fas fa-copy me-1"></i>Copiar corpo
         </button>
       </div>
-      <p class="mt-2 mb-0" style="font-size:.78rem;color:var(--iq-muted)">
-        <i class="fas fa-info-circle fa-xs me-1"></i>"Abrir no cliente de email" não inclui anexo — usar <strong>Download .eml</strong> para enviar com anexo.
-      </p>
+      <div class="mt-2" style="font-size:.78rem;color:var(--iq-muted);line-height:1.6">
+        <i class="fas fa-info-circle fa-xs me-1"></i>"Abrir no cliente de email" não inclui anexo.<br>
+        Para enviar com anexo — usar <strong>Download .eml</strong>:<br>
+        &nbsp;· <strong>Thunderbird</strong>: abre o ficheiro → abre directamente para envio<br>
+        &nbsp;· <strong>Outlook</strong>: abre o ficheiro → clica <strong>Reencaminhar</strong> → apaga "FW:" do assunto → define destinatário → envia
+      </div>
 
     </div><!-- /coluna esquerda -->
 
@@ -702,7 +705,7 @@ function bodyB64(str) {
 function gerarEml(d) {
   var assunto = d.assunto || gerarAssuntoAuto(d);
   var from = d.from_name ? mimeB64(d.from_name) + ' <' + d.from_email + '>' : d.from_email;
-  var base = ['MIME-Version: 1.0', 'Date: ' + new Date().toUTCString(), 'From: ' + from, 'To: ' + d.to];
+  var base = ['MIME-Version: 1.0', 'X-Unsent: 1', 'Date: ' + new Date().toUTCString(), 'From: ' + from, 'To: ' + d.to];
   if (d.cc) base.push('CC: ' + d.cc);
   base.push('Subject: ' + mimeB64(assunto));
   var bodyPart = 'Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n' + bodyB64(gerarCorpo(d));

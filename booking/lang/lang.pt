@@ -10,7 +10,7 @@
 // This file is PHP code. Treat it as such.
 
 // Used in style.inc
-$vocab["mrbs"]               = "InfoDEQ - Reserva de Salas";
+$vocab["mrbs"]               = "InfoDEQB - Reserva de Salas";
 
 // Used in functions.inc
 $vocab["report"]             = "Relatórios";
