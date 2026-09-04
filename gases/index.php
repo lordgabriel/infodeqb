@@ -19,12 +19,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <h1 class="iq-page-title"><i class="fas fa-wind me-2 text-primary"></i><?= t('GASES_TITLE') ?></h1>
     <p class="iq-page-sub">Monitorização de pressão de garrafas de gás</p>
   </div>
-  <div class="d-flex gap-2 ms-auto">
+  <div class="d-flex gap-2 ms-auto flex-wrap">
     <a href="ronda.php" class="btn btn-primary">
       <i class="fas fa-clipboard-list me-1"></i> Nova Ronda
     </a>
     <a href="relatorio.php" class="btn btn-outline-secondary">
       <i class="fas fa-chart-line me-1"></i> Relatórios
+    </a>
+    <a href="encomenda-gases.php" class="btn btn-outline-secondary">
+      <i class="fas fa-envelope me-1"></i> Encomenda Air Liquide
     </a>
   </div>
 </div>
