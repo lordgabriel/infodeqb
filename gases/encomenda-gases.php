@@ -16,6 +16,12 @@ $mainClass = 'iq-main';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 <style>
+/* ── Base font size ── */
+.main-layout, .main-layout input, .main-layout textarea, .main-layout select, .main-layout button {
+  font-size: 1rem;
+}
+.form-label { font-size: .95rem; }
+
 /* ── Layout ── */
 .main-layout {
   display: grid;
@@ -118,13 +124,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   background: var(--iq-gray-50, #f9fafb);
   border-bottom: 1px solid var(--iq-border);
   padding: .55rem .85rem;
-  font-size: .77rem;
+  font-size: .88rem;
   line-height: 2;
 }
 .preview-meta > div { display: flex; gap: .4rem; }
 .pv-lbl {
   font-weight: 600;
-  font-size: .67rem;
+  font-size: .75rem;
   letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--iq-muted);
@@ -135,7 +141,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .pv-val { color: var(--iq-text); word-break: break-all; }
 .preview-body {
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: .72rem;
+  font-size: .84rem;
   line-height: 1.7;
   padding: .8rem .85rem;
   white-space: pre-wrap;
@@ -228,6 +234,77 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- ── Coluna esquerda: formulário ── -->
     <div>
 
+      <!-- Tipo de encomenda -->
+      <div class="iq-card">
+        <div class="iq-card-title"><i class="fas fa-tag"></i> Tipo de Encomenda</div>
+        <div class="d-flex gap-2">
+          <button type="button" id="btn-tipo-garrafas" class="btn btn-sm btn-primary" onclick="setTipo('garrafas')">
+            <i class="fas fa-flask me-1"></i>Garrafas
+          </button>
+          <button type="button" id="btn-tipo-azoto" class="btn btn-sm btn-outline-secondary" onclick="setTipo('azoto')">
+            <i class="fas fa-snowflake me-1"></i>Azoto Líquido
+          </button>
+        </div>
+      </div>
+
+      <!-- Garrafas cheias -->
+      <div class="iq-card" id="section-garrafas-cheias">
+        <div class="iq-card-title">
+          <i class="fas fa-check-circle" style="color:#16a34a"></i> Garrafas Cheias
+          <span class="badge rounded-pill ms-1" style="background:#dcfce7;color:#15803d;font-weight:500;font-size:.63rem">CHEIAS</span>
+        </div>
+        <div id="rows-cheias" class="gas-rows"></div>
+        <button class="btn-add-gas" type="button" onclick="showGasPicker('cheias', this)">
+          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
+        </button>
+      </div>
+
+      <!-- Garrafas vazias -->
+      <div class="iq-card" id="section-garrafas-vazias">
+        <div class="iq-card-title">
+          <i class="fas fa-circle" style="color:#b45309"></i> Devolução — Garrafas Vazias
+          <span class="badge rounded-pill ms-1" style="background:#fef3c7;color:#b45309;font-weight:500;font-size:.63rem">VAZIAS</span>
+        </div>
+        <div id="rows-vazias" class="gas-rows"></div>
+        <button class="btn-add-gas" type="button" onclick="showGasPicker('vazias', this)">
+          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
+        </button>
+      </div>
+
+      <!-- Azoto Líquido -->
+      <div class="iq-card" id="section-azoto" style="display:none">
+        <div class="iq-card-title"><i class="fas fa-snowflake" style="color:#0ea5e9"></i> Azoto Líquido</div>
+        <div class="row g-2 mb-2">
+          <div class="col-sm-4">
+            <label class="form-label">Volume (litros)</label>
+            <input type="number" class="form-control form-control-sm" id="az_volume" min="1" placeholder="ex: 25" oninput="updatePreview()">
+          </div>
+          <div class="col-sm-8">
+            <label class="form-label">Laboratório</label>
+            <input type="text" class="form-control form-control-sm" id="az_lab" placeholder="ex: E301" oninput="updatePreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalhes -->
+      <div class="iq-card">
+        <div class="iq-card-title"><i class="fas fa-file-invoice"></i> Detalhes da Encomenda</div>
+        <div class="row g-2 mb-2">
+          <div class="col-sm-4">
+            <label class="form-label">Conta</label>
+            <input type="text" class="form-control form-control-sm" id="conta" placeholder="ex: 12233224">
+          </div>
+          <div class="col-sm-8">
+            <label class="form-label">Contacto</label>
+            <input type="text" class="form-control form-control-sm" id="contacto" placeholder="Nome / telemóvel">
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Local de entrega</label>
+          <input type="text" class="form-control form-control-sm" id="local" placeholder="ex: Central de gases da FEUP">
+        </div>
+      </div>
+
       <!-- Destinatários -->
       <div class="iq-card">
         <div class="iq-card-title"><i class="fas fa-envelope"></i> Destinatários</div>
@@ -242,59 +319,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
         </div>
         <div>
-          <label class="form-label">Assunto <small class="text-muted">— gerado automaticamente; editável</small></label>
-          <input type="text" class="form-control form-control-sm" id="assunto">
-        </div>
-      </div>
-
-      <!-- Garrafas cheias -->
-      <div class="iq-card">
-        <div class="iq-card-title">
-          <i class="fas fa-check-circle" style="color:#16a34a"></i> Garrafas Cheias
-          <span class="badge rounded-pill ms-1" style="background:#dcfce7;color:#15803d;font-weight:500;font-size:.63rem">CHEIAS</span>
-        </div>
-        <div id="rows-cheias" class="gas-rows"></div>
-        <button class="btn-add-gas" type="button" onclick="showGasPicker('cheias', this)">
-          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
-        </button>
-      </div>
-
-      <!-- Garrafas vazias -->
-      <div class="iq-card">
-        <div class="iq-card-title">
-          <i class="fas fa-circle" style="color:#b45309"></i> Devolução — Garrafas Vazias
-          <span class="badge rounded-pill ms-1" style="background:#fef3c7;color:#b45309;font-weight:500;font-size:.63rem">VAZIAS</span>
-        </div>
-        <div id="rows-vazias" class="gas-rows"></div>
-        <button class="btn-add-gas" type="button" onclick="showGasPicker('vazias', this)">
-          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
-        </button>
-      </div>
-
-      <!-- Detalhes -->
-      <div class="iq-card">
-        <div class="iq-card-title"><i class="fas fa-file-invoice"></i> Detalhes da Encomenda</div>
-        <div class="row g-2 mb-2">
-          <div class="col-sm-4">
-            <label class="form-label">Conta</label>
-            <input type="text" class="form-control form-control-sm" id="conta" value="12233224">
-          </div>
-          <div class="col-sm-8">
-            <label class="form-label">Contacto</label>
-            <input type="text" class="form-control form-control-sm" id="contacto" value="Luís Martins/965683942">
-          </div>
-        </div>
-        <div class="mb-2">
-          <label class="form-label">Local de entrega</label>
-          <input type="text" class="form-control form-control-sm" id="local" value="Central de gases da FEUP">
-        </div>
-        <div class="mb-2">
-          <label class="form-label">N.º nota de encomenda <small class="text-muted">(opcional)</small></label>
-          <input type="text" class="form-control form-control-sm" id="nota" value="I48_278_C26 (em anexo)">
-        </div>
-        <div>
-          <label class="form-label">Informação adicional <small class="text-muted">(opcional)</small></label>
-          <textarea class="form-control form-control-sm" id="info_extra" rows="2">O valor da nota de encomenda corresponde à despesa previsível do concurso para 2026</textarea>
+          <label class="form-label">Assunto</label>
+          <input type="text" class="form-control form-control-sm" id="assunto" readonly
+            style="background:var(--iq-gray-50,#f9fafb);cursor:default">
         </div>
       </div>
 
@@ -314,6 +341,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <i class="fas fa-copy me-1"></i>Copiar corpo
         </button>
       </div>
+      <p class="mt-2 mb-0" style="font-size:.78rem;color:var(--iq-muted)">
+        <i class="fas fa-info-circle fa-xs me-1"></i>"Abrir no cliente de email" não inclui anexo — usar <strong>Download .eml</strong> para enviar com anexo.
+      </p>
 
     </div><!-- /coluna esquerda -->
 
@@ -345,6 +375,25 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <button id="btn-repor" class="btn btn-sm btn-outline-secondary flex-shrink-0" style="font-size:.75rem;display:none" onclick="reporAnexoPadrao()" title="Repor ficheiro original incorporado">
           <i class="fas fa-undo fa-xs"></i>
         </button>
+      </div>
+
+      <!-- Nota + Info adicional (abaixo do anexo) -->
+      <div class="iq-card" style="margin-top:.65rem">
+        <div class="mb-2">
+          <label class="form-label" style="font-size:.82rem">N.º nota de encomenda</label>
+          <input type="text" class="form-control form-control-sm" id="nota" value="I48_278_C26" readonly
+            style="background:var(--iq-gray-50,#f9fafb);cursor:default">
+        </div>
+        <div>
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <label class="form-label mb-0" style="font-size:.82rem">Informação adicional</label>
+            <button type="button" class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.15rem .45rem" id="btn-edit-info" onclick="editarInfoExtra()">
+              <i class="fas fa-pencil-alt fa-xs me-1"></i>Editar
+            </button>
+          </div>
+          <textarea class="form-control form-control-sm" id="info_extra" rows="3" readonly
+            style="background:var(--iq-gray-50,#f9fafb);color:var(--iq-text);cursor:default;resize:none">O valor da nota de encomenda corresponde à despesa previsível do concurso para 2026</textarea>
+        </div>
       </div>
 
     </div><!-- /coluna direita -->
@@ -438,12 +487,37 @@ function onAnexoChange(input) {
   reader.onload = function(e) {
     _anexoB64  = e.target.result.split(',')[1];
     _anexoNome = file.name;
+    var nomeSemExt = file.name.replace(/\.pdf$/i, '');
+    var notaEl = document.getElementById('nota');
+    if (notaEl && !notaEl.value.trim()) { notaEl.value = nomeSemExt; }
+    else if (notaEl) { notaEl.value = nomeSemExt; }
+    updatePreview();
     _idbSave(_anexoB64, _anexoNome, function(ok) {
       _refreshAnexoUI();
       showToast(ok ? 'Anexo guardado: ' + file.name : 'Anexo seleccionado (não foi possível guardar permanentemente)');
     });
   };
   reader.readAsDataURL(file);
+}
+
+
+function editarInfoExtra() {
+  var ta = document.getElementById('info_extra');
+  var btn = document.getElementById('btn-edit-info');
+  ta.readOnly = false;
+  ta.style.background = '';
+  ta.style.cursor = 'text';
+  ta.style.resize = '';
+  ta.focus();
+  btn.innerHTML = '<i class="fas fa-lock fa-xs me-1"></i>Bloquear';
+  btn.onclick = function() {
+    ta.readOnly = true;
+    ta.style.background = 'var(--iq-gray-50,#f9fafb)';
+    ta.style.cursor = 'default';
+    ta.style.resize = 'none';
+    btn.innerHTML = '<i class="fas fa-pencil-alt fa-xs me-1"></i>Editar';
+    btn.onclick = editarInfoExtra;
+  };
 }
 
 function reporAnexoPadrao() {
@@ -528,6 +602,18 @@ function getRows(tipo) {
   return rows;
 }
 
+var _tipo = 'garrafas'; // 'garrafas' | 'azoto'
+
+function setTipo(t) {
+  _tipo = t;
+  document.getElementById('btn-tipo-garrafas').className = 'btn btn-sm ' + (t === 'garrafas' ? 'btn-primary' : 'btn-outline-secondary');
+  document.getElementById('btn-tipo-azoto').className    = 'btn btn-sm ' + (t === 'azoto'    ? 'btn-primary' : 'btn-outline-secondary');
+  document.getElementById('section-garrafas-cheias').style.display = t === 'garrafas' ? '' : 'none';
+  document.getElementById('section-garrafas-vazias').style.display = t === 'garrafas' ? '' : 'none';
+  document.getElementById('section-azoto').style.display           = t === 'azoto'    ? '' : 'none';
+  updatePreview();
+}
+
 function fld(id) { return document.getElementById(id).value.trim(); }
 
 function getData() {
@@ -538,12 +624,18 @@ function getData() {
     nota: fld('nota'), info_extra: fld('info_extra'),
     assunto: fld('assunto'),
     cheias: getRows('cheias'), vazias: getRows('vazias'),
+    tipo: _tipo,
+    az_volume: fld('az_volume'),
+    az_lab: fld('az_lab'),
   };
 }
 
 function plural(n) { return n == 1 ? 'garrafa' : 'garrafas'; }
 
 function gerarAssuntoAuto(d) {
+  if (d.tipo === 'azoto') {
+    return 'Encomenda de azoto líquido - ' + (d.local || '(local)') + ' (Conta: ' + (d.conta || '—') + ')';
+  }
   return 'Encomenda de gases - ' + (d.local || '(local)') + ' (Conta: ' + (d.conta || '—') + ')';
 }
 
@@ -551,19 +643,25 @@ function gerarCorpo(d) {
   var L = [];
   L.push('Bom dia,');
   L.push('');
-  L.push('Solicitamos a entrega das seguintes garrafas cheias:');
-  if (d.cheias.length === 0) { L.push('(nenhuma)'); }
-  else { d.cheias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); }); }
-  if (d.vazias.length > 0) {
-    L.push('');
-    L.push('com devolução de garrafas vazias de:');
-    d.vazias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); });
+  if (d.tipo === 'azoto') {
+    var vol = d.az_volume || '?';
+    var lab = d.az_lab ? ' do laboratório ' + d.az_lab : '';
+    L.push('Solicitamos o enchimento de 1 recipiente de azoto líquido (' + vol + ' litros)' + lab + '.');
+  } else {
+    L.push('Solicitamos a entrega das seguintes garrafas cheias:');
+    if (d.cheias.length === 0) { L.push('(nenhuma)'); }
+    else { d.cheias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); }); }
+    if (d.vazias.length > 0) {
+      L.push('');
+      L.push('com devolução de garrafas vazias de:');
+      d.vazias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); });
+    }
   }
   L.push('');
   L.push('Conta: ' + (d.conta || '—'));
   L.push('Local de entrega: ' + (d.local || '—'));
   L.push('Contacto: ' + (d.contacto || '—'));
-  if (d.nota) L.push('N.º da nota de encomenda: ' + d.nota);
+  if (d.nota) L.push('N.º da nota de encomenda: ' + d.nota + ' (em anexo)');
   if (d.info_extra) { L.push(''); L.push(d.info_extra); }
   return L.join('\n');
 }
@@ -663,7 +761,7 @@ function showToast(msg) {
 var _assuntoManual = false;
 document.addEventListener('DOMContentLoaded', function() {
   var aEl = document.getElementById('assunto');
-  aEl.addEventListener('input', function() { _assuntoManual = aEl.value !== ''; updatePreview(); });
+  aEl.addEventListener('input', function() { updatePreview(); });
   ['conta', 'local'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
       if (!_assuntoManual) aEl.value = gerarAssuntoAuto(getData());
@@ -681,6 +779,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (stored && stored.b64 && stored.nome) {
       _anexoB64  = stored.b64;
       _anexoNome = stored.nome;
+      var notaEl = document.getElementById('nota');
+      if (notaEl && !notaEl.value.trim()) {
+        notaEl.value = stored.nome.replace(/\.pdf$/i, '') + ' (em anexo)';
+        updatePreview();
+      }
     }
     _refreshAnexoUI();
   });
