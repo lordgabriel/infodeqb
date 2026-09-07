@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
         $assunto = buildAssuntoGases($tipo, $local, $conta);
         $corpo   = buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab);
 
-        $to      = ['encomendagarrafas.pt@airliquide.com'];
+        $to      = ['fmartins@fe.up.pt'];
         $ccList  = $cc ? array_values(array_filter(array_map('trim', explode(';', $cc)))) : [];
         if ($_iqEmailUtilizador) {
             $ccList[] = $_iqEmailUtilizador; // cópia automática para o remetente
@@ -208,10 +208,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
 .btn-add-gas {
   width: 100%;
-  background: none;
-  border: 1px dashed var(--iq-border2, var(--iq-gray-300));
+  background: var(--iq-blue-light, #dbeafe);
+  border: 1px dashed #93c5fd;
   border-radius: 6px;
-  color: var(--iq-muted);
+  color: var(--iq-blue, #2563eb);
   font-family: inherit;
   font-size: .8rem;
   padding: .28rem .7rem;
@@ -220,9 +220,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   transition: border-color .15s, color .15s, background .15s;
 }
 .btn-add-gas:hover {
-  border-color: var(--iq-blue);
-  color: var(--iq-blue);
-  background: var(--iq-blue-light);
+  border-color: var(--iq-blue, #2563eb);
+  background: #bfdbfe;
 }
 
 .btn-row-remove {
@@ -239,55 +238,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .btn-row-remove:hover { border-color: #ef4444; color: #ef4444; }
 
 .preview-col { position: sticky; top: 1rem; }
-.preview-box {
-  background: var(--iq-surface);
-  border: 1px solid var(--iq-border);
-  border-radius: var(--iq-r);
-  box-shadow: 0 1px 3px rgba(0,0,0,.07);
-  overflow: hidden;
-}
-.preview-head {
-  background: var(--iq-nav-bg, #16232b);
-  color: rgba(255,255,255,.6);
-  padding: .5rem .85rem;
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.pv-count { color: rgba(255,255,255,.38); font-weight: 400; text-transform: none; letter-spacing: 0; }
-.preview-meta {
-  background: var(--iq-gray-50, #f9fafb);
-  border-bottom: 1px solid var(--iq-border);
-  padding: .55rem .85rem;
-  font-size: .88rem;
-  line-height: 2;
-}
-.preview-meta > div { display: flex; gap: .4rem; }
-.pv-lbl {
-  font-weight: 600;
-  font-size: .75rem;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  color: var(--iq-muted);
-  min-width: 52px;
-  flex-shrink: 0;
-  padding-top: 3px;
-}
-.pv-val { color: var(--iq-text); word-break: break-all; }
-.preview-body {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: .84rem;
-  line-height: 1.7;
-  padding: .8rem .85rem;
-  white-space: pre-wrap;
-  color: var(--iq-gray-700, #374151);
-  max-height: 360px;
-  overflow-y: auto;
-}
 
 /* ── Histórico ── */
 .hist-vazio { font-size: .83rem; color: var(--iq-muted); padding: .4rem 0; }
@@ -370,7 +320,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <h1 class="iq-page-title">
         <i class="fas fa-flask me-2" style="color:var(--iq-blue)"></i>Encomenda de Gases
       </h1>
-      <p class="iq-page-sub">Air Liquide — envia email para <strong>encomendagarrafas.pt@airliquide.com</strong></p>
+      <p class="iq-page-sub">Air Liquide — envia email para <strong>encomendagarrafas.pt@airliquide.com</strong> <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">TESTE → fmartins@fe.up.pt</span></p>
     </div>
   </div>
 
@@ -469,9 +419,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <button class="btn btn-sm btn-primary" type="button" id="btn-enviar" onclick="enviarEncomenda()">
           <i class="fas fa-paper-plane me-1"></i>Enviar encomenda
         </button>
-        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copiarCorpo()">
-          <i class="fas fa-copy me-1"></i>Copiar corpo
-        </button>
       </div>
       <div style="font-size:.78rem;color:var(--iq-muted)">
         <i class="fas fa-info-circle fa-xs me-1"></i>É enviada cópia automática para o teu email (<?= htmlspecialchars($_iqEmailUtilizador) ?>).
@@ -481,19 +428,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
     <!-- ── Coluna direita: pré-visualização + histórico ── -->
     <div class="preview-col">
-
-      <div class="preview-box">
-        <div class="preview-head">
-          <span>Pré-visualização</span>
-          <span class="pv-count" id="pv-badge">—</span>
-        </div>
-        <div class="preview-meta">
-          <div><span class="pv-lbl">Para</span><span class="pv-val">encomendagarrafas.pt@airliquide.com</span></div>
-          <div><span class="pv-lbl">CC</span><span class="pv-val" id="pv-cc">—</span></div>
-          <div><span class="pv-lbl">Assunto</span><span class="pv-val" id="pv-subject">—</span></div>
-        </div>
-        <div class="preview-body" id="pv-body"></div>
-      </div>
 
       <!-- Histórico -->
       <div class="iq-card" style="margin-top:.65rem">
@@ -659,8 +593,6 @@ function getData() {
   };
 }
 
-function plural(n) { return n == 1 ? 'garrafa' : 'garrafas'; }
-
 function gerarAssuntoAuto(d) {
   if (d.tipo === 'azoto') {
     return 'Encomenda de azoto líquido - ' + (d.local || '(local)') + ' (Conta: ' + (d.conta || '—') + ')';
@@ -668,54 +600,11 @@ function gerarAssuntoAuto(d) {
   return 'Encomenda de gases - ' + (d.local || '(local)') + ' (Conta: ' + (d.conta || '—') + ')';
 }
 
-function gerarCorpo(d) {
-  var L = [];
-  L.push('Bom dia,');
-  L.push('');
-  if (d.tipo === 'azoto') {
-    var vol = d.az_volume || '?';
-    var lab = d.az_lab ? ' do laboratório ' + d.az_lab : '';
-    L.push('Solicitamos o enchimento de 1 recipiente de azoto líquido (' + vol + ' litros)' + lab + '.');
-  } else {
-    L.push('Solicitamos a entrega das seguintes garrafas cheias:');
-    if (d.cheias.length === 0) { L.push('(nenhuma)'); }
-    else { d.cheias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); }); }
-    if (d.vazias.length > 0) {
-      L.push('');
-      L.push('com devolução de garrafas vazias de:');
-      d.vazias.forEach(function(r) { L.push('- ' + r.qty + ' ' + plural(r.qty) + ' de ' + r.gas); });
-    }
-  }
-  L.push('');
-  L.push('Conta: ' + (d.conta || '—'));
-  L.push('Local de entrega: ' + (d.local || '—'));
-  L.push('Contacto: ' + (d.contacto || '—'));
-  L.push('');
-  L.push('Com os melhores cumprimentos,');
-  return L.join('\n');
-}
-
-/* ── Preview ─────────────────────────────────────────────────────────── */
 var _assuntoManual = false;
-
-function updatePreview() {
-  var d = getData();
-  var assunto = d.assunto || gerarAssuntoAuto(d);
-  document.getElementById('pv-cc').textContent      = d.cc || '—';
-  document.getElementById('pv-subject').textContent = assunto;
-  document.getElementById('pv-body').textContent    = gerarCorpo(d);
-  var nc = d.cheias.reduce(function(s,r){return s+r.qty;},0);
-  var nv = d.vazias.reduce(function(s,r){return s+r.qty;},0);
-  var parts = [];
-  if (d.tipo === 'azoto') { parts.push(d.az_volume ? d.az_volume + ' L' : 'azoto'); }
-  else { if (nc) parts.push(nc + ' cheias'); if (nv) parts.push(nv + ' vazias'); }
-  document.getElementById('pv-badge').textContent = parts.join(' · ') || '—';
-}
 
 function onDetalhesInput() {
   var aEl = document.getElementById('assunto');
   if (!_assuntoManual) aEl.value = gerarAssuntoAuto(getData());
-  updatePreview();
 }
 
 /* ── Envio ───────────────────────────────────────────────────────────── */
@@ -831,21 +720,6 @@ function repetirEncomenda(h) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-/* ── Copiar corpo ────────────────────────────────────────────────────── */
-function copiarCorpo() {
-  var text = gerarCorpo(getData());
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function() { showToast('Corpo do email copiado'); }).catch(function() { fallbackCopy(text); });
-  } else { fallbackCopy(text); }
-}
-function fallbackCopy(text) {
-  var ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); showToast('Corpo do email copiado'); } catch(e) { showToast('Não foi possível copiar'); }
-  document.body.removeChild(ta);
-}
-
 /* ── Toast ───────────────────────────────────────────────────────────── */
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -856,12 +730,8 @@ function showToast(msg) {
 /* ── Init ────────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
   var aEl = document.getElementById('assunto');
-  aEl.addEventListener('input', function() { _assuntoManual = true; updatePreview(); });
-  document.querySelectorAll('input:not(#assunto), textarea').forEach(function(el) {
-    el.addEventListener('input', updatePreview);
-  });
+  aEl.addEventListener('input', function() { _assuntoManual = true; });
   aEl.value = gerarAssuntoAuto(getData());
-  updatePreview();
 });
 </script>
 
