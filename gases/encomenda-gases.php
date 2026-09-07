@@ -695,7 +695,7 @@ function setTipo(t) {
   } else {
     temDados = !!(document.getElementById('az_volume').value || document.getElementById('az_lab').value);
   }
-  if (temDados && !confirm('Ao mudar o tipo de encomenda os dados já preenchidos serão limpos. Continuar?')) return;
+  if (temDados && !confirm('Só é possível submeter um tipo de encomenda de cada vez.\nAo mudar de tipo, os dados já preenchidos serão apagados. Continuar?')) return;
 
   // Limpar secção inactiva
   if (_tipo === 'garrafas') {
