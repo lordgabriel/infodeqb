@@ -155,6 +155,11 @@ $stmtHist->execute([$_iqEmailUtilizador]);
 $historicoRows = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
 Database::disconnect();
 
+$_jsonFile = __DIR__ . '/data/encomendas.json';
+$_cfg      = file_exists($_jsonFile) ? (json_decode(file_get_contents($_jsonFile), true) ?: []) : [];
+$_gasesG   = $_cfg['gases_garrafa']    ?? [];
+$_gasesL   = $_cfg['gases_liquefeitos'] ?? [];
+
 $pageTitle = 'Encomenda de Gases — Air Liquide';
 $mainClass = 'iq-main';
 include ROOT_DIR . '/infodeqb/inc/header.php';
@@ -238,6 +243,10 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .btn-row-remove:hover { border-color: #ef4444; color: #ef4444; }
 
 .preview-col { position: sticky; top: 1rem; }
+
+/* ── Cores cheias/vazias ── */
+#section-garrafas-cheias { border-left: 3px solid #16a34a; }
+#section-garrafas-vazias { border-left: 3px solid #d97706; }
 
 /* ── Histórico ── */
 .hist-vazio { font-size: .83rem; color: var(--iq-muted); padding: .4rem 0; }
@@ -461,6 +470,88 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </div><!-- /coluna direita -->
 
   </div><!-- /main-layout -->
+
+  <!-- ── Gases abrangidos pelo contrato ── -->
+  <?php if (!empty($_gasesG) || !empty($_gasesL)): ?>
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <span style="font-weight:600"><i class="fas fa-list me-2"></i>Gases abrangidos pelo contrato</span>
+      <span class="text-muted" style="font-size:.82rem">Preços sem IVA · Concurso 2023</span>
+    </div>
+    <div class="card-body p-0">
+
+      <?php if (!empty($_gasesG)): ?>
+      <div class="px-3 pt-3 pb-1">
+        <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
+          <i class="fas fa-wind me-1"></i>Gases em garrafa
+        </h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0" id="tbl-gases-enc">
+          <thead class="table-light">
+            <tr>
+              <th>Gás</th><th>Pureza</th><th>Designação comercial</th><th>Garrafa</th>
+              <th class="text-end">Prazo (dias)</th><th class="text-end">Preço/garrafa (s/IVA)</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($_gasesG as $g): ?>
+            <?php $longo = (int)($g['prazo'] ?? 0) >= 30; ?>
+            <tr>
+              <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
+              <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
+              <td><?= htmlspecialchars($g['designacao'] ?? '') ?></td>
+              <td><?= htmlspecialchars($g['garrafa'] ?? '') ?></td>
+              <td class="text-end <?= $longo ? 'text-danger' : '' ?>">
+                <?= (int)($g['prazo'] ?? 0) ?><?= $longo ? ' ⚠' : '' ?>
+              </td>
+              <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€</td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php endif; ?>
+
+      <?php if (!empty($_gasesL)): ?>
+      <div class="px-3 pt-3 pb-1 mt-2">
+        <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
+          <i class="fas fa-tint me-1"></i>Gases liquefeitos
+        </h6>
+      </div>
+      <div class="table-responsive pb-3">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Produto</th><th>Pureza</th><th>Recipiente</th>
+              <th class="text-end">Prazo (dias)</th><th class="text-end">Preço unitário (s/IVA)</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($_gasesL as $g): ?>
+            <tr>
+              <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
+              <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
+              <td><?= htmlspecialchars($g['recipiente'] ?? '') ?></td>
+              <td class="text-end"><?= (int)($g['prazo'] ?? 0) ?></td>
+              <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€/<?= htmlspecialchars($g['unidade'] ?? 'un') ?></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php endif; ?>
+
+      <div class="px-3 pb-3">
+        <small class="text-muted">
+          <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+          Prazos assinalados com ⚠ são prazos longos (≥ 30 dias úteis) — planear as encomendas com antecedência.
+        </small>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
 </div>
 
 <div class="iq-toast" id="toast"></div>
