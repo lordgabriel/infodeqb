@@ -488,12 +488,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                 <div class="d-flex gap-1 flex-shrink-0">
                   <button class="btn btn-xs btn-outline-secondary"
                     style="font-size:.72rem;padding:.18rem .45rem"
-                    onclick='showDetalhe(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>)'>
+                    onclick="showDetalhe(<?= (int)$h['id'] ?>)">
                     <i class="fas fa-eye"></i>
                   </button>
                   <button class="btn btn-xs btn-outline-primary"
                     style="font-size:.72rem;padding:.18rem .5rem"
-                    onclick='repetirEncomenda(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>)'>
+                    onclick="repetirEncomenda(<?= (int)$h['id'] ?>)">
                     Repetir
                   </button>
                 </div>
@@ -621,6 +621,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="iq-toast" id="toast"></div>
 
 <script>
+var _histRows = <?= json_encode(array_column($historicoRows, null, 'id')) ?>;
+
 var GASES = [
   'Acetileno 99,5% B20',
   'Acetileno 99,6% B40',
@@ -847,8 +849,10 @@ function renderHistorico(rows) {
     el.innerHTML = '<p class="hist-vazio mb-0">Sem encomendas anteriores.</p>';
     return;
   }
+  _histRows = {};
   var html = '';
   rows.forEach(function(h) {
+    _histRows[h.id] = h;
     var badge = h.tipo === 'azoto'
       ? '<span class="hist-tipo-badge hist-tipo-azoto">❄ azoto</span>'
       : '<span class="hist-tipo-badge hist-tipo-garrafas">🔵 garrafas</span>';
@@ -858,20 +862,20 @@ function renderHistorico(rows) {
     html += '<div class="hist-assunto">' + esc(h.assunto || '—') + '</div>';
     html += '<div class="hist-meta">' + badge + data + '</div>';
     html += '</div>';
-    var hJson = esc(JSON.stringify(h));
     html += '<div class="d-flex gap-1 flex-shrink-0">';
     html += '<button class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.18rem .45rem" '
-          + 'onclick=\'showDetalhe(' + hJson + ')\'><i class="fas fa-eye"></i></button>';
+          + 'onclick="showDetalhe(' + h.id + ')"><i class="fas fa-eye"></i></button>';
     html += '<button class="btn btn-xs btn-outline-primary" style="font-size:.72rem;padding:.18rem .5rem" '
-          + 'onclick=\'repetirEncomenda(' + hJson + ')\'>Repetir</button>';
+          + 'onclick="repetirEncomenda(' + h.id + ')">Repetir</button>';
     html += '</div>';
     html += '</div>';
   });
   el.innerHTML = html;
 }
 
-function repetirEncomenda(h) {
-  if (typeof h === 'string') h = JSON.parse(h);
+function repetirEncomenda(id) {
+  var h = _histRows[id];
+  if (!h) return;
   setTipo(h.tipo || 'garrafas');
   document.getElementById('conta').value    = h.conta || '';
   document.getElementById('local').value    = h.local_entrega || '';
@@ -903,8 +907,9 @@ function repetirEncomenda(h) {
 function updatePreview() {} // stub — preview removido
 
 /* ── Toast ───────────────────────────────────────────────────────────── */
-function showDetalhe(h) {
-  if (typeof h === 'string') h = JSON.parse(h);
+function showDetalhe(id) {
+  var h = _histRows[id];
+  if (!h) return;
   var data = (h.enviado_em || '').substr(0, 16).replace('T', ' ');
   document.getElementById('detalhe-meta').textContent = (h.assunto || '') + ' · ' + data;
   document.getElementById('detalhe-corpo').textContent = h.corpo || '(sem corpo guardado)';
