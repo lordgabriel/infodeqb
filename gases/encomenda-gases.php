@@ -12,7 +12,7 @@ $_iqEmailUtilizador = $_iqCurrentUser; // ex: up356946@up.pt
 /* ── helpers PHP ───────────────────────────────────────────────────── */
 function buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab, $nome = '', $utilizador = '') {
     $L = [];
-    $L[] = 'Bom dia,';
+    $L[] = 'Exmos. Srs.,';
     $L[] = '';
     if ($tipo === 'azoto') {
         $vol = $az_volume ?: '?';
