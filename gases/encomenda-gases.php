@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
     if ($_POST['action'] === 'historico') {
         $q = $pdo->prepare(
             "SELECT id, tipo, conta, local_entrega, contacto, cc,
-                    az_volume, az_lab, cheias_json, vazias_json, assunto, enviado_em
+                    az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
              FROM infodeqb_encomenda_gases
              WHERE utilizador=? ORDER BY enviado_em DESC LIMIT 10"
         );
@@ -429,7 +429,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="iq-card-title"><i class="fas fa-envelope"></i> Destinatários</div>
         <div class="mb-2">
           <label class="form-label">CC <small class="text-muted">— separar com ;</small></label>
-          <input type="text" class="form-control form-control-sm" id="cc" placeholder="email1@exemplo.pt; email2@exemplo.pt" oninput="updatePreview()">
+          <input type="text" class="form-control form-control-sm" id="cc" placeholder="email1@fe.up.pt; email2@up.pt" oninput="updatePreview()">
+          <div class="form-text" style="font-size:.75rem"><i class="fas fa-info-circle me-1"></i>Apenas emails institucionais (@fe.up.pt, @up.pt)</div>
         </div>
         <div>
           <label class="form-label">Assunto</label>
@@ -442,6 +443,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div class="d-flex flex-wrap gap-2 mb-2">
         <button class="btn btn-sm btn-primary" type="button" id="btn-enviar" onclick="enviarEncomenda()">
           <i class="fas fa-paper-plane me-1"></i>Submeter encomenda
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="limparFormulario()">
+          <i class="fas fa-eraser me-1"></i>Limpar
         </button>
       </div>
       <div style="font-size:.78rem;color:var(--iq-muted)">
@@ -481,11 +485,18 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                     <?= htmlspecialchars(substr($h['enviado_em'] ?? '', 0, 10)) ?>
                   </div>
                 </div>
-                <button class="btn btn-xs btn-outline-primary flex-shrink-0"
-                  style="font-size:.72rem;padding:.18rem .5rem"
-                  onclick='repetirEncomenda(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>)'>
-                  Repetir
-                </button>
+                <div class="d-flex gap-1 flex-shrink-0">
+                  <button class="btn btn-xs btn-outline-secondary"
+                    style="font-size:.72rem;padding:.18rem .45rem"
+                    onclick='showDetalhe(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>)'>
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-xs btn-outline-primary"
+                    style="font-size:.72rem;padding:.18rem .5rem"
+                    onclick='repetirEncomenda(<?= htmlspecialchars(json_encode($h), ENT_QUOTES) ?>)'>
+                    Repetir
+                  </button>
+                </div>
               </div>
             <?php endforeach; ?>
           <?php endif; ?>
@@ -496,6 +507,25 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
   </div><!-- /main-layout -->
 
+</div>
+
+<!-- ── Modal: Detalhe de encomenda ── -->
+<div class="modal fade" id="modalDetalheEncomenda" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-envelope-open-text me-2"></i>Detalhe da encomenda</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-1" style="font-size:.78rem" id="detalhe-meta"></p>
+        <pre id="detalhe-corpo" style="font-size:.85rem;white-space:pre-wrap;word-break:break-word;background:var(--iq-gray-50,#f9fafb);border:1px solid var(--iq-border);border-radius:6px;padding:.75rem 1rem;margin:0"></pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── Modal: Gases abrangidos pelo contrato ── -->
@@ -828,8 +858,13 @@ function renderHistorico(rows) {
     html += '<div class="hist-assunto">' + esc(h.assunto || '—') + '</div>';
     html += '<div class="hist-meta">' + badge + data + '</div>';
     html += '</div>';
-    html += '<button class="btn btn-xs btn-outline-primary flex-shrink-0" style="font-size:.72rem;padding:.18rem .5rem" '
-          + 'onclick=\'repetirEncomenda(' + esc(JSON.stringify(h)) + ')\'>Repetir</button>';
+    var hJson = esc(JSON.stringify(h));
+    html += '<div class="d-flex gap-1 flex-shrink-0">';
+    html += '<button class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.18rem .45rem" '
+          + 'onclick=\'showDetalhe(' + hJson + ')\'><i class="fas fa-eye"></i></button>';
+    html += '<button class="btn btn-xs btn-outline-primary" style="font-size:.72rem;padding:.18rem .5rem" '
+          + 'onclick=\'repetirEncomenda(' + hJson + ')\'>Repetir</button>';
+    html += '</div>';
     html += '</div>';
   });
   el.innerHTML = html;
@@ -868,6 +903,29 @@ function repetirEncomenda(h) {
 function updatePreview() {} // stub — preview removido
 
 /* ── Toast ───────────────────────────────────────────────────────────── */
+function showDetalhe(h) {
+  if (typeof h === 'string') h = JSON.parse(h);
+  var data = (h.enviado_em || '').substr(0, 16).replace('T', ' ');
+  document.getElementById('detalhe-meta').textContent = (h.assunto || '') + ' · ' + data;
+  document.getElementById('detalhe-corpo').textContent = h.corpo || '(sem corpo guardado)';
+  var m = new bootstrap.Modal(document.getElementById('modalDetalheEncomenda'));
+  m.show();
+}
+
+function limparFormulario() {
+  if (!confirm('Limpar todos os campos do formulário?')) return;
+  document.getElementById('conta').value    = '';
+  document.getElementById('local').value    = '';
+  document.getElementById('contacto').value = '';
+  document.getElementById('cc').value       = '';
+  document.getElementById('rows-cheias').innerHTML = '';
+  document.getElementById('rows-vazias').innerHTML = '';
+  document.getElementById('az_volume').value = '';
+  document.getElementById('az_lab').value    = '';
+  _assuntoManual = false;
+  onDetalhesInput();
+}
+
 function showToast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
