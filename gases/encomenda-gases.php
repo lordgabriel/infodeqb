@@ -720,6 +720,8 @@ function repetirEncomenda(h) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
+function updatePreview() {} // stub — preview removido
+
 /* ── Toast ───────────────────────────────────────────────────────────── */
 function showToast(msg) {
   var t = document.getElementById('toast');
