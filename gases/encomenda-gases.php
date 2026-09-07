@@ -228,6 +228,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   border-color: var(--iq-blue, #2563eb);
   background: #bfdbfe;
 }
+.btn-add-gas-vazias {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+.btn-add-gas-vazias:hover {
+  border-color: #d97706;
+  background: #fde68a;
+}
 
 .btn-row-remove {
   background: none;
@@ -370,7 +379,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <span class="badge rounded-pill ms-1" style="background:#fef3c7;color:#b45309;font-weight:500;font-size:.63rem">VAZIAS</span>
         </div>
         <div id="rows-vazias" class="gas-rows"></div>
-        <button class="btn-add-gas" type="button" onclick="showGasPicker('vazias', this)">
+        <button class="btn-add-gas btn-add-gas-vazias" type="button" onclick="showGasPicker('vazias', this)">
           <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
         </button>
       </div>
