@@ -433,7 +433,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <!-- Acções -->
       <div class="d-flex flex-wrap gap-2 mb-2">
         <button class="btn btn-sm btn-primary" type="button" id="btn-enviar" onclick="enviarEncomenda()">
-          <i class="fas fa-paper-plane me-1"></i>Enviar encomenda
+          <i class="fas fa-paper-plane me-1"></i>Submeter encomenda
         </button>
       </div>
       <div style="font-size:.78rem;color:var(--iq-muted)">
@@ -785,7 +785,7 @@ function enviarEncomenda() {
     .catch(function() { showToast('Erro de rede — tenta novamente'); })
     .finally(function() {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Enviar encomenda';
+      btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submeter encomenda';
     });
 }
 
