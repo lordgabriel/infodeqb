@@ -73,11 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
         $assunto = buildAssuntoGases($tipo, $local, $conta);
         $corpo   = buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab);
 
-        $to      = ['fmartins@fe.up.pt'];
+        $to      = ['fmartins@fe.up.pt']; // TESTE — mudar para encomendagarrafas.pt@airliquide.com
         $ccList  = $cc ? array_values(array_filter(array_map('trim', explode(';', $cc)))) : [];
-        if ($_iqEmailUtilizador) {
-            $ccList[] = $_iqEmailUtilizador; // cópia automática para o remetente
-        }
+        $ccList[] = 'fmartins@fe.up.pt'; // TESTE — mudar para $_iqEmailUtilizador (auto-CC ao remetente)
 
         try {
             send_email($to, '<pre style="font-family:monospace;font-size:14px">' . htmlspecialchars($corpo) . '</pre>', $assunto, $ccList);
@@ -688,6 +686,26 @@ function getRows(tipo) {
 var _tipo = 'garrafas';
 
 function setTipo(t) {
+  if (t === _tipo) return;
+
+  // Verificar se há dados no tipo actual antes de limpar
+  var temDados = false;
+  if (_tipo === 'garrafas') {
+    temDados = document.querySelectorAll('#rows-cheias .gas-row, #rows-vazias .gas-row').length > 0;
+  } else {
+    temDados = !!(document.getElementById('az_volume').value || document.getElementById('az_lab').value);
+  }
+  if (temDados && !confirm('Ao mudar o tipo de encomenda os dados já preenchidos serão limpos. Continuar?')) return;
+
+  // Limpar secção inactiva
+  if (_tipo === 'garrafas') {
+    document.getElementById('rows-cheias').innerHTML = '';
+    document.getElementById('rows-vazias').innerHTML = '';
+  } else {
+    document.getElementById('az_volume').value = '';
+    document.getElementById('az_lab').value    = '';
+  }
+
   _tipo = t;
   document.getElementById('btn-tipo-garrafas').className = 'btn btn-sm ' + (t === 'garrafas' ? 'btn-primary' : 'btn-outline-secondary');
   document.getElementById('btn-tipo-azoto').className    = 'btn btn-sm ' + (t === 'azoto'    ? 'btn-primary' : 'btn-outline-secondary');
