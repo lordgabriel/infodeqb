@@ -170,23 +170,13 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 } catch (PDOException $e) { /* tabela já existe */ }
 
-if ($isGasAdmin) {
-    $stmtHist = $pdo->prepare(
-        "SELECT id, utilizador, nome, tipo, conta, local_entrega, contacto, cc,
-                az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
-         FROM infodeqb_encomenda_gases
-         ORDER BY enviado_em DESC LIMIT 50"
-    );
-    $stmtHist->execute([]);
-} else {
-    $stmtHist = $pdo->prepare(
-        "SELECT id, utilizador, nome, tipo, conta, local_entrega, contacto, cc,
-                az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
-         FROM infodeqb_encomenda_gases
-         WHERE utilizador=? ORDER BY enviado_em DESC LIMIT 10"
-    );
-    $stmtHist->execute([$_iqEmailUtilizador]);
-}
+$stmtHist = $pdo->prepare(
+    "SELECT id, utilizador, nome, tipo, conta, local_entrega, contacto, cc,
+            az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
+     FROM infodeqb_encomenda_gases
+     WHERE utilizador=? ORDER BY enviado_em DESC LIMIT 10"
+);
+$stmtHist->execute([$_iqEmailUtilizador]);
 $historicoRows = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
 Database::disconnect();
 
@@ -498,13 +488,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
       <!-- Histórico -->
       <div class="iq-card" style="margin-top:.65rem">
-        <div class="iq-card-title" style="justify-content:space-between">
-          <span><i class="fas fa-history"></i> Histórico<?= $isGasAdmin ? ' <span style="font-weight:400;text-transform:none;font-size:.75rem;letter-spacing:0">(todos os utilizadores)</span>' : '' ?></span>
-          <?php if ($isGasAdmin): ?>
-          <button class="btn btn-xs btn-outline-danger" id="btn-apagar-sel" style="font-size:.7rem;padding:.15rem .5rem;display:none" onclick="apagarSelecionados()">
-            <i class="fas fa-trash me-1"></i>Apagar seleccionados
-          </button>
-          <?php endif; ?>
+        <div class="iq-card-title">
+          <i class="fas fa-history"></i> Histórico
         </div>
         <div id="historico-lista">
           <?php if (empty($historicoRows)): ?>
@@ -512,18 +497,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           <?php else: ?>
             <?php foreach ($historicoRows as $h): ?>
               <div class="hist-row" data-id="<?= (int)$h['id'] ?>">
-                <?php if ($isGasAdmin): ?>
-                <input type="checkbox" class="hist-chk flex-shrink-0" value="<?= (int)$h['id'] ?>" onchange="onChkChange()" style="margin-right:.2rem">
-                <?php endif; ?>
                 <div class="hist-info">
                   <div class="hist-assunto"><?= htmlspecialchars($h['assunto'] ?? '—') ?></div>
                   <div class="hist-meta">
                     <span class="hist-tipo-badge hist-tipo-<?= $h['tipo'] ?>">
                       <?= $h['tipo'] === 'azoto' ? '❄ azoto' : '🔵 garrafas' ?>
                     </span>
-                    <?php if ($isGasAdmin): ?>
-                    <span style="opacity:.7"><?= htmlspecialchars($h['nome'] ?? $h['utilizador'] ?? '') ?> · </span>
-                    <?php endif; ?>
                     <?= htmlspecialchars(substr($h['enviado_em'] ?? '', 0, 10)) ?>
                   </div>
                 </div>
@@ -538,13 +517,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                     onclick="repetirEncomenda(<?= (int)$h['id'] ?>)">
                     Repetir
                   </button>
-                  <?php if ($isGasAdmin): ?>
-                  <button class="btn btn-xs btn-outline-danger"
-                    style="font-size:.72rem;padding:.18rem .4rem"
-                    onclick="apagarUm(<?= (int)$h['id'] ?>)" title="Apagar">
-                    <i class="fas fa-times"></i>
-                  </button>
-                  <?php endif; ?>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -906,20 +878,16 @@ function renderHistorico(rows) {
       ? '<span class="hist-tipo-badge hist-tipo-azoto">❄ azoto</span>'
       : '<span class="hist-tipo-badge hist-tipo-garrafas">🔵 garrafas</span>';
     var data = (h.enviado_em || '').substr(0, 10);
-    var nomeMeta = IS_GAS_ADMIN && h.nome ? '<span style="opacity:.7">' + esc(h.nome) + ' · </span>' : '';
     html += '<div class="hist-row" data-id="' + h.id + '">';
-    if (IS_GAS_ADMIN) html += '<input type="checkbox" class="hist-chk flex-shrink-0" value="' + h.id + '" onchange="onChkChange()" style="margin-right:.2rem">';
     html += '<div class="hist-info">';
     html += '<div class="hist-assunto">' + esc(h.assunto || '—') + '</div>';
-    html += '<div class="hist-meta">' + badge + nomeMeta + data + '</div>';
+    html += '<div class="hist-meta">' + badge + data + '</div>';
     html += '</div>';
     html += '<div class="d-flex gap-1 flex-shrink-0">';
     html += '<button class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.18rem .45rem" '
           + 'onclick="showDetalhe(' + h.id + ')"><i class="fas fa-eye"></i></button>';
     html += '<button class="btn btn-xs btn-outline-primary" style="font-size:.72rem;padding:.18rem .5rem" '
           + 'onclick="repetirEncomenda(' + h.id + ')">Repetir</button>';
-    if (IS_GAS_ADMIN) html += '<button class="btn btn-xs btn-outline-danger" style="font-size:.72rem;padding:.18rem .4rem" '
-          + 'onclick="apagarUm(' + h.id + ')" title="Apagar"><i class="fas fa-times"></i></button>';
     html += '</div>';
     html += '</div>';
   });
@@ -968,51 +936,6 @@ function showDetalhe(id) {
   document.getElementById('detalhe-corpo').textContent = h.corpo || '(sem corpo guardado)';
   var m = new bootstrap.Modal(document.getElementById('modalDetalheEncomenda'));
   m.show();
-}
-
-var IS_GAS_ADMIN = <?= $isGasAdmin ? 'true' : 'false' ?>;
-
-function onChkChange() {
-  var sel = document.querySelectorAll('.hist-chk:checked').length;
-  var btn = document.getElementById('btn-apagar-sel');
-  if (btn) btn.style.display = sel > 0 ? '' : 'none';
-}
-
-function apagarUm(id) {
-  if (!confirm('Apagar esta encomenda do histórico?')) return;
-  _apagarIds([id]);
-}
-
-function apagarSelecionados() {
-  var ids = Array.from(document.querySelectorAll('.hist-chk:checked')).map(function(c) { return parseInt(c.value); });
-  if (!ids.length) return;
-  if (!confirm('Apagar ' + ids.length + ' encomenda(s) do histórico?')) return;
-  _apagarIds(ids);
-}
-
-function _apagarIds(ids) {
-  var fd = new FormData();
-  fd.append('action', 'apagar_hist');
-  fd.append('ids', ids.join(','));
-  fetch(window.location.pathname, { method: 'POST', body: fd })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-      if (res.ok) {
-        ids.forEach(function(id) {
-          var row = document.querySelector('.hist-row[data-id="' + id + '"]');
-          if (row) row.remove();
-          delete _histRows[id];
-        });
-        onChkChange();
-        if (!document.querySelector('.hist-row')) {
-          document.getElementById('historico-lista').innerHTML = '<p class="hist-vazio mb-0">Sem encomendas anteriores.</p>';
-        }
-        showToast('Apagado' + (ids.length > 1 ? 's ' + ids.length + ' registos' : ' 1 registo'));
-      } else {
-        showToast(res.erro || 'Erro ao apagar');
-      }
-    })
-    .catch(function() { showToast('Erro de rede'); });
 }
 
 function limparFormulario() {

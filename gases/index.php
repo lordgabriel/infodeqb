@@ -29,6 +29,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <a href="encomenda-gases.php" class="btn btn-outline-secondary">
       <i class="fas fa-envelope me-1"></i> Encomenda Air Liquide
     </a>
+    <a href="historico-encomendas.php" class="btn btn-outline-secondary">
+      <i class="fas fa-history me-1"></i> Histórico de Encomendas
+    </a>
   </div>
 </div>
 
