@@ -10,7 +10,7 @@ $_iqNomeUtilizador  = $_SESSION['DisplayName'] ?? $_iqCurrentUser;
 $_iqEmailUtilizador = $_iqCurrentUser; // ex: up356946@up.pt
 
 /* ── helpers PHP ───────────────────────────────────────────────────── */
-function buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab) {
+function buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab, $nome = '', $utilizador = '') {
     $L = [];
     $L[] = 'Bom dia,';
     $L[] = '';
@@ -43,6 +43,11 @@ function buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az
     $L[] = 'Contacto: ' . ($contacto ?: '—');
     $L[] = '';
     $L[] = 'Com os melhores cumprimentos,';
+    if ($nome || $utilizador) {
+        $assinatura = $nome ?: '';
+        if ($utilizador) $assinatura .= ($assinatura ? ' (' . $utilizador . ')' : $utilizador);
+        $L[] = $assinatura;
+    }
     return implode("\n", $L);
 }
 
@@ -71,14 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
         $vazias    = json_decode($_POST['vazias_json'] ?? '[]', true) ?: [];
 
         $assunto = buildAssuntoGases($tipo, $local, $conta);
-        $corpo   = buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab);
+        $corpo   = buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab, $_iqNomeUtilizador, $_iqEmailUtilizador);
 
         $to      = ['fmartins@fe.up.pt']; // TESTE — mudar para encomendagarrafas.pt@airliquide.com
         $ccList  = $cc ? array_values(array_filter(array_map('trim', explode(';', $cc)))) : [];
         $ccList[] = 'fmartins@fe.up.pt'; // TESTE — mudar para $_iqEmailUtilizador (auto-CC ao remetente)
 
+        $htmlCorpo = '<div style="font-family:monospace;font-size:14px;line-height:1.8">'
+                   . nl2br(htmlspecialchars($corpo))
+                   . '</div>';
         try {
-            send_email($to, '<pre style="font-family:monospace;font-size:14px">' . htmlspecialchars($corpo) . '</pre>', $assunto, $ccList);
+            send_email($to, $htmlCorpo, $assunto, $ccList);
 
             $pdo->prepare(
                 "INSERT INTO infodeqb_encomenda_gases
