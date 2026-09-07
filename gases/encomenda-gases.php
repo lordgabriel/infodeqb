@@ -438,6 +438,16 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <!-- ── Coluna direita: pré-visualização + histórico ── -->
     <div class="preview-col">
 
+      <!-- Link gases do contrato -->
+      <?php if (!empty($_gasesG) || !empty($_gasesL)): ?>
+      <div style="text-align:right;margin-bottom:.4rem">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#modalGasesContrato"
+           style="font-size:.8rem;color:var(--iq-blue,#2563eb);text-decoration:none">
+          <i class="fas fa-info-circle me-1"></i>Gases abrangidos pelo contrato
+        </a>
+      </div>
+      <?php endif; ?>
+
       <!-- Histórico -->
       <div class="iq-card" style="margin-top:.65rem">
         <div class="iq-card-title"><i class="fas fa-history"></i> Histórico</div>
@@ -471,88 +481,97 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 
   </div><!-- /main-layout -->
 
-  <!-- ── Gases abrangidos pelo contrato ── -->
-  <?php if (!empty($_gasesG) || !empty($_gasesL)): ?>
-  <div class="card mb-4">
-    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
-      <span style="font-weight:600"><i class="fas fa-list me-2"></i>Gases abrangidos pelo contrato</span>
-      <span class="text-muted" style="font-size:.82rem">Preços sem IVA · Concurso 2023</span>
-    </div>
-    <div class="card-body p-0">
+</div>
 
-      <?php if (!empty($_gasesG)): ?>
-      <div class="px-3 pt-3 pb-1">
-        <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
-          <i class="fas fa-wind me-1"></i>Gases em garrafa
-        </h6>
+<!-- ── Modal: Gases abrangidos pelo contrato ── -->
+<?php if (!empty($_gasesG) || !empty($_gasesL)): ?>
+<div class="modal fade" id="modalGasesContrato" tabindex="-1" aria-labelledby="modalGasesContratoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalGasesContratoLabel">
+          <i class="fas fa-list me-2"></i>Gases abrangidos pelo contrato
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0" id="tbl-gases-enc">
-          <thead class="table-light">
-            <tr>
-              <th>Gás</th><th>Pureza</th><th>Designação comercial</th><th>Garrafa</th>
-              <th class="text-end">Prazo (dias)</th><th class="text-end">Preço/garrafa (s/IVA)</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($_gasesG as $g): ?>
-            <?php $longo = (int)($g['prazo'] ?? 0) >= 30; ?>
-            <tr>
-              <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
-              <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
-              <td><?= htmlspecialchars($g['designacao'] ?? '') ?></td>
-              <td><?= htmlspecialchars($g['garrafa'] ?? '') ?></td>
-              <td class="text-end <?= $longo ? 'text-danger' : '' ?>">
-                <?= (int)($g['prazo'] ?? 0) ?><?= $longo ? ' ⚠' : '' ?>
-              </td>
-              <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€</td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-      <?php endif; ?>
+      <div class="modal-body p-0">
 
-      <?php if (!empty($_gasesL)): ?>
-      <div class="px-3 pt-3 pb-1 mt-2">
-        <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
-          <i class="fas fa-tint me-1"></i>Gases liquefeitos
-        </h6>
-      </div>
-      <div class="table-responsive pb-3">
-        <table class="table table-sm table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Produto</th><th>Pureza</th><th>Recipiente</th>
-              <th class="text-end">Prazo (dias)</th><th class="text-end">Preço unitário (s/IVA)</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($_gasesL as $g): ?>
-            <tr>
-              <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
-              <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
-              <td><?= htmlspecialchars($g['recipiente'] ?? '') ?></td>
-              <td class="text-end"><?= (int)($g['prazo'] ?? 0) ?></td>
-              <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€/<?= htmlspecialchars($g['unidade'] ?? 'un') ?></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-      <?php endif; ?>
+        <?php if (!empty($_gasesG)): ?>
+        <div class="px-3 pt-3 pb-1">
+          <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
+            <i class="fas fa-wind me-1"></i>Gases em garrafa &nbsp;<span class="fw-normal text-secondary">· Preços sem IVA · Concurso 2023</span>
+          </h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Gás</th><th>Pureza</th><th>Designação comercial</th><th>Garrafa</th>
+                <th class="text-end">Prazo (dias)</th><th class="text-end">Preço/garrafa (s/IVA)</th>
+              </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($_gasesG as $g): ?>
+              <?php $longo = (int)($g['prazo'] ?? 0) >= 30; ?>
+              <tr>
+                <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
+                <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
+                <td><?= htmlspecialchars($g['designacao'] ?? '') ?></td>
+                <td><?= htmlspecialchars($g['garrafa'] ?? '') ?></td>
+                <td class="text-end <?= $longo ? 'text-danger' : '' ?>">
+                  <?= (int)($g['prazo'] ?? 0) ?><?= $longo ? ' ⚠' : '' ?>
+                </td>
+                <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€</td>
+              </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
 
-      <div class="px-3 pb-3">
-        <small class="text-muted">
-          <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-          Prazos assinalados com ⚠ são prazos longos (≥ 30 dias úteis) — planear as encomendas com antecedência.
-        </small>
+        <?php if (!empty($_gasesL)): ?>
+        <div class="px-3 pt-3 pb-1 mt-2">
+          <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
+            <i class="fas fa-tint me-1"></i>Gases liquefeitos
+          </h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Produto</th><th>Pureza</th><th>Recipiente</th>
+                <th class="text-end">Prazo (dias)</th><th class="text-end">Preço unitário (s/IVA)</th>
+              </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($_gasesL as $g): ?>
+              <tr>
+                <td><?= htmlspecialchars($g['gas'] ?? '') ?></td>
+                <td><?= htmlspecialchars($g['pureza'] ?? '') ?></td>
+                <td><?= htmlspecialchars($g['recipiente'] ?? '') ?></td>
+                <td class="text-end"><?= (int)($g['prazo'] ?? 0) ?></td>
+                <td class="text-end"><?= htmlspecialchars($g['preco'] ?? '') ?>&nbsp;€/<?= htmlspecialchars($g['unidade'] ?? 'un') ?></td>
+              </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
+
+        <div class="px-3 py-2">
+          <small class="text-muted">
+            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+            Prazos assinalados com ⚠ são ≥ 30 dias úteis — planear as encomendas com antecedência.
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>
-  <?php endif; ?>
-
 </div>
+<?php endif; ?>
 
 <div class="iq-toast" id="toast"></div>
 
