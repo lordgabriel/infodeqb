@@ -21,14 +21,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apaga
 }
 
 /* ── Carrega histórico ──────────────────────────────────────────────── */
-$pdo = Database::connect();
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$rows = $pdo->query(
-    "SELECT id, utilizador, nome, tipo, conta, local_entrega, assunto, corpo, enviado_em
-     FROM infodeqb_encomenda_gases
-     ORDER BY enviado_em DESC LIMIT 200"
-)->fetchAll(PDO::FETCH_ASSOC);
-Database::disconnect();
+$rows = [];
+$dbErro = '';
+try {
+    $pdo = Database::connect();
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    /* Garante que a tabela existe */
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `infodeqb_encomenda_gases` (
+        `id`           int(11)                      NOT NULL AUTO_INCREMENT,
+        `utilizador`   varchar(50)                  NOT NULL,
+        `nome`         varchar(200)                 DEFAULT NULL,
+        `tipo`         enum('garrafas','azoto')     NOT NULL DEFAULT 'garrafas',
+        `conta`        varchar(50)                  DEFAULT NULL,
+        `local_entrega` varchar(200)               DEFAULT NULL,
+        `contacto`     varchar(200)                 DEFAULT NULL,
+        `cc`           varchar(300)                 DEFAULT NULL,
+        `az_volume`    int(11)                      DEFAULT NULL,
+        `az_lab`       varchar(50)                  DEFAULT NULL,
+        `cheias_json`  text                         DEFAULT NULL,
+        `vazias_json`  text                         DEFAULT NULL,
+        `assunto`      varchar(300)                 DEFAULT NULL,
+        `corpo`        text                         DEFAULT NULL,
+        `enviado_em`   datetime                     DEFAULT NULL,
+        PRIMARY KEY (`id`),
+        KEY `idx_utilizador` (`utilizador`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $rows = $pdo->query(
+        "SELECT id, utilizador, nome, tipo, conta, local_entrega, assunto, corpo, enviado_em
+         FROM infodeqb_encomenda_gases
+         ORDER BY enviado_em DESC LIMIT 200"
+    )->fetchAll(PDO::FETCH_ASSOC);
+    Database::disconnect();
+} catch (Exception $e) {
+    $dbErro = $e->getMessage();
+}
 
 $pageTitle = 'Histórico de Encomendas — Gases';
 $mainClass = 'iq-main';
@@ -72,7 +98,9 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     </div>
   </div>
 
-  <?php if (empty($rows)): ?>
+  <?php if ($dbErro): ?>
+    <div class="alert alert-danger"><strong>Erro de BD:</strong> <?= htmlspecialchars($dbErro) ?></div>
+  <?php elseif (empty($rows)): ?>
     <div class="alert alert-info">Sem encomendas registadas.</div>
   <?php else: ?>
   <div class="card">
