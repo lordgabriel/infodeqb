@@ -79,9 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
         $assunto = buildAssuntoGases($tipo, $local, $conta);
         $corpo   = buildCorpoGases($tipo, $conta, $local, $contacto, $cheias, $vazias, $az_volume, $az_lab, $_iqNomeUtilizador, $_iqEmailUtilizador);
 
-        $to      = ['fmartins@fe.up.pt']; // TESTE — mudar para encomendagarrafas.pt@airliquide.com
+        $to      = ['gaes@fe.up.pt']; 
         $ccList  = $cc ? array_values(array_filter(array_map('trim', explode(';', $cc)))) : [];
-        $ccList[] = 'fmartins@fe.up.pt'; // TESTE — mudar para $_iqEmailUtilizador (auto-CC ao remetente)
+        $ccList[] = $_iqEmailUtilizador; 
 
         $htmlCorpo = '<div style="font-family:monospace;font-size:14px;line-height:1.8">'
                    . nl2br(htmlspecialchars($corpo))
