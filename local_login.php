@@ -16,9 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$code || !$name) {
         $error = 'Preencha o código UP e o nome.';
     } else {
-        // Normalizar: garantir formato upCODIGO@up.pt
-        $codeNum = preg_replace('/^up/i', '', $code); // remove prefixo 'up' se presente
-        $upCode  = 'up' . $codeNum;                   // garante prefixo 'up'
+        // Normalizar: aceita "up620893", "up620893@up.pt", "620893", etc.
+        $codeNum = strtolower(trim($code));
+        $codeNum = preg_replace('/@.*$/', '', $codeNum);  // remove domínio se presente
+        $codeNum = preg_replace('/^up/i', '', $codeNum);  // remove prefixo 'up'
+        $upCode  = 'up' . $codeNum;                       // garante prefixo 'up'
         $_SESSION['user']        = $upCode . '@up.pt';
         $_SESSION['Code']        = $upCode . '@up.pt';
         $_SESSION['DisplayName'] = $name;
