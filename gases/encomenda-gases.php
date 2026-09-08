@@ -114,7 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             "SELECT id, tipo, conta, local_entrega, contacto, cc,
                     az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
              FROM infodeqb_encomenda_gases
-             WHERE utilizador=? ORDER BY enviado_em DESC LIMIT 10"
+             WHERE utilizador=? AND YEAR(enviado_em) = YEAR(NOW())
+             ORDER BY enviado_em DESC LIMIT 60"
         );
         $q->execute([$_iqEmailUtilizador]);
         Database::disconnect();
@@ -174,7 +175,8 @@ $stmtHist = $pdo->prepare(
     "SELECT id, utilizador, nome, tipo, conta, local_entrega, contacto, cc,
             az_volume, az_lab, cheias_json, vazias_json, assunto, corpo, enviado_em
      FROM infodeqb_encomenda_gases
-     WHERE utilizador=? ORDER BY enviado_em DESC LIMIT 10"
+     WHERE utilizador=? AND YEAR(enviado_em) = YEAR(NOW())
+     ORDER BY enviado_em DESC LIMIT 60"
 );
 $stmtHist->execute([$_iqEmailUtilizador]);
 $historicoRows = $stmtHist->fetchAll(PDO::FETCH_ASSOC);
@@ -185,7 +187,7 @@ $_cfg      = file_exists($_jsonFile) ? (json_decode(file_get_contents($_jsonFile
 $_gasesG   = $_cfg['gases_garrafa']    ?? [];
 $_gasesL   = $_cfg['gases_liquefeitos'] ?? [];
 
-$pageTitle = 'Encomenda de Gases — Air Liquide';
+$pageTitle = t('GENC_TITLE');
 $mainClass = 'iq-main';
 include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
@@ -316,6 +318,28 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .hist-tipo-garrafas { background: #dbeafe; color: #1d4ed8; }
 .hist-tipo-azoto    { background: #e0f2fe; color: #0369a1; }
 
+/* ── Agrupamento por mês ── */
+.hist-month-header {
+  display: flex; align-items: center; gap: .35rem;
+  padding: .3rem 0 .25rem;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--iq-muted);
+  border-bottom: 1px solid var(--iq-border);
+  margin-top: .4rem;
+  cursor: pointer; user-select: none;
+}
+.hist-month-header:hover { color: var(--iq-text); }
+.hist-month-toggle { transition: transform .18s; flex-shrink: 0; }
+.hist-month-group.collapsed .hist-month-toggle { transform: rotate(-90deg); }
+.hist-month-group.collapsed .hist-row { display: none; }
+.hist-month-count {
+  margin-left: auto;
+  font-size: .65rem; font-weight: 700;
+  background: var(--iq-gray-100,#f3f4f6); color: var(--iq-muted);
+  border-radius: 8px; padding: 0 6px;
+}
+.hist-month-group:first-child .hist-month-header { margin-top: 0; }
+
 /* ── Gas picker ── */
 .gas-picker {
   position: fixed;
@@ -361,26 +385,26 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="iq-page-header">
     <div>
       <h1 class="iq-page-title">
-        <i class="fas fa-flask me-2" style="color:var(--iq-blue)"></i>Encomenda de Gases
+        <i class="fas fa-flask me-2" style="color:var(--iq-blue)"></i><?= t('GENC_TITLE') ?>
       </h1>
       <p class="iq-page-sub">Air Liquide — envia email para <strong>encomendagarrafas.pt@airliquide.com</strong> <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">TESTE → fmartins@fe.up.pt</span></p>
     </div>
   </div>
 
-  <div class="main-layout">
+  <div class="main-layout" lang="pt">
 
     <!-- ── Coluna esquerda: formulário ── -->
     <div>
 
       <!-- Tipo de encomenda -->
       <div class="iq-card">
-        <div class="iq-card-title"><i class="fas fa-tag"></i> Tipo de Encomenda</div>
+        <div class="iq-card-title"><i class="fas fa-tag"></i> <?= t('GENC_TIPO') ?></div>
         <div class="d-flex gap-2">
           <button type="button" id="btn-tipo-garrafas" class="btn btn-sm btn-primary" onclick="setTipo('garrafas')">
-            <i class="fas fa-flask me-1"></i>Garrafas
+            <i class="fas fa-flask me-1"></i><?= t('GENC_GARRAFAS') ?>
           </button>
           <button type="button" id="btn-tipo-azoto" class="btn btn-sm btn-outline-secondary" onclick="setTipo('azoto')">
-            <i class="fas fa-snowflake me-1"></i>Azoto Líquido
+            <i class="fas fa-snowflake me-1"></i><?= t('GENC_AZOTO_LIQ') ?>
           </button>
         </div>
       </div>
@@ -388,71 +412,71 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <!-- Garrafas cheias -->
       <div class="iq-card" id="section-garrafas-cheias">
         <div class="iq-card-title">
-          <i class="fas fa-check-circle" style="color:#16a34a"></i> Garrafas Cheias
-          <span class="badge rounded-pill ms-1" style="background:#dcfce7;color:#15803d;font-weight:500;font-size:.63rem">CHEIAS</span>
+          <i class="fas fa-check-circle" style="color:#16a34a"></i> <?= t('GENC_CHEIAS') ?>
+          <span class="badge rounded-pill ms-1" style="background:#dcfce7;color:#15803d;font-weight:500;font-size:.63rem"><?= t('GENC_CHEIAS_BADGE') ?></span>
         </div>
         <div id="rows-cheias" class="gas-rows"></div>
         <button class="btn-add-gas" type="button" onclick="showGasPicker('cheias', this)">
-          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
+          <i class="fas fa-plus fa-xs me-1"></i><?= t('GENC_ADD_GAS') ?>
         </button>
       </div>
 
       <!-- Garrafas vazias -->
       <div class="iq-card" id="section-garrafas-vazias">
         <div class="iq-card-title">
-          <i class="fas fa-circle" style="color:#b45309"></i> Devolução — Garrafas Vazias
-          <span class="badge rounded-pill ms-1" style="background:#fef3c7;color:#b45309;font-weight:500;font-size:.63rem">VAZIAS</span>
+          <i class="fas fa-circle" style="color:#b45309"></i> <?= t('GENC_VAZIAS') ?>
+          <span class="badge rounded-pill ms-1" style="background:#fef3c7;color:#b45309;font-weight:500;font-size:.63rem"><?= t('GENC_VAZIAS_BADGE') ?></span>
         </div>
         <div id="rows-vazias" class="gas-rows"></div>
         <button class="btn-add-gas btn-add-gas-vazias" type="button" onclick="showGasPicker('vazias', this)">
-          <i class="fas fa-plus fa-xs me-1"></i>Adicionar gás
+          <i class="fas fa-plus fa-xs me-1"></i><?= t('GENC_ADD_GAS') ?>
         </button>
       </div>
 
       <!-- Azoto Líquido -->
       <div class="iq-card" id="section-azoto" style="display:none">
-        <div class="iq-card-title"><i class="fas fa-snowflake" style="color:#0ea5e9"></i> Azoto Líquido</div>
+        <div class="iq-card-title"><i class="fas fa-snowflake" style="color:#0ea5e9"></i> <?= t('GENC_AZOTO_LIQ') ?></div>
         <div class="row g-2 mb-2">
           <div class="col-sm-4">
-            <label class="form-label">Volume (litros)</label>
+            <label class="form-label"><?= t('GENC_VOLUME_L') ?></label>
             <input type="number" class="form-control form-control-sm" id="az_volume" min="1" placeholder="ex: 25" oninput="updatePreview()">
           </div>
           <div class="col-sm-8">
-            <label class="form-label">Laboratório</label>
-            <input type="text" class="form-control form-control-sm" id="az_lab" placeholder="ex: E301" oninput="updatePreview()">
+            <label class="form-label"><?= t('GENC_LAB') ?></label>
+            <input type="text" class="form-control form-control-sm" id="az_lab" placeholder="ex: E301" oninput="updatePreview()" lang="pt" spellcheck="false">
           </div>
         </div>
       </div>
 
       <!-- Detalhes -->
       <div class="iq-card">
-        <div class="iq-card-title"><i class="fas fa-file-invoice"></i> Detalhes da Encomenda</div>
+        <div class="iq-card-title"><i class="fas fa-file-invoice"></i> <?= t('GENC_DETALHES') ?></div>
         <div class="row g-2 mb-2">
           <div class="col-sm-4">
-            <label class="form-label">Conta</label>
-            <input type="text" class="form-control form-control-sm" id="conta" placeholder="ex: 12233224" oninput="onDetalhesInput()">
+            <label class="form-label"><?= t('GENC_CONTA') ?></label>
+            <input type="text" class="form-control form-control-sm" id="conta" placeholder="ex: 12233224" oninput="onDetalhesInput()" lang="pt" spellcheck="false">
           </div>
           <div class="col-sm-8">
-            <label class="form-label">Contacto</label>
-            <input type="text" class="form-control form-control-sm" id="contacto" placeholder="Nome / telemóvel" oninput="updatePreview()">
+            <label class="form-label"><?= t('GENC_CONTACTO') ?></label>
+            <input type="text" class="form-control form-control-sm" id="contacto" placeholder="Nome / telemóvel" oninput="updatePreview()" lang="pt" spellcheck="true">
           </div>
         </div>
         <div class="mb-0">
-          <label class="form-label">Local de entrega</label>
-          <input type="text" class="form-control form-control-sm" id="local" placeholder="ex: Central de gases da FEUP" oninput="onDetalhesInput()">
+          <label class="form-label"><?= t('GENC_LOCAL') ?></label>
+          <input type="text" class="form-control form-control-sm" id="local" placeholder="ex: Central de gases da FEUP" oninput="onDetalhesInput()" lang="pt" spellcheck="true">
         </div>
       </div>
 
       <!-- Destinatários -->
       <div class="iq-card">
-        <div class="iq-card-title"><i class="fas fa-envelope"></i> Destinatários</div>
+        <div class="iq-card-title"><i class="fas fa-envelope"></i> <?= t('GENC_DEST') ?></div>
         <div class="mb-2">
-          <label class="form-label">CC <small class="text-muted">— separar com ;</small></label>
-          <input type="text" class="form-control form-control-sm" id="cc" placeholder="email1@fe.up.pt; email2@up.pt" oninput="updatePreview()">
-          <div class="form-text" style="font-size:.75rem"><i class="fas fa-info-circle me-1"></i>Apenas emails institucionais (@fe.up.pt, @up.pt)</div>
+          <label class="form-label"><?= t('GENC_CC') ?></label>
+          <input type="text" class="form-control form-control-sm" id="cc" placeholder="email1@fe.up.pt; email2@up.pt" oninput="updatePreview()" lang="pt" spellcheck="false">
+          <div class="form-text" style="font-size:.75rem"><i class="fas fa-info-circle me-1"></i><?= t('GENC_CC_HINT') ?></div>
         </div>
         <div>
-          <label class="form-label">Assunto</label>
+          <label class="form-label"><?= t('GENC_ASSUNTO') ?></label>
           <input type="text" class="form-control form-control-sm" id="assunto" readonly
             style="background:var(--iq-gray-50,#f9fafb);cursor:default">
         </div>
@@ -461,14 +485,14 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <!-- Acções -->
       <div class="d-flex flex-wrap gap-2 mb-2">
         <button class="btn btn-sm btn-primary" type="button" id="btn-enviar" onclick="enviarEncomenda()">
-          <i class="fas fa-paper-plane me-1"></i>Submeter encomenda
+          <i class="fas fa-paper-plane me-1"></i><?= t('GENC_SUBMETER') ?>
         </button>
         <button class="btn btn-sm btn-outline-secondary" type="button" onclick="limparFormulario()">
-          <i class="fas fa-eraser me-1"></i>Limpar
+          <i class="fas fa-eraser me-1"></i><?= t('GENC_LIMPAR') ?>
         </button>
       </div>
       <div style="font-size:.78rem;color:var(--iq-muted)">
-        <i class="fas fa-info-circle fa-xs me-1"></i>É enviada cópia automática para o teu email (<?= htmlspecialchars($_iqEmailUtilizador) ?>).
+        <i class="fas fa-info-circle fa-xs me-1"></i><?= t('GENC_COPIA_AUTO', htmlspecialchars($_iqEmailUtilizador)) ?>
       </div>
 
     </div><!-- /coluna esquerda -->
@@ -481,7 +505,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <div style="text-align:right;margin-bottom:.4rem">
         <a href="#" data-bs-toggle="modal" data-bs-target="#modalGasesContrato"
            style="font-size:.8rem;color:var(--iq-blue,#2563eb);text-decoration:none">
-          <i class="fas fa-info-circle me-1"></i>Gases abrangidos pelo contrato
+          <i class="fas fa-info-circle me-1"></i><?= t('GENC_CONTRATO') ?>
         </a>
       </div>
       <?php endif; ?>
@@ -489,19 +513,40 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <!-- Histórico -->
       <div class="iq-card" style="margin-top:.65rem">
         <div class="iq-card-title">
-          <i class="fas fa-history"></i> Histórico
+          <i class="fas fa-history"></i> <?= t('GENC_HISTORICO') ?>
         </div>
         <div id="historico-lista">
           <?php if (empty($historicoRows)): ?>
-            <p class="hist-vazio mb-0">Sem encomendas anteriores.</p>
-          <?php else: ?>
-            <?php foreach ($historicoRows as $h): ?>
+            <p class="hist-vazio mb-0"><?= t('GENC_SEM_ENC') ?></p>
+          <?php else:
+            $_meses  = $GLOBALS['_lang']['GENC_MESES'] ?? ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril','05'=>'Maio','06'=>'Junho','07'=>'Julho','08'=>'Agosto','09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
+            $mesesPt = array_combine(['01','02','03','04','05','06','07','08','09','10','11','12'], array_values($_meses));
+            $byMonth = [];
+            foreach ($historicoRows as $h) {
+                $ym = substr($h['enviado_em'] ?? '', 0, 7);
+                $byMonth[$ym][] = $h;
+            }
+            $gIdx = 0;
+            foreach ($byMonth as $ym => $mRows):
+                list($ano, $mes) = explode('-', $ym);
+                $label = ($mesesPt[$mes] ?? $mes) . ' ' . $ano;
+                $collapsed = $gIdx > 0 ? ' collapsed' : '';
+                $gIdx++;
+          ?>
+            <div class="hist-month-group<?= $collapsed ?>">
+              <div class="hist-month-header"
+                onclick="this.closest('.hist-month-group').classList.toggle('collapsed')">
+                <span class="hist-month-toggle"><i class="fas fa-chevron-down fa-xs"></i></span>
+                <?= htmlspecialchars($label) ?>
+                <span class="hist-month-count"><?= count($mRows) ?></span>
+              </div>
+              <?php foreach ($mRows as $h): ?>
               <div class="hist-row" data-id="<?= (int)$h['id'] ?>">
                 <div class="hist-info">
                   <div class="hist-assunto"><?= htmlspecialchars($h['assunto'] ?? '—') ?></div>
                   <div class="hist-meta">
                     <span class="hist-tipo-badge hist-tipo-<?= $h['tipo'] ?>">
-                      <?= $h['tipo'] === 'azoto' ? '❄ azoto' : '🔵 garrafas' ?>
+                      <?= $h['tipo'] === 'azoto' ? t('GENC_BADGE_AZOTO') : t('GENC_BADGE_GARR') ?>
                     </span>
                     <?= htmlspecialchars(substr($h['enviado_em'] ?? '', 0, 10)) ?>
                   </div>
@@ -515,12 +560,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
                   <button class="btn btn-xs btn-outline-primary"
                     style="font-size:.72rem;padding:.18rem .5rem"
                     onclick="repetirEncomenda(<?= (int)$h['id'] ?>)">
-                    Repetir
+                    <?= t('GENC_REPETIR') ?>
                   </button>
                 </div>
               </div>
-            <?php endforeach; ?>
-          <?php endif; ?>
+              <?php endforeach; ?>
+            </div>
+          <?php endforeach; endif; ?>
         </div>
       </div>
 
@@ -535,15 +581,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="modal-dialog modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-envelope-open-text me-2"></i>Detalhe da encomenda</h5>
+        <h5 class="modal-title"><i class="fas fa-envelope-open-text me-2"></i><?= t('GENC_DETALHE') ?></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted mb-1" style="font-size:.78rem" id="detalhe-meta"></p>
-        <pre id="detalhe-corpo" style="font-size:.85rem;white-space:pre-wrap;word-break:break-word;background:var(--iq-gray-50,#f9fafb);border:1px solid var(--iq-border);border-radius:6px;padding:.75rem 1rem;margin:0"></pre>
+        <p class="text-muted mb-2" style="font-size:.78rem" id="detalhe-meta"></p>
+        <div id="detalhe-corpo"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><?= t('GENC_FECHAR') ?></button>
       </div>
     </div>
   </div>
@@ -556,24 +602,24 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalGasesContratoLabel">
-          <i class="fas fa-list me-2"></i>Gases abrangidos pelo contrato
+          <i class="fas fa-list me-2"></i><?= t('GENC_CONTRATO') ?>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?= t('GENC_FECHAR') ?>"></button>
       </div>
       <div class="modal-body p-0">
 
         <?php if (!empty($_gasesG)): ?>
         <div class="px-3 pt-3 pb-1">
           <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
-            <i class="fas fa-wind me-1"></i>Gases em garrafa &nbsp;<span class="fw-normal text-secondary">· Preços sem IVA · Concurso 2023</span>
+            <i class="fas fa-wind me-1"></i><?= t('GENC_GASES_GARRAFA') ?> &nbsp;<span class="fw-normal text-secondary">· Preços sem IVA · Concurso 2023</span>
           </h6>
         </div>
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
               <tr>
-                <th>Gás</th><th>Pureza</th><th>Designação comercial</th><th>Garrafa</th>
-                <th class="text-end">Prazo (dias)</th><th class="text-end">Preço/garrafa (s/IVA)</th>
+                <th><?= t('GENC_COL_GAS') ?></th><th><?= t('GENC_COL_PUREZA') ?></th><th><?= t('GENC_COL_DESIG') ?></th><th><?= t('GENC_COL_GARRAFA') ?></th>
+                <th class="text-end"><?= t('GENC_COL_PRAZO') ?></th><th class="text-end"><?= t('GENC_COL_PRECO_G') ?></th>
               </tr>
             </thead>
             <tbody>
@@ -598,15 +644,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <?php if (!empty($_gasesL)): ?>
         <div class="px-3 pt-3 pb-1 mt-2">
           <h6 class="text-muted mb-2" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em">
-            <i class="fas fa-tint me-1"></i>Gases liquefeitos
+            <i class="fas fa-tint me-1"></i><?= t('GENC_GASES_LIQ') ?>
           </h6>
         </div>
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
               <tr>
-                <th>Produto</th><th>Pureza</th><th>Recipiente</th>
-                <th class="text-end">Prazo (dias)</th><th class="text-end">Preço unitário (s/IVA)</th>
+                <th><?= t('GENC_COL_PRODUTO') ?></th><th><?= t('GENC_COL_PUREZA') ?></th><th><?= t('GENC_COL_RECIP') ?></th>
+                <th class="text-end"><?= t('GENC_COL_PRAZO') ?></th><th class="text-end"><?= t('GENC_COL_PRECO_U') ?></th>
               </tr>
             </thead>
             <tbody>
@@ -627,12 +673,12 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="px-3 py-2">
           <small class="text-muted">
             <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-            Prazos assinalados com ⚠ são ≥ 30 dias úteis — planear as encomendas com antecedência.
+            <?= t('GENC_AVISO_PRAZO') ?>
           </small>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><?= t('GENC_FECHAR') ?></button>
       </div>
     </div>
   </div>
@@ -642,6 +688,33 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 <div class="iq-toast" id="toast"></div>
 
 <script>
+var _T = <?= json_encode([
+  'tipo_confirm'  => t('GENC_JS_TIPO_CONFIRM'),
+  'conta'         => t('GENC_JS_CONTA'),
+  'local'         => t('GENC_JS_LOCAL'),
+  'volume'        => t('GENC_JS_VOLUME'),
+  'add_gas'       => t('GENC_JS_ADD_GAS'),
+  'a_enviar'      => t('GENC_JS_A_ENVIAR'),
+  'enviado'       => t('GENC_JS_ENVIADO'),
+  'erro_rede'     => t('GENC_JS_ERRO_REDE'),
+  'remover'       => t('GENC_JS_REMOVER'),
+  'repetido'      => t('GENC_JS_REPETIDO'),
+  'sem_gas'       => t('GENC_JS_SEM_GAS'),
+  'limpar_cf'     => t('GENC_JS_LIMPAR_CF'),
+  'submeter'      => t('GENC_SUBMETER'),
+  'badge_azoto'   => t('GENC_BADGE_AZOTO'),
+  'badge_garr'    => t('GENC_BADGE_GARR'),
+  'sem_enc'       => t('GENC_SEM_ENC'),
+  'repetir'       => t('GENC_REPETIR'),
+  'conta_th'      => t('GENC_CONTA'),
+  'local_th'      => t('GENC_LOCAL'),
+  'contacto_th'   => t('GENC_CONTACTO'),
+  'col_gas'       => t('GENC_COL_GAS'),
+  'cheias_th'     => t('GENC_CHEIAS_PEDIDAS'),
+  'vazias_th'     => t('GENC_VAZIAS_LEVANTAR'),
+  'meses'         => array_values($GLOBALS['_lang']['GENC_MESES'] ?? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']),
+]) ?>;
+
 var _histRows = <?= json_encode(array_column($historicoRows, null, 'id')) ?>;
 
 var GASES = [
@@ -727,7 +800,7 @@ function addGasRow(tipo, qty, gas) {
   var sel = makeGasSelect(gas);
   var rmBtn = document.createElement('button');
   rmBtn.type = 'button'; rmBtn.className = 'btn-row-remove';
-  rmBtn.innerHTML = '&times;'; rmBtn.title = 'Remover';
+  rmBtn.innerHTML = '&times;'; rmBtn.title = _T.remover;
   rmBtn.addEventListener('click', function() { row.remove(); updatePreview(); });
   row.appendChild(qtyInput); row.appendChild(sel); row.appendChild(rmBtn);
   container.appendChild(row);
@@ -756,7 +829,7 @@ function setTipo(t) {
   } else {
     temDados = !!(document.getElementById('az_volume').value || document.getElementById('az_lab').value);
   }
-  if (temDados && !confirm('Só é possível submeter um tipo de encomenda de cada vez.\nAo mudar de tipo, os dados já preenchidos serão apagados. Continuar?')) return;
+  if (temDados && !confirm(_T.tipo_confirm)) return;
 
   // Limpar secção inactiva
   if (_tipo === 'garrafas') {
@@ -809,16 +882,16 @@ function onDetalhesInput() {
 function enviarEncomenda() {
   var d = getData();
 
-  if (!d.conta)  { showToast('Preenche a conta'); return; }
-  if (!d.local)  { showToast('Preenche o local de entrega'); return; }
-  if (d.tipo === 'azoto' && !d.az_volume) { showToast('Indica o volume de azoto'); return; }
+  if (!d.conta)  { showToast(_T.conta); return; }
+  if (!d.local)  { showToast(_T.local); return; }
+  if (d.tipo === 'azoto' && !d.az_volume) { showToast(_T.volume); return; }
   if (d.tipo === 'garrafas' && d.cheias.length === 0 && d.vazias.length === 0) {
-    showToast('Adiciona pelo menos um gás'); return;
+    showToast(_T.add_gas); return;
   }
 
   var btn = document.getElementById('btn-enviar');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>A enviar…';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + _T.a_enviar;
 
   var fd = new FormData();
   fd.append('action', 'enviar');
@@ -837,16 +910,16 @@ function enviarEncomenda() {
     .then(function(r) { return r.json(); })
     .then(function(res) {
       if (res.ok) {
-        showToast('Encomenda enviada!');
+        showToast(_T.enviado);
         recarregarHistorico();
       } else {
         showToast('Erro: ' + (res.erro || 'falha no envio'));
       }
     })
-    .catch(function() { showToast('Erro de rede — tenta novamente'); })
+    .catch(function() { showToast(_T.erro_rede); })
     .finally(function() {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submeter encomenda';
+      btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>' + _T.submeter;
     });
 }
 
@@ -864,31 +937,51 @@ function esc(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+var MESES_PT = _T.meses;
+
 function renderHistorico(rows) {
   var el = document.getElementById('historico-lista');
   if (!rows || !rows.length) {
-    el.innerHTML = '<p class="hist-vazio mb-0">Sem encomendas anteriores.</p>';
+    el.innerHTML = '<p class="hist-vazio mb-0">' + esc(_T.sem_enc) + '</p>';
     return;
   }
   _histRows = {};
-  var html = '';
+  var byMonth = {}, order = [];
   rows.forEach(function(h) {
     _histRows[h.id] = h;
-    var badge = h.tipo === 'azoto'
-      ? '<span class="hist-tipo-badge hist-tipo-azoto">❄ azoto</span>'
-      : '<span class="hist-tipo-badge hist-tipo-garrafas">🔵 garrafas</span>';
-    var data = (h.enviado_em || '').substr(0, 10);
-    html += '<div class="hist-row" data-id="' + h.id + '">';
-    html += '<div class="hist-info">';
-    html += '<div class="hist-assunto">' + esc(h.assunto || '—') + '</div>';
-    html += '<div class="hist-meta">' + badge + data + '</div>';
+    var ym = (h.enviado_em || '').substr(0, 7);
+    if (!byMonth[ym]) { byMonth[ym] = []; order.push(ym); }
+    byMonth[ym].push(h);
+  });
+  var html = '';
+  order.forEach(function(ym, gIdx) {
+    var parts = ym.split('-');
+    var label = MESES_PT[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+    var collapsed = gIdx > 0 ? ' collapsed' : '';
+    html += '<div class="hist-month-group' + collapsed + '">';
+    html += '<div class="hist-month-header" onclick="this.closest(\'.hist-month-group\').classList.toggle(\'collapsed\')">';
+    html += '<span class="hist-month-toggle"><i class="fas fa-chevron-down fa-xs"></i></span>';
+    html += esc(label);
+    html += '<span class="hist-month-count">' + byMonth[ym].length + '</span>';
     html += '</div>';
-    html += '<div class="d-flex gap-1 flex-shrink-0">';
-    html += '<button class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.18rem .45rem" '
-          + 'onclick="showDetalhe(' + h.id + ')"><i class="fas fa-eye"></i></button>';
-    html += '<button class="btn btn-xs btn-outline-primary" style="font-size:.72rem;padding:.18rem .5rem" '
-          + 'onclick="repetirEncomenda(' + h.id + ')">Repetir</button>';
-    html += '</div>';
+    byMonth[ym].forEach(function(h) {
+      var badge = h.tipo === 'azoto'
+        ? '<span class="hist-tipo-badge hist-tipo-azoto">' + esc(_T.badge_azoto) + '</span>'
+        : '<span class="hist-tipo-badge hist-tipo-garrafas">' + esc(_T.badge_garr) + '</span>';
+      var data = (h.enviado_em || '').substr(0, 10);
+      html += '<div class="hist-row" data-id="' + h.id + '">';
+      html += '<div class="hist-info">';
+      html += '<div class="hist-assunto">' + esc(h.assunto || '—') + '</div>';
+      html += '<div class="hist-meta">' + badge + data + '</div>';
+      html += '</div>';
+      html += '<div class="d-flex gap-1 flex-shrink-0">';
+      html += '<button class="btn btn-xs btn-outline-secondary" style="font-size:.72rem;padding:.18rem .45rem" '
+            + 'onclick="showDetalhe(' + h.id + ')"><i class="fas fa-eye"></i></button>';
+      html += '<button class="btn btn-xs btn-outline-primary" style="font-size:.72rem;padding:.18rem .5rem" '
+            + 'onclick="repetirEncomenda(' + h.id + ')">' + esc(_T.repetir) + '</button>';
+      html += '</div>';
+      html += '</div>';
+    });
     html += '</div>';
   });
   el.innerHTML = html;
@@ -921,25 +1014,69 @@ function repetirEncomenda(id) {
   _assuntoManual = false;
   document.getElementById('assunto').value = gerarAssuntoAuto(getData());
   updatePreview();
-  showToast('Formulário preenchido com encomenda anterior');
+  showToast(_T.repetido);
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 function updatePreview() {} // stub — preview removido
 
-/* ── Toast ───────────────────────────────────────────────────────────── */
+/* ── Detalhe modal ────────────────────────────────────────────────────── */
+function renderDetalheGases(h) {
+  var html = '';
+  html += '<table class="table table-sm mb-3" style="font-size:.82rem">';
+  html += '<tr><th style="width:38%">' + esc(_T.conta_th) + '</th><td>' + esc(h.conta || '—') + '</td></tr>';
+  html += '<tr><th>' + esc(_T.local_th) + '</th><td>' + esc(h.local_entrega || '—') + '</td></tr>';
+  if (h.contacto) html += '<tr><th>' + esc(_T.contacto_th) + '</th><td>' + esc(h.contacto) + '</td></tr>';
+  html += '</table>';
+  if (h.tipo === 'azoto') {
+    html += '<p style="margin:0"><strong>' + esc(_T.badge_azoto) + ':</strong> ' + esc(h.az_volume || '?') + ' L';
+    if (h.az_lab) html += ' — Lab.&nbsp;' + esc(h.az_lab);
+    html += '</p>';
+  } else {
+    var cheias = [], vazias = [], gases = {}, order = [];
+    try { cheias = JSON.parse(h.cheias_json || '[]'); } catch(e) {}
+    try { vazias = JSON.parse(h.vazias_json || '[]'); } catch(e) {}
+    cheias.forEach(function(r) {
+      if (!gases[r.gas]) { gases[r.gas] = {c: 0, v: 0}; order.push(r.gas); }
+      gases[r.gas].c += (parseInt(r.qty, 10) || 0);
+    });
+    vazias.forEach(function(r) {
+      if (!gases[r.gas]) { gases[r.gas] = {c: 0, v: 0}; order.push(r.gas); }
+      gases[r.gas].v += (parseInt(r.qty, 10) || 0);
+    });
+    if (order.length) {
+      html += '<table class="table table-sm table-bordered" style="font-size:.82rem">';
+      html += '<thead class="table-light"><tr>';
+      html += '<th>' + esc(_T.col_gas) + '</th>';
+      html += '<th class="text-center" style="white-space:nowrap">' + esc(_T.cheias_th) + '</th>';
+      html += '<th class="text-center" style="white-space:nowrap">' + esc(_T.vazias_th) + '</th>';
+      html += '</tr></thead><tbody>';
+      order.forEach(function(g) {
+        var c = gases[g].c, v = gases[g].v;
+        html += '<tr><td>' + esc(g) + '</td>';
+        html += '<td class="text-center">' + (c ? c : '<span style="color:#9ca3af">—</span>') + '</td>';
+        html += '<td class="text-center">' + (v ? v : '<span style="color:#9ca3af">—</span>') + '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<p class="text-muted">' + esc(_T.sem_gas) + '</p>';
+    }
+  }
+  return html;
+}
+
 function showDetalhe(id) {
   var h = _histRows[id];
   if (!h) return;
   var data = (h.enviado_em || '').substr(0, 16).replace('T', ' ');
   document.getElementById('detalhe-meta').textContent = (h.assunto || '') + ' · ' + data;
-  document.getElementById('detalhe-corpo').textContent = h.corpo || '(sem corpo guardado)';
-  var m = new bootstrap.Modal(document.getElementById('modalDetalheEncomenda'));
-  m.show();
+  document.getElementById('detalhe-corpo').innerHTML = renderDetalheGases(h);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalheEncomenda')).show();
 }
 
 function limparFormulario() {
-  if (!confirm('Limpar todos os campos do formulário?')) return;
+  if (!confirm(_T.limpar_cf)) return;
   document.getElementById('conta').value    = '';
   document.getElementById('local').value    = '';
   document.getElementById('contacto').value = '';
