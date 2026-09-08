@@ -610,7 +610,7 @@ $lang['GASES_REPORT_TITLE']  = 'Reports — Special Gases';
 $lang['GASES_RONDA_TITLE']   = 'New Round — Special Gases';
 
 // ── Gas Orders (Air Liquide) ──────────────────
-$lang['GENC_TITLE']            = 'Gas Order — Air Liquide';
+$lang['GENC_TITLE']            = 'Special Gas Order';
 $lang['GENC_TIPO']             = 'Order Type';
 $lang['GENC_GARRAFAS']         = 'Cylinders';
 $lang['GENC_AZOTO_LIQ']        = 'Liquid Nitrogen';
