@@ -151,8 +151,9 @@ function ExportFile ($records)
     if (! empty($records))
         foreach ($records as $row) {
             if (! $heading) {
-                // display field/column names as a first row
-                echo implode("\t", array_keys($row)) . "\n";
+                $keys = array_keys($row);
+                array_walk($keys, __NAMESPACE__ . '\cleanData');
+                echo implode("\t", $keys) . "\n";
                 $heading = true;
             }
             array_walk($row, __NAMESPACE__ . '\cleanData');

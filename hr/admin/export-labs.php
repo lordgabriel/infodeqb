@@ -38,15 +38,14 @@ if ($tab === 'expire') {
     $extraParams[] = date('Y-m-d', strtotime('+1 month'));
 }
 
-// ── JOIN de labs (se houver filtro) ───────────────────────────────────
-$labJoin   = '';
+// ── JOIN de labs (sempre, para obter gabids; filtro opcional) ─────────
+$labJoin  = 'LEFT JOIN infodeqb_rds_registo_acessos ra ON ra.registo_id = r.autoid
+             LEFT JOIN infodeqb_rds_gabinetes gf ON gf.id = ra.lab_id';
 $labWhere  = '';
 $labParams = array();
 if (!empty($labs)) {
-    $phLabs   = implode(',', array_fill(0, count($labs), '?'));
-    $labJoin  = 'JOIN infodeqb_rds_registo_acessos ra ON ra.registo_id = r.autoid
-                 JOIN infodeqb_rds_gabinetes gf ON gf.id = ra.lab_id';
-    $labWhere = 'AND gf.deqid IN (' . $phLabs . ')';
+    $phLabs    = implode(',', array_fill(0, count($labs), '?'));
+    $labWhere  = 'AND gf.deqid IN (' . $phLabs . ')';
     $labParams = $labs;
 }
 
@@ -55,13 +54,13 @@ $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $sql = "
-    SELECT DISTINCT
-           c.codigo, c.nome, c.email, c.telefone,
+    SELECT c.codigo, c.nome, c.email, c.telefone,
            g.grupo_pro,
            r.datainicio, r.datafim, r.status,
            r.acessodeq, r.acessos AS labs_nomes,
            r.unidade, r.local_trabalho,
-           r.createdate, r.dataativo, r.datainativo, r.datacica
+           r.createdate, r.dataativo, r.datainativo, r.datacica,
+           GROUP_CONCAT(DISTINCT gf.gabid ORDER BY gf.gabid SEPARATOR '; ') AS gabids_list
     FROM infodeqb_rds_colaborador c
     JOIN infodeqb_rds_registo r    ON r.codigo  = c.codigo
     JOIN infodeqb_rds_grupo g      ON g.grupoid = r.grupo
@@ -71,6 +70,9 @@ $sql = "
       AND r.status = ?
       $extraWhere
       $labWhere
+    GROUP BY c.codigo, c.nome, c.email, c.telefone, g.grupo_pro,
+             r.datainicio, r.datafim, r.status, r.acessodeq, r.acessos,
+             r.unidade, r.local_trabalho, r.createdate, r.dataativo, r.datainativo, r.datacica
     ORDER BY c.nome ASC
 ";
 
@@ -105,6 +107,7 @@ foreach ($rows as $row) {
         'Posto de trabalho'   => $row['local_trabalho'],
         'Acesso DEQ'          => $row['acessodeq'] ? 'Sim' : 'Não',
         'Laboratórios'        => $row['labs_nomes'],
+        'Gabid'               => $row['gabids_list'] ?? '',
     );
     // Colunas extra por separador
     if ($tab === 'new') {

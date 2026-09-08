@@ -387,7 +387,6 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       <h1 class="iq-page-title">
         <i class="fas fa-flask me-2" style="color:var(--iq-blue)"></i><?= t('GENC_TITLE') ?>
       </h1>
-      <p class="iq-page-sub">Air Liquide — envia email para <strong>encomendagarrafas.pt@airliquide.com</strong> <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">TESTE → fmartins@fe.up.pt</span></p>
     </div>
   </div>
 
