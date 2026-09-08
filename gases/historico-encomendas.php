@@ -165,6 +165,15 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
 </div>
 
+<style>
+.iq-toast {
+  position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(8px);
+  background:var(--iq-gray-800,#1f2937); color:#fff; padding:.45rem 1rem;
+  border-radius:20px; font-size:.8rem; opacity:0; transition:opacity .22s,transform .22s;
+  pointer-events:none; white-space:nowrap; z-index:2000;
+}
+.iq-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
 <div class="iq-toast" id="toast"></div>
 
 <script>
@@ -188,7 +197,7 @@ function showDetalhe(id) {
   if (!h) return;
   document.getElementById('detalhe-meta').textContent = (h.assunto || '') + ' · ' + (h.enviado_em || '').substr(0, 16);
   document.getElementById('detalhe-corpo').textContent = h.corpo || '(sem corpo guardado)';
-  new bootstrap.Modal(document.getElementById('modalDetalhe')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalhe')).show();
 }
 
 function apagarUm(id) {
