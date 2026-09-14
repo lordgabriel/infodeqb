@@ -11,11 +11,25 @@ if (!$equipId) { header('Location: index.php'); exit; }
 $pdo = Database::connect();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// ── POST: gerir acessos específicos (apenas admin global) ─────────
-$flashMsg = ''; $flashType = 'success';
-if (!empty($_POST) && $isAdmin) {
+// ── Equipamento (antes dos POST para usar $podeEditar) ────────────────
+$stmt = $pdo->prepare(
+    'SELECT e.*, COALESCE(l.designacao, e.Laboratorio) AS lab_nome
+     FROM infodeqb_equipmentdeq e
+     LEFT JOIN infodeqb_labs_ensino l ON l.lab_id = e.Laboratorio
+     WHERE e.equipment_id = ?'
+);
+$stmt->execute([$equipId]);
+$eq = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$eq) { header('Location: index.php'); exit; }
+
+$podeEditar = podeGerirEquipamento($pdo, $userIdNum, $isAdmin, $eq);
+
+// ── POST ──────────────────────────────────────────────────────────────
+if (!empty($_POST)) {
     $acao = $_POST['_acao'] ?? '';
-    if ($acao === 'grant_access') {
+
+    // Acessos específicos (apenas admin global)
+    if ($isAdmin && $acao === 'grant_access') {
         $tc = (int)preg_replace('/\D/', '', trim($_POST['target_code'] ?? ''));
         if ($tc) {
             try {
@@ -30,44 +44,47 @@ if (!empty($_POST) && $isAdmin) {
         } else {
             $_SESSION['_equip_flash'] = [t('EQUIP_INVALID_CODE'), 'warning'];
         }
-    } elseif ($acao === 'revoke_access') {
+        header('Location: equipment_details.php?id=' . $equipId); exit;
+    }
+
+    if ($isAdmin && $acao === 'revoke_access') {
         $pdo->prepare('DELETE FROM infodeqb_equipmentdeq_access WHERE id = ?')
             ->execute([(int)$_POST['access_id']]);
         $_SESSION['_equip_flash'] = [t('EQUIP_ACCESS_REVOKED'), 'success'];
+        header('Location: equipment_details.php?id=' . $equipId); exit;
     }
-    header('Location: equipment_details.php?id=' . $equipId); exit;
+
 }
+
+$flashMsg = ''; $flashType = 'success';
 if (isset($_SESSION['_equip_flash'])) {
     list($flashMsg, $flashType) = $_SESSION['_equip_flash'];
     unset($_SESSION['_equip_flash']);
 }
 
-// ── Equipamento ───────────────────────────────────────────────────
-$stmt = $pdo->prepare(
-    'SELECT e.*, COALESCE(l.designacao, e.Laboratorio) AS lab_nome
-     FROM infodeqb_equipmentdeq e
-     LEFT JOIN infodeqb_labs_ensino l ON l.lab_id = e.Laboratorio
-     WHERE e.equipment_id = ?'
-);
-$stmt->execute([$equipId]);
-$eq = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$eq) { header('Location: index.php'); exit; }
-
-$podeEditar = podeGerirEquipamento($pdo, $userIdNum, $isAdmin, $eq);
-
 // Acessos específicos (admin global)
 $acessosEspecificos = [];
 if ($isAdmin) {
-    $s = $pdo->prepare('SELECT * FROM infodeqb_equipmentdeq_access WHERE equipment_id=? ORDER BY granted_at DESC');
+    $s = $pdo->prepare(
+        'SELECT * FROM infodeqb_equipmentdeq_access WHERE equipment_id=? ORDER BY granted_at DESC'
+    );
     $s->execute([$equipId]);
     $acessosEspecificos = $s->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Documentos
+$sDocs = $pdo->prepare(
+    'SELECT * FROM infodeqb_equipment_docs WHERE equipment_id=? ORDER BY id ASC'
+);
+$sDocs->execute([$equipId]);
+$docsList = $sDocs->fetchAll(PDO::FETCH_ASSOC);
+
 Database::disconnect();
 
-// ── Imagem ────────────────────────────────────────────────────────
+// ── Imagem ────────────────────────────────────────────────────────────
 $imgUrl = null;
 $imgDir = __DIR__ . '/img/' . $eq['Laboratorio'] . '/';
-foreach (['jpg','jpeg','png','gif','webp'] as $ext) {
+foreach (['jpg', 'jpeg', 'png', 'gif', 'webp'] as $ext) {
     if (file_exists($imgDir . $eq['equipment_id'] . '.' . $ext)) {
         $imgUrl = HTTP_DIR . '/infodeqb/equipments/img/'
                 . rawurlencode($eq['Laboratorio']) . '/' . $eq['equipment_id'] . '.' . $ext;
@@ -75,15 +92,26 @@ foreach (['jpg','jpeg','png','gif','webp'] as $ext) {
     }
 }
 
+// ── Helper ────────────────────────────────────────────────────────────
 function fmtField($v) {
     if (empty($v)) return null;
     $s = (string)$v;
-    // Se contém HTML (links, formatação), manter tags seguras sem escapar
     if ($s !== strip_tags($s)) {
         return strip_tags($s, '<a><br><b><strong><em><i><p><ul><ol><li><span>');
     }
-    // Texto simples: escapar e converter quebras de linha
     return nl2br(htmlspecialchars($s, ENT_QUOTES));
+}
+
+function docIcon($ext) {
+    $map = [
+        'pdf'  => 'fa-file-pdf text-danger',
+        'doc'  => 'fa-file-word text-primary',
+        'docx' => 'fa-file-word text-primary',
+        'xls'  => 'fa-file-excel text-success',
+        'xlsx' => 'fa-file-excel text-success',
+        'txt'  => 'fa-file-alt text-muted',
+    ];
+    return isset($map[$ext]) ? $map[$ext] : 'fa-file text-muted';
 }
 
 $pageTitle = htmlspecialchars($eq['Equipamento'] ?? 'Equipamento') . ' — Equipamentos';
@@ -158,6 +186,39 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
       </div>
     </div>
 
+    <?php if ($docsList): ?>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+        <i class="fas fa-folder-open text-secondary"></i>
+        <strong><?= t('EQUIP_DOCS_TITLE') ?></strong>
+        <span class="badge badge-secondary ml-1" style="font-size:.75rem"><?= count($docsList) ?></span>
+      </div>
+      <div class="card-body py-2">
+        <ul class="list-unstyled mb-0" style="font-size:.87rem">
+          <?php foreach ($docsList as $i => $doc):
+            $docExt = strtolower(pathinfo($doc['filename'], PATHINFO_EXTENSION));
+            $icon   = docIcon($docExt);
+            $docUrl = HTTP_DIR . '/infodeqb/equipments/img/'
+                    . rawurlencode($doc['laboratorio']) . '/' . rawurlencode($doc['filename']);
+            $label  = $doc['descricao'] ?: $doc['filename'];
+          ?>
+          <li class="d-flex align-items-center py-1 <?= $i < count($docsList) - 1 ? 'border-bottom' : '' ?>">
+            <i class="fas <?= $icon ?> mr-2 flex-shrink-0"></i>
+            <div>
+              <a href="<?= htmlspecialchars($docUrl) ?>" target="_blank" rel="noopener">
+                <?= htmlspecialchars($label) ?>
+              </a>
+              <?php if ($doc['descricao']): ?>
+              <div class="text-muted" style="font-size:.76rem"><?= htmlspecialchars($doc['filename']) ?></div>
+              <?php endif; ?>
+            </div>
+          </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    </div>
+    <?php endif; ?>
+
   </div>
 </div>
 
@@ -178,7 +239,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 </div>
 <?php endforeach; ?>
 
-<?php /* ── Acessos específicos (admin global) ─────────────────── */ ?>
+<?php /* ── Acessos específicos (admin global) ─────────────────────── */ ?>
 <?php if ($isAdmin): ?>
 <div class="card shadow-sm mb-4 border-warning">
   <div class="card-header py-2 d-flex align-items-center">
@@ -189,8 +250,13 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   <div class="card-body">
     <?php if ($acessosEspecificos): ?>
     <table class="table table-sm mb-3" style="font-size:.83rem">
-      <thead class="">
-        <tr><th><?= t('EQUIP_ACCESS_USER') ?></th><th><?= t('EQUIP_GRANTED_BY') ?></th><th><?= t('DATE') ?></th><th style="width:4em"></th></tr>
+      <thead>
+        <tr>
+          <th><?= t('EQUIP_ACCESS_USER') ?></th>
+          <th><?= t('EQUIP_GRANTED_BY') ?></th>
+          <th><?= t('DATE') ?></th>
+          <th style="width:4em"></th>
+        </tr>
       </thead>
       <tbody>
       <?php foreach ($acessosEspecificos as $ac): ?>

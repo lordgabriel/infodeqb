@@ -35,9 +35,72 @@ $labs = $pdo->query('SELECT lab_id, designacao FROM infodeqb_labs_ensino ORDER B
             ->fetchAll(PDO::FETCH_ASSOC);
 
 $flashMsg = ''; $flashType = 'success';
+if (isset($_SESSION['_equip_flash'])) {
+    list($flashMsg, $flashType) = $_SESSION['_equip_flash'];
+    unset($_SESSION['_equip_flash']);
+}
 
 // ── POST ──────────────────────────────────────────────────────────
 if (!empty($_POST)) {
+    $acao = $_POST['_acao'] ?? '';
+
+    // ── Upload de documento ───────────────────────────────────────
+    if ($acao === 'upload_doc' && $equipId > 0) {
+        $podeEditar = podeGerirEquipamento($pdo, $userIdNum, $isAdmin, $eq);
+        if ($podeEditar && !empty($_FILES['doc_file']['tmp_name']) && $_FILES['doc_file']['error'] === UPLOAD_ERR_OK) {
+            $allowedExts = ['pdf','doc','docx','xls','xlsx','txt'];
+            $origExt     = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
+            if (in_array($origExt, $allowedExts) && $_FILES['doc_file']['size'] <= 10485760) {
+                $descricao = trim($_POST['doc_descricao'] ?? '');
+                $lab       = $eq['Laboratorio'];
+                $ins       = $pdo->prepare(
+                    'INSERT INTO infodeqb_equipment_docs (equipment_id, laboratorio, filename, descricao, uploaded_by)
+                     VALUES (?,?,?,?,?)'
+                );
+                $ins->execute([$equipId, $lab, 'tmp', $descricao ?: null, $userIdNum]);
+                $docId    = (int)$pdo->lastInsertId();
+                $filename = 'doc_' . $equipId . '_' . $docId . '.' . $origExt;
+                $dir      = __DIR__ . '/img/' . $lab . '/';
+                if (!is_dir($dir)) mkdir($dir, 0755, true);
+                if (move_uploaded_file($_FILES['doc_file']['tmp_name'], $dir . $filename)) {
+                    $pdo->prepare('UPDATE infodeqb_equipment_docs SET filename=? WHERE id=?')
+                        ->execute([$filename, $docId]);
+                    $_SESSION['_equip_flash'] = [t('EQUIP_DOCS_UPLOADED'), 'success'];
+                } else {
+                    $pdo->prepare('DELETE FROM infodeqb_equipment_docs WHERE id=?')->execute([$docId]);
+                    $_SESSION['_equip_flash'] = [t('EQUIP_DOCS_ERR_UPLOAD'), 'danger'];
+                }
+            } else {
+                $_SESSION['_equip_flash'] = [
+                    $_FILES['doc_file']['size'] > 10485760 ? t('EQUIP_DOCS_ERR_SIZE') : t('EQUIP_DOCS_ERR_TYPE'),
+                    'warning'
+                ];
+            }
+        }
+        Database::disconnect();
+        header('Location: edit_equipment.php?id=' . $equipId); exit;
+    }
+
+    // ── Remover documento ─────────────────────────────────────────
+    if (strpos($acao, 'delete_doc_') === 0 && $equipId > 0) {
+        $podeEditar = podeGerirEquipamento($pdo, $userIdNum, $isAdmin, $eq);
+        if ($podeEditar) {
+            $docId = (int)substr($acao, 11);
+            $sDoc  = $pdo->prepare('SELECT * FROM infodeqb_equipment_docs WHERE id=? AND equipment_id=?');
+            $sDoc->execute([$docId, $equipId]);
+            $doc   = $sDoc->fetch(PDO::FETCH_ASSOC);
+            if ($doc) {
+                $filePath = __DIR__ . '/img/' . $doc['laboratorio'] . '/' . $doc['filename'];
+                if (file_exists($filePath)) unlink($filePath);
+                $pdo->prepare('DELETE FROM infodeqb_equipment_docs WHERE id=?')->execute([$docId]);
+                $_SESSION['_equip_flash'] = [t('EQUIP_DOCS_DELETED'), 'success'];
+            }
+        }
+        Database::disconnect();
+        header('Location: edit_equipment.php?id=' . $equipId); exit;
+    }
+
+    // ── Formulário principal ──────────────────────────────────────
     $labNovo = trim($_POST['Laboratorio'] ?? '');
 
     // Verificar permissão para guardar:
@@ -134,6 +197,14 @@ if (!empty($_POST)) {
     }
 }
 
+// Documentos (só para equipamentos existentes)
+$docsList = [];
+if ($equipId > 0) {
+    $sDocs = $pdo->prepare('SELECT * FROM infodeqb_equipment_docs WHERE equipment_id=? ORDER BY id ASC');
+    $sDocs->execute([$equipId]);
+    $docsList = $sDocs->fetchAll(PDO::FETCH_ASSOC);
+}
+
 Database::disconnect();
 
 // Imagem actual
@@ -145,6 +216,18 @@ foreach (['jpg','jpeg','png','gif','webp'] as $ext) {
                 . rawurlencode($eq['Laboratorio']) . '/' . $eq['equipment_id'] . '.' . $ext;
         break;
     }
+}
+
+function docIcon($ext) {
+    $map = [
+        'pdf'  => 'fa-file-pdf text-danger',
+        'doc'  => 'fa-file-word text-primary',
+        'docx' => 'fa-file-word text-primary',
+        'xls'  => 'fa-file-excel text-success',
+        'xlsx' => 'fa-file-excel text-success',
+        'txt'  => 'fa-file-alt text-muted',
+    ];
+    return isset($map[$ext]) ? $map[$ext] : 'fa-file text-muted';
 }
 
 $pageTitle = $equipId ? t('EQUIP_EDIT') : t('EQUIP_NEW');
@@ -175,7 +258,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .eq-form label.small         { margin-bottom: .1rem; display:block; line-height:1.3; }
 .eq-form .form-control,
 .eq-form select.form-control { font-size: .82rem !important; padding: .25rem .45rem !important; height:auto !important; }
-.eq-form textarea.form-control{ font-size:.82rem !important; padding:.25rem .45rem !important; resize:vertical; }
+.eq-form textarea.form-control{ font-size:.82rem !important; padding:.25rem .45rem !important; resize:vertical; overflow:hidden; }
 .eq-form .form-row           { margin-right:-.35rem; margin-left:-.35rem; }
 .eq-form .form-row > [class*=col-] { padding-right:.35rem; padding-left:.35rem; }
 </style>
@@ -258,22 +341,38 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
         <div class="card-header py-2"><strong><?= t('EQUIP_OP_DETAILS') ?></strong></div>
         <div class="card-body">
           <div class="form-row">
-          <?php foreach ([
-            'Descricao'    => [t('DESCRIPTION'),          1],
-            'Condicoes'    => [t('EQUIP_CONDITIONS'),     1],
-            'Horario'      => [t('EQUIP_SCHEDULE'),       1],
-            'Amostras'     => [t('EQUIP_SAMPLES'),        1],
-            'Operacao'     => [t('EQUIP_OPERATION'),      1],
-            'Custo'        => [t('EQUIP_COST'),           1],
-            'Procedimento' => [t('EQUIP_PROCEDURE'),      1],
-            'Observacoes'  => [t('OBSERVATIONS'),         1],
-          ] as $field => [$label, $rows]): ?>
-          <div class="col-md-6 form-group mb-2">
-            <label class="small font-weight-bold"><?= htmlspecialchars($label) ?></label>
-            <textarea name="<?= $field ?>" class="form-control" rows="<?= $rows ?>"
-                      style="font-size:.85rem"><?= htmlspecialchars($eq[$field] ?? '') ?></textarea>
-          </div>
-          <?php endforeach; ?>
+            <div class="col-12 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('DESCRIPTION') ?></label>
+              <textarea name="Descricao" class="form-control eq-auto" rows="3"><?= htmlspecialchars($eq['Descricao'] ?? '') ?></textarea>
+            </div>
+            <div class="col-12 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_CONDITIONS') ?></label>
+              <textarea name="Condicoes" class="form-control eq-auto" rows="3"><?= htmlspecialchars($eq['Condicoes'] ?? '') ?></textarea>
+            </div>
+            <div class="col-md-8 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_OPERATION') ?></label>
+              <textarea name="Operacao" class="form-control eq-auto" rows="2"><?= htmlspecialchars($eq['Operacao'] ?? '') ?></textarea>
+            </div>
+            <div class="col-md-4 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_COST') ?></label>
+              <textarea name="Custo" class="form-control eq-auto" rows="2"><?= htmlspecialchars($eq['Custo'] ?? '') ?></textarea>
+            </div>
+            <div class="col-md-6 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_SCHEDULE') ?></label>
+              <textarea name="Horario" class="form-control eq-auto" rows="1"><?= htmlspecialchars($eq['Horario'] ?? '') ?></textarea>
+            </div>
+            <div class="col-md-6 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_SAMPLES') ?></label>
+              <textarea name="Amostras" class="form-control eq-auto" rows="1"><?= htmlspecialchars($eq['Amostras'] ?? '') ?></textarea>
+            </div>
+            <div class="col-12 form-group mb-2">
+              <label class="small font-weight-bold"><?= t('EQUIP_PROCEDURE') ?></label>
+              <textarea name="Procedimento" class="form-control eq-auto" rows="3"><?= htmlspecialchars($eq['Procedimento'] ?? '') ?></textarea>
+            </div>
+            <div class="col-12 form-group mb-0">
+              <label class="small font-weight-bold"><?= t('OBSERVATIONS') ?></label>
+              <textarea name="Observacoes" class="form-control eq-auto" rows="2"><?= htmlspecialchars($eq['Observacoes'] ?? '') ?></textarea>
+            </div>
           </div>
         </div>
       </div>
@@ -302,6 +401,77 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
         </div>
       </div>
+
+      <?php if ($equipId > 0): ?>
+      <div class="card shadow-sm mb-3">
+        <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+          <i class="fas fa-folder-open text-secondary"></i>
+          <strong><?= t('EQUIP_DOCS_TITLE') ?></strong>
+          <?php if ($docsList): ?>
+          <span class="badge badge-secondary ml-1" style="font-size:.72rem"><?= count($docsList) ?></span>
+          <?php endif; ?>
+        </div>
+        <div class="card-body py-2" style="font-size:.83rem">
+
+          <?php if ($docsList): ?>
+          <ul class="list-unstyled mb-2">
+            <?php foreach ($docsList as $i => $doc):
+              $dExt   = strtolower(pathinfo($doc['filename'], PATHINFO_EXTENSION));
+              $dIcon  = docIcon($dExt);
+              $dUrl   = HTTP_DIR . '/infodeqb/equipments/img/'
+                      . rawurlencode($doc['laboratorio']) . '/' . rawurlencode($doc['filename']);
+              $dLabel = $doc['descricao'] ?: $doc['filename'];
+            ?>
+            <li class="d-flex align-items-center py-1 <?= $i < count($docsList) - 1 ? 'border-bottom' : '' ?>">
+              <i class="fas <?= $dIcon ?> mr-2 flex-shrink-0" style="width:1.1em;text-align:center"></i>
+              <div class="flex-grow-1 min-width-0">
+                <a href="<?= htmlspecialchars($dUrl) ?>" target="_blank" rel="noopener"
+                   class="d-block text-truncate" title="<?= htmlspecialchars($dLabel) ?>">
+                  <?= htmlspecialchars($dLabel) ?>
+                </a>
+                <?php if ($doc['descricao']): ?>
+                <div class="text-muted" style="font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  <?= htmlspecialchars($doc['filename']) ?>
+                </div>
+                <?php endif; ?>
+              </div>
+              <button type="submit" name="_acao"
+                      value="delete_doc_<?= (int)$doc['id'] ?>"
+                      class="btn btn-xs btn-outline-danger ml-1 flex-shrink-0"
+                      onclick="return confirm(<?= json_encode(t('EQUIP_DOCS_CONFIRM_DEL')) ?>)">
+                <i class="fas fa-times fa-xs"></i>
+              </button>
+            </li>
+            <?php endforeach; ?>
+          </ul>
+          <?php else: ?>
+          <p class="text-muted mb-2"><?= t('EQUIP_DOCS_NONE') ?></p>
+          <?php endif; ?>
+
+          <div class="<?= $docsList ? 'border-top pt-2' : '' ?>">
+            <div class="form-group mb-1">
+              <label class="small font-weight-bold mb-0"><?= t('EQUIP_DOCS_DESC') ?></label>
+              <input type="text" name="doc_descricao" class="form-control form-control-sm"
+                     placeholder="<?= htmlspecialchars(t('EQUIP_DOCS_DESC_PH')) ?>"
+                     maxlength="300">
+            </div>
+            <div class="form-group mb-1">
+              <label class="small font-weight-bold mb-0"><?= t('EQUIP_DOCS_FILE') ?></label>
+              <input type="file" name="doc_file" class="form-control-file form-control-sm"
+                     accept=".pdf,.doc,.docx,.xls,.xlsx,.txt">
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">PDF, Word, Excel, TXT — máx. 10&nbsp;MB</small>
+              <button type="submit" name="_acao" value="upload_doc"
+                      class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-upload mr-1"></i><?= t('EQUIP_DOCS_UPLOAD') ?>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
 
   </div><!-- /row -->
@@ -315,5 +485,19 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   </div>
 
 </form>
+
+<script>
+(function () {
+  function fit(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+  var els = document.querySelectorAll('.eq-auto');
+  for (var i = 0; i < els.length; i++) {
+    fit(els[i]);
+    els[i].addEventListener('input', function () { fit(this); });
+  }
+})();
+</script>
 
 <?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>

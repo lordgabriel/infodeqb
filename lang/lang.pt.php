@@ -575,6 +575,18 @@ $lang['EQUIP_INVALID_CODE']      = 'Código UP inválido.';
 $lang['EQUIP_ERROR_GRANT']       = 'Erro ao conceder acesso.';
 $lang['EQUIP_ACCESS_REVOKED']    = 'Acesso revogado.';
 $lang['EQUIP_LIST']              = 'Lista';
+$lang['EQUIP_DOCS_TITLE']        = 'Documentos';
+$lang['EQUIP_DOCS_UPLOAD']       = 'Adicionar documento';
+$lang['EQUIP_DOCS_DESC']         = 'Descrição';
+$lang['EQUIP_DOCS_DESC_PH']      = 'ex: Manual de operação, Ficha técnica…';
+$lang['EQUIP_DOCS_FILE']         = 'Ficheiro';
+$lang['EQUIP_DOCS_NONE']         = 'Sem documentos associados.';
+$lang['EQUIP_DOCS_UPLOADED']     = 'Documento adicionado.';
+$lang['EQUIP_DOCS_DELETED']      = 'Documento removido.';
+$lang['EQUIP_DOCS_ERR_TYPE']     = 'Tipo de ficheiro não permitido.';
+$lang['EQUIP_DOCS_ERR_SIZE']     = 'Ficheiro demasiado grande (máx. 10 MB).';
+$lang['EQUIP_DOCS_ERR_UPLOAD']   = 'Erro ao fazer upload.';
+$lang['EQUIP_DOCS_CONFIRM_DEL']  = 'Remover este documento?';
 
 // ── Arquivo de exames (extra) ─────────────────
 $lang['EXAM_SUBTITLE']       = 'Autos de incorporação e arquivo físico de provas de avaliação';

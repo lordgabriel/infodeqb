@@ -575,6 +575,18 @@ $lang['EQUIP_INVALID_CODE']      = 'Invalid UP code.';
 $lang['EQUIP_ERROR_GRANT']       = 'Error granting access.';
 $lang['EQUIP_ACCESS_REVOKED']    = 'Access revoked.';
 $lang['EQUIP_LIST']              = 'List';
+$lang['EQUIP_DOCS_TITLE']        = 'Documents';
+$lang['EQUIP_DOCS_UPLOAD']       = 'Add document';
+$lang['EQUIP_DOCS_DESC']         = 'Description';
+$lang['EQUIP_DOCS_DESC_PH']      = 'e.g. Operation manual, Technical sheet…';
+$lang['EQUIP_DOCS_FILE']         = 'File';
+$lang['EQUIP_DOCS_NONE']         = 'No documents associated.';
+$lang['EQUIP_DOCS_UPLOADED']     = 'Document added.';
+$lang['EQUIP_DOCS_DELETED']      = 'Document removed.';
+$lang['EQUIP_DOCS_ERR_TYPE']     = 'File type not allowed.';
+$lang['EQUIP_DOCS_ERR_SIZE']     = 'File too large (max. 10 MB).';
+$lang['EQUIP_DOCS_ERR_UPLOAD']   = 'Upload error.';
+$lang['EQUIP_DOCS_CONFIRM_DEL']  = 'Remove this document?';
 
 // ── Exam archive (extra) ──────────────────────
 $lang['EXAM_SUBTITLE']       = 'Incorporation records and physical archive of assessment exams';
