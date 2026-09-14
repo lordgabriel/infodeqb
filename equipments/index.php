@@ -107,7 +107,7 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
   $labNome = $eqs[0]['lab_nome']    ?? $labId;
   $podeAdicionarAqui = $isAdmin || in_array($labId, $labsDoUser);
 ?>
-<div class="lab-group mb-4" data-lab="<?= htmlspecialchars($labNome) ?>">
+<div class="lab-group mb-4" id="lab-<?= htmlspecialchars($labId) ?>" data-lab="<?= htmlspecialchars($labNome) ?>">
   <div class="d-flex align-items-center mb-0 px-3 py-2 rounded-top"
        style="background:var(--iq-accent)">
     <h6 class="mb-0 font-weight-bold me-auto" style="font-size:.88rem;color:#fff">

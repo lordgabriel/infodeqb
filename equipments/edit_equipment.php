@@ -213,10 +213,9 @@ if (!empty($_POST)) {
                     $equipId ? t('SUCCESS_UPDATED') : t('SUCCESS_ADDED'),
                     'success'
                 ];
-                // Novo equipamento → fica na edição para poder adicionar docs/imagem
                 $redirect = $equipId
                     ? 'equipment_details.php?id=' . $newId
-                    : 'edit_equipment.php?id=' . $newId;
+                    : 'index.php#lab-' . rawurlencode($campos['Laboratorio']);
                 header('Location: ' . $redirect); exit;
 
             } catch (Exception $e) {
