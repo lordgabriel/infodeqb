@@ -180,12 +180,44 @@ if (!empty($_POST)) {
                 }
 
                 $pdo->commit();
+
+                // ── Documento inicial (apenas para novo equipamento) ──
+                if (!$equipId && !empty($_FILES['doc_file']['tmp_name'])
+                              && $_FILES['doc_file']['error'] === UPLOAD_ERR_OK) {
+                    $allowedExts = ['pdf','doc','docx','xls','xlsx','txt'];
+                    $origExt = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
+                    if (in_array($origExt, $allowedExts) && $_FILES['doc_file']['size'] <= 10485760) {
+                        $descricao = trim($_POST['doc_descricao'] ?? '');
+                        $lab = $campos['Laboratorio'];
+                        $ins = $pdo->prepare(
+                            'INSERT INTO infodeqb_equipment_docs (equipment_id, laboratorio, filename, descricao, uploaded_by)
+                             VALUES (?,?,?,?,?)'
+                        );
+                        $ins->execute([$newId, $lab, 'tmp', $descricao ?: null, $userIdNum]);
+                        $docId = (int)$pdo->lastInsertId();
+                        $filename = 'doc_' . $newId . '_' . $docId . '.' . $origExt;
+                        $dir = __DIR__ . '/img/' . $lab . '/';
+                        if (!is_dir($dir)) mkdir($dir, 0755, true);
+                        if (move_uploaded_file($_FILES['doc_file']['tmp_name'], $dir . $filename)) {
+                            $pdo->prepare('UPDATE infodeqb_equipment_docs SET filename=? WHERE id=?')
+                                ->execute([$filename, $docId]);
+                        } else {
+                            $pdo->prepare('DELETE FROM infodeqb_equipment_docs WHERE id=?')
+                                ->execute([$docId]);
+                        }
+                    }
+                }
+
                 Database::disconnect();
                 $_SESSION['_equip_flash'] = [
                     $equipId ? t('SUCCESS_UPDATED') : t('SUCCESS_ADDED'),
                     'success'
                 ];
-                header('Location: equipment_details.php?id=' . $newId); exit;
+                // Novo equipamento → fica na edição para poder adicionar docs/imagem
+                $redirect = $equipId
+                    ? 'equipment_details.php?id=' . $newId
+                    : 'edit_equipment.php?id=' . $newId;
+                header('Location: ' . $redirect); exit;
 
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -263,7 +295,8 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
 .eq-form .form-row > [class*=col-] { padding-right:.35rem; padding-left:.35rem; }
 </style>
 
-<form method="post" enctype="multipart/form-data" class="eq-form">
+<form method="post" enctype="multipart/form-data" class="eq-form"
+      action="edit_equipment.php?id=<?= $equipId ?>">
 
   <div class="row">
     <div class="col-md-8">
@@ -401,6 +434,29 @@ include ROOT_DIR . '/infodeqb/inc/header.php';
           </div>
         </div>
       </div>
+
+      <?php if (!$equipId): ?>
+      <div class="card shadow-sm mb-3">
+        <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+          <i class="fas fa-folder-open text-secondary"></i>
+          <strong><?= t('EQUIP_DOCS_TITLE') ?></strong>
+          <small class="text-muted ml-auto" style="font-size:.72rem">opcional</small>
+        </div>
+        <div class="card-body py-2" style="font-size:.83rem">
+          <div class="form-group mb-1">
+            <label class="small font-weight-bold mb-0"><?= t('EQUIP_DOCS_DESC') ?></label>
+            <input type="text" name="doc_descricao" class="form-control form-control-sm"
+                   placeholder="<?= htmlspecialchars(t('EQUIP_DOCS_DESC_PH')) ?>" maxlength="300">
+          </div>
+          <div class="form-group mb-1">
+            <label class="small font-weight-bold mb-0"><?= t('EQUIP_DOCS_FILE') ?></label>
+            <input type="file" name="doc_file" class="form-control-file form-control-sm"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.txt">
+          </div>
+          <small class="text-muted">PDF, Word, Excel, TXT — máx. 10&nbsp;MB</small>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <?php if ($equipId > 0): ?>
       <div class="card shadow-sm mb-3">
