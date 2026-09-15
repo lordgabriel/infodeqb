@@ -44,8 +44,9 @@ $_iqAdminsHr     = $_SESSION[$_cacheKey]['hr']      ?? [];
 $_iqAdminsHrList = $_SESSION[$_cacheKey]['hr_list'] ?? [];
 $_iqAdminsWater  = $_SESSION[$_cacheKey]['water']  ?? [];
 $_iqAdminsExam   = $_SESSION[$_cacheKey]['exam']   ?? [];
-$_iqAdminsMobile = $_SESSION[$_cacheKey]['mobile'] ?? [];
-$_iqAdminsDsd    = $_SESSION[$_cacheKey]['dsd']    ?? [];
-$_iqAdminsGases  = $_SESSION[$_cacheKey]['gases']  ?? [];
+$_iqAdminsMobile  = $_SESSION[$_cacheKey]['mobile']  ?? [];
+$_iqAdminsDsd     = $_SESSION[$_cacheKey]['dsd']     ?? [];
+$_iqAdminsGases   = $_SESSION[$_cacheKey]['gases']   ?? [];
+$_iqAdminsErasmus = $_SESSION[$_cacheKey]['erasmus'] ?? [];
 
 unset($_cacheKey, $_cacheTs, $_admRows, $_admByModule, $_r, $_e);

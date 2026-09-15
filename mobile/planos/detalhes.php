@@ -1,157 +1,144 @@
 <?php
-require_once 'conexao.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/deqbwww.php';
+include ROOT_DIR . '/infodeqb/session.php';
+require_once ROOT_DIR . '/infodeqb/inc/admins.php';
 
-$id_cadeira_feup = isset($_GET['id_cadeira_feup']) ? intval($_GET['id_cadeira_feup']) : null;
-$id_inst = isset($_GET['id_inst']) ? intval($_GET['id_inst']) : null;
+$id_cadeira_feup = isset($_GET['id_cadeira_feup']) ? (int)$_GET['id_cadeira_feup'] : 0;
+$id_inst         = isset($_GET['id_inst'])         ? (int)$_GET['id_inst']         : 0;
 
 if (!$id_cadeira_feup || !$id_inst) {
-    header("Location: index.php");
-    exit;
+    header('Location: index.php'); exit;
 }
 
-// 1. Nome da Cadeira da FEUP
-$stmtCad = $conexao->prepare("SELECT nome_cadeira_feup FROM CadeirasFEUP WHERE id_cadeira_feup = :id");
-$stmtCad->execute(['id' => $id_cadeira_feup]);
-$infoCad = $stmtCad->fetch(PDO::FETCH_ASSOC);
+$pdo = Database::connect();
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// 2. Coleta a árvore de dados baseada na NOVA relação pura por Equivalência
-$stmtCadeiras = $conexao->prepare("
-    SELECT 
-        E.id_equivalencia,
-        CE.id_cadeira_estrangeira,
-        CE.nome_cadeira_estrangeira, 
-        CE.ects_estrangeira, 
-        L.link_url
-    FROM Equivalencias E
-    JOIN Equivalencias_Cadeiras_Relacao ECR ON E.id_equivalencia = ECR.id_equivalencia
-    JOIN CadeirasEstrangeiras CE ON ECR.id_cadeira_estrangeira = CE.id_cadeira_estrangeira
-    LEFT JOIN LinksCadeirasEstrangeiras L ON L.id_cadeira_estrangeira = CE.id_cadeira_estrangeira
-    WHERE E.id_cadeira_feup = :id_cad AND E.id_instituicao = :id_inst
-    ORDER BY E.id_equivalencia DESC, CE.nome_cadeira_estrangeira ASC
-");
-$stmtCadeiras->execute(['id_cad' => $id_cadeira_feup, 'id_inst' => $id_inst]);
-$lista_bruta = $stmtCadeiras->fetchAll(PDO::FETCH_ASSOC);
+$sCad = $pdo->prepare(
+    'SELECT nome_cadeira_feup FROM infodeqb_erasmus_cadeiras_feup WHERE id_cadeira_feup = ?'
+);
+$sCad->execute([$id_cadeira_feup]);
+$infoCad = $sCad->fetch(PDO::FETCH_ASSOC);
+if (!$infoCad) { header('Location: index.php'); exit; }
 
-// 3. Agrupamento por Equivalência e Remoção de Duplicados Estruturais
-$equivalencias_temporarias = [];
-foreach ($lista_bruta as $linha) {
-    $id_eq = $linha['id_equivalencia'];
-    $id_ce = $linha['id_cadeira_estrangeira'];
-    
-    if (!isset($equivalencias_temporarias[$id_eq])) {
-        $equivalencias_temporarias[$id_eq] = [];
-    }
-    if (!isset($equivalencias_temporarias[$id_eq][$id_ce])) {
-        $equivalencias_temporarias[$id_eq][$id_ce] = [
+$sInst = $pdo->prepare(
+    'SELECT nome_instituicao FROM infodeqb_erasmus_instituicoes WHERE id_instituicao = ?'
+);
+$sInst->execute([$id_inst]);
+$infoInst = $sInst->fetch(PDO::FETCH_ASSOC);
+
+$sRows = $pdo->prepare(
+    'SELECT E.id_equivalencia,
+            CE.id_cadeira_estrangeira, CE.nome_cadeira_estrangeira, CE.ects_estrangeira,
+            L.link_url
+     FROM infodeqb_erasmus_equivalencias E
+     JOIN infodeqb_erasmus_equivalencias_relacao ECR ON E.id_equivalencia = ECR.id_equivalencia
+     JOIN infodeqb_erasmus_cadeiras_estrangeiras CE ON ECR.id_cadeira_estrangeira = CE.id_cadeira_estrangeira
+     LEFT JOIN infodeqb_erasmus_links_cadeiras L ON L.id_cadeira_estrangeira = CE.id_cadeira_estrangeira
+     WHERE E.id_cadeira_feup = ? AND E.id_instituicao = ?
+     ORDER BY E.id_equivalencia DESC, CE.nome_cadeira_estrangeira ASC'
+);
+$sRows->execute([$id_cadeira_feup, $id_inst]);
+
+$tmp = [];
+foreach ($sRows->fetchAll(PDO::FETCH_ASSOC) as $linha) {
+    $eq_id = $linha['id_equivalencia'];
+    $ce_id = $linha['id_cadeira_estrangeira'];
+    if (!isset($tmp[$eq_id][$ce_id])) {
+        $tmp[$eq_id][$ce_id] = [
             'nome'  => $linha['nome_cadeira_estrangeira'],
             'ects'  => $linha['ects_estrangeira'],
-            'links' => []
+            'links' => [],
         ];
     }
-    if (!empty($linha['link_url']) && !in_array($linha['link_url'], $equivalencias_temporarias[$id_eq][$id_ce]['links'])) {
-        $equivalencias_temporarias[$id_eq][$id_ce]['links'][] = $linha['link_url'];
+    if (!empty($linha['link_url']) && !in_array($linha['link_url'], $tmp[$eq_id][$ce_id]['links'])) {
+        $tmp[$eq_id][$ce_id]['links'][] = $linha['link_url'];
     }
 }
 
-$equivalencias_agrupadas = [];
-$assinaturas_registadas = [];
-foreach ($equivalencias_temporarias as $id_eq => $cadeiras) {
-    $assinatura = "";
-    foreach ($cadeiras as $id_ce => $dados) {
-        $assinatura .= $id_ce . "_";
-    }
-    if (!in_array($assinatura, $assinaturas_registadas)) {
-        $assinaturas_registadas[] = $assinatura;
-        $equivalencias_agrupadas[$id_eq] = $cadeiras; 
+$agrupadas = [];
+$sigs      = [];
+foreach ($tmp as $eq_id => $cadeiras) {
+    $sig = implode('_', array_keys($cadeiras));
+    if (!in_array($sig, $sigs)) {
+        $sigs[]            = $sig;
+        $agrupadas[$eq_id] = $cadeiras;
     }
 }
+
+Database::disconnect();
+
+$pageTitle = 'Equivalências — ' . htmlspecialchars($infoCad['nome_cadeira_feup']);
+include ROOT_DIR . '/infodeqb/inc/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalhes da Equivalência - FEUP</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; background-color: #f8f9fa; color: #333; }
-        .container { max-width: 800px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; }
-        .uc-destaque { background-color: #e9ecef; padding: 15px; border-radius: 4px; border-left: 5px solid #800000; margin-bottom: 25px; }
-        .bloco-opcao { border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-bottom: 30px; }
-        .opcao-titulo { background: #495057; color: white; margin: -20px -20px 15px -20px; padding: 10px 20px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #f1f3f5; }
-        .divisor-ou { text-align: center; margin: 20px 0; position: relative; }
-        .divisor-ou::before { content: ""; display: block; border-top: 1px dashed #ced4da; position: absolute; top: 50%; width: 100%; }
-        .divisor-ou span { background: #f8f9fa; padding: 5px 15px; font-weight: bold; color: #800000; position: relative; z-index: 2; border: 1px solid #ced4da; border-radius: 20px; }
-        .btn-voltar { display: inline-block; margin-top: 10px; color: #0056b3; font-weight: bold; text-decoration: none; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Composição da Equivalência</h2>
-    
-    <div class="uc-destaque">
-        Unidade Curricular da FEUP: <br>
-        <strong><?= htmlspecialchars($infoCad['nome_cadeira_feup'] ?? 'Não encontrada') ?></strong>
-    </div>
-
-    <p style="color: #495057; margin-bottom: 20px;">
-        Foram encontrados <strong><?= count($equivalencias_agrupadas) ?> caminhos alternativos</strong> estruturalmente diferentes. Pode optar por cumprir <u>qualquer um</u> dos conjuntos:
-    </p>
-
-    <?php 
-    $contador = 1;
-    foreach ($equivalencias_agrupadas as $id_eq => $cadeiras): 
-    ?>
-        <?php if ($contador > 1): ?>
-            <div class="divisor-ou"><span>OU</span></div>
-        <?php endif; ?>
-
-        <div class="bloco-opcao">
-            <div class="opcao-titulo">
-                <span>📋 OPÇÃO ALTERNATIVA <?= $contador ?></span>
-                <span style="font-weight: normal; font-size: 12px; opacity: 0.8;">Ref: Histórico #<?= $id_eq ?></span>
-            </div>
-            
-            <table style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Cadeira no Estrangeiro</th>
-                        <th>Créditos</th>
-                        <th>Programa</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($cadeiras as $id_ce => $dados_ce): ?>
-                        <tr>
-                            <td><strong><?= htmlspecialchars($dados_ce['nome']) ?></strong></td>
-                            <td><?= htmlspecialchars($dados_ce['ects']) ?> ECTS</td>
-                            <td>
-                                <?php if (!empty($dados_ce['links'])): ?>
-                                    <?php foreach ($dados_ce['links'] as $idx => $url): ?>
-                                        <a style="color:#28a745; font-weight:bold; text-decoration:none;" href="<?= htmlspecialchars($url) ?>" target="_blank">
-                                            Ver Programa <?= (count($dados_ce['links']) > 1 ? ($idx + 1) : '') ?> ↗
-                                        </a><br>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <span style="color: #999; font-style: italic;">Não disponível</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php 
-        $contador++;
-    endforeach; 
-    ?>
-
-    <hr style="border: 0; border-top: 1px solid #dee2e6; margin-top: 30px; margin-bottom: 20px;">
-    <a class="btn-voltar" href="index.php?instituicao=<?= $id_inst ?>">← Voltar para a Instituição</a>
+<div class="iq-page-header d-flex align-items-center flex-wrap" style="gap:8px">
+  <div class="mr-auto">
+    <h1>Composição da Equivalência</h1>
+    <?php if ($infoInst): ?>
+    <small class="text-muted"><?= htmlspecialchars($infoInst['nome_instituicao']) ?></small>
+    <?php endif; ?>
+  </div>
+  <a href="index.php?instituicao=<?= $id_inst ?>" class="btn btn-outline-secondary btn-sm">
+    <i class="fas fa-arrow-left mr-1"></i>Voltar
+  </a>
 </div>
 
-</body>
-</html>
+<div class="card shadow-sm mb-4" style="border-left:4px solid var(--iq-primary)">
+  <div class="card-body py-2" style="font-size:.87rem">
+    <div class="text-muted" style="font-size:.75rem">UC da FEUP</div>
+    <strong><?= htmlspecialchars($infoCad['nome_cadeira_feup']) ?></strong>
+  </div>
+</div>
+
+<p class="text-muted mb-3" style="font-size:.87rem">
+  <?= count($agrupadas) ?> conjunto<?= count($agrupadas) !== 1 ? 's' : '' ?> alternativo<?= count($agrupadas) !== 1 ? 's' : '' ?> encontrado<?= count($agrupadas) !== 1 ? 's' : '' ?>.
+  Pode cumprir <u>qualquer um</u> dos seguintes:
+</p>
+
+<?php $n = 1; foreach ($agrupadas as $eq_id => $cadeiras): ?>
+<?php if ($n > 1): ?>
+<div class="text-center my-3">
+  <span class="badge badge-secondary px-3 py-1" style="font-size:.82rem">OU</span>
+</div>
+<?php endif; ?>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+    <strong>Opção <?= $n ?></strong>
+    <small class="text-muted ml-auto">ref. #<?= (int)$eq_id ?></small>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0" style="font-size:.85rem">
+      <thead>
+        <tr>
+          <th>Cadeira no estrangeiro</th>
+          <th style="width:8%">ECTS</th>
+          <th style="width:12%">Programa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($cadeiras as $dados): ?>
+        <tr>
+          <td><strong><?= htmlspecialchars($dados['nome']) ?></strong></td>
+          <td><?= $dados['ects'] ? htmlspecialchars((string)$dados['ects']) . ' ECTS' : '—' ?></td>
+          <td>
+            <?php if ($dados['links']): ?>
+              <?php foreach ($dados['links'] as $i => $url): ?>
+              <a href="<?= htmlspecialchars($url) ?>" target="_blank" rel="noopener"
+                 style="font-size:.8rem" class="d-block">
+                Link<?= count($dados['links']) > 1 ? ' ' . ($i + 1) : '' ?> ↗
+              </a>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <span class="text-muted">—</span>
+            <?php endif; ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+<?php $n++; endforeach; ?>
+
+<?php include ROOT_DIR . '/infodeqb/inc/footer.php'; ?>
